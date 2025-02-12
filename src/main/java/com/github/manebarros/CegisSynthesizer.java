@@ -35,7 +35,7 @@ public class CegisSynthesizer {
     return formulas;
   }
 
-  public Solution synthesize(
+  public Contextualized<Solution> synthesize(
       Scope scope,
       List<ExecutionFormulaG> existentialFormulas,
       ExecutionFormulaG universalFormula) {
@@ -54,7 +54,7 @@ public class CegisSynthesizer {
             searchProblem.getContent().formula(), searchProblem.getContent().bounds());
 
     if (candSol.unsat()) {
-      return candSol;
+      return searchProblem.replace(candSol);
     }
 
     Contextualized<Solution> candCheckSol =
@@ -76,7 +76,7 @@ public class CegisSynthesizer {
                   searchProblem.getHistoryEncoding(), candSol.instance(), universalFormula.not())
               .fmap(p -> checker.solve(p.formula(), p.bounds()));
     }
-    return candSol;
+    return searchProblem.replace(candSol);
   }
 
   private Solution nextCandidate(

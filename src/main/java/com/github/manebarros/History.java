@@ -5,24 +5,18 @@ import java.util.List;
 import kodkod.instance.Instance;
 
 public class History {
-  private final int initialValue;
   private final List<Session> sessions;
 
-  public History(int initialValue, List<Session> sessions) {
-    this.initialValue = initialValue;
+  public History(List<Session> sessions) {
     this.sessions = sessions;
   }
 
   public History(History h) {
-    this(h.getInitialValue(), new ArrayList<>(h.getSessions()));
+    this(new ArrayList<>(h.getSessions()));
   }
 
-  public History(Instance instance) {
-    this(new HistoryIntermediateRepresentation(instance).buildHistory());
-  }
-
-  public int getInitialValue() {
-    return initialValue;
+  public History(AbstractHistoryK encoding, Instance instance) {
+    this(new HistoryIntermediateRepresentation(encoding, instance).buildHistory());
   }
 
   public List<Session> getSessions() {
@@ -32,12 +26,12 @@ public class History {
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
-    sb.append("initial value: " + initialValue + "\n");
     if (!sessions.isEmpty()) {
       sb.append(sessions.get(0));
-    }
-    for (var s : sessions.subList(1, sessions.size())) {
-      sb.append("\n\n").append(s);
+
+      for (var s : sessions.subList(1, sessions.size())) {
+        sb.append("\n\n").append(s);
+      }
     }
     return sb.toString();
   }

@@ -1,5 +1,8 @@
 package com.github.manebarros;
 
+import java.util.ArrayList;
+import java.util.Collection;
+import java.util.List;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
@@ -38,5 +41,44 @@ public final class KodkodUtil {
 
   public static Formula transitive(Expression relation) {
     return relation.join(relation).in(relation);
+  }
+
+  public static Formula strictPartialOrder(Expression r, Expression s) {
+    return Formula.and(irreflexive(r), asymmetric(r, s), transitive(r));
+  }
+
+  public static Formula irreflexive(Expression r) {
+    return r.intersection(Expression.IDEN).no();
+  }
+
+  public static Formula asymmetric(Expression r, Expression s) {
+    Variable a = Variable.unary("a");
+    Variable b = Variable.unary("b");
+
+    return a.product(b).in(r).implies(b.product(a).in(r).not()).forAll(a.oneOf(s).and(b.oneOf(s)));
+  }
+
+  public static Formula acyclic(Expression r) {
+    return r.closure().intersection(Expression.IDEN).no();
+  }
+
+  public static Formula function(Expression f, Expression domain) {
+    Variable x = Variable.unary("x");
+    return x.join(f).one().forAll(x.oneOf(domain));
+  }
+
+  public static Formula strictTotalOrder(Expression r, Expression s) {
+    return strictPartialOrder(r, s).and(total(r, s));
+  }
+
+  public static Formula disj(Collection<? extends Expression> expressions) {
+    Formula formula = Formula.TRUE;
+    List<Expression> l = new ArrayList<>(expressions);
+    for (int i = 1; i < l.size(); i++) {
+      for (int j = 0; j < i; j++) {
+        formula = formula.and(l.get(i).eq(l.get(j)).not());
+      }
+    }
+    return formula;
   }
 }

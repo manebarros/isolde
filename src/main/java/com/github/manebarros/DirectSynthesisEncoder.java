@@ -26,6 +26,16 @@ import kodkod.instance.TupleSet;
 import kodkod.instance.Universe;
 
 public final class DirectSynthesisEncoder implements SynthesisEncoder {
+  private DirectSynthesisEncoder() {}
+
+  private static DirectSynthesisEncoder instance = null;
+
+  public static DirectSynthesisEncoder instance() {
+    if (instance == null) {
+      instance = new DirectSynthesisEncoder();
+    }
+    return instance;
+  }
 
   @Override
   public Contextualized<KodkodProblem> encode(Scope scope, List<ExecutionFormulaG> formulas) {
@@ -59,10 +69,10 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
     Bounds b = new Bounds(u);
     TupleFactory f = u.factory();
 
-    b.boundExactly(transactions, f.setOf(txnAtoms));
-    b.boundExactly(keys, f.setOf(objAtoms));
-    b.boundExactly(values, f.setOf(valAtoms));
-    b.boundExactly(sessions, f.setOf(sessionAtoms));
+    b.boundExactly(transactions, f.setOf(txnAtoms.toArray()));
+    b.boundExactly(keys, f.setOf(objAtoms.toArray()));
+    b.boundExactly(values, f.setOf(valAtoms.toArray()));
+    b.boundExactly(sessions, f.setOf(sessionAtoms.toArray()));
 
     Atom<Integer> initialTxn = txnAtoms.get(0);
     List<Atom<Integer>> normalTxns = txnAtoms.subList(1, scope.getTransactions() + 1);
@@ -70,16 +80,18 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
     b.boundExactly(initialTransaction, f.setOf(initialTxn));
 
     TupleSet writesLowerBound =
-        f.setOf(initialTxn).product(f.setOf(objAtoms)).product(f.setOf(valAtoms.get(0)));
+        f.setOf(initialTxn).product(f.setOf(objAtoms.toArray())).product(f.setOf(valAtoms.get(0)));
     TupleSet writesUpperBound =
-        f.setOf(normalTxns)
-            .product(f.setOf(objAtoms))
-            .product(f.setOf(valAtoms.subList(1, scope.getValues() + 1)));
+        f.setOf(normalTxns.toArray())
+            .product(f.setOf(objAtoms.toArray()))
+            .product(f.setOf(valAtoms.subList(1, scope.getValues()).toArray()));
     writesUpperBound.addAll(writesLowerBound);
     b.bound(writes, writesLowerBound, writesUpperBound);
 
     TupleSet readsUpperBound =
-        f.setOf(normalTxns).product(f.setOf(objAtoms)).product(f.setOf(valAtoms));
+        f.setOf(normalTxns.toArray())
+            .product(f.setOf(objAtoms.toArray()))
+            .product(f.setOf(valAtoms.toArray()));
     b.bound(reads, readsUpperBound);
 
     List<Expression> commitOrderRelations =
@@ -98,7 +110,7 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
     }
     b.boundExactly(mainCommitOrder, mainCommitOrderTs);
 
-    TupleSet commitOrderLowerBound = f.setOf(initialTxn).product(f.setOf(normalTxns));
+    TupleSet commitOrderLowerBound = f.setOf(initialTxn).product(f.setOf(normalTxns.toArray()));
 
     // TODO: Can we use a more strict upper bound for the remaining commit orders?
     for (int i = 1; i < formulas.size(); i++) {
@@ -106,7 +118,7 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
       commitOrderRelations.add(commitOrder);
       TupleSet commitOrderTs = f.noneOf(2);
       commitOrderTs.addAll(commitOrderLowerBound);
-      for (int j = 0; i < scope.getTransactions(); i++) {
+      for (int j = 0; j < scope.getTransactions(); j++) {
         for (int k = 0; k < scope.getTransactions(); k++) {
           if (j != k) {
             commitOrderTs.add(f.tuple(normalTxns.get(j), normalTxns.get(k)));
@@ -117,27 +129,25 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
     }
 
     b.bound(sessionOrder, commitOrderLowerBound, mainCommitOrderTs);
-    b.bound(txn_session, f.setOf(normalTxns).product(f.setOf(sessionAtoms)));
+    b.bound(txn_session, f.setOf(normalTxns.toArray()).product(f.setOf(sessionAtoms.toArray())));
 
+    var enc = DirectAbstractHistoryEncoding.instance();
     Formula formula =
         Formula.and(
+            // noBlindWrites(),
+            noEmptyTransactions(),
             transactionsWriteToKeyAtMostOnce(),
             transactionsReadKeyAtMostOnce(),
             sessionSemantics(),
+            enc.noReadsFromThinAir(),
+            enc.sessionOrder().union(enc.binaryWr()).in(mainCommitOrder),
             uniqueWrites());
 
     if (!formulas.isEmpty()) {
-      formula =
-          formula.and(
-              formulas
-                  .get(0)
-                  .apply(DirectAbstractHistoryEncoding.instance(), commitOrderRelations.get(0)));
+      formula = formula.and(formulas.get(0).apply(enc, commitOrderRelations.get(0)));
       for (int i = 1; i < formulas.size(); i++) {
         Expression co = commitOrderRelations.get(i);
-        formula =
-            formula
-                .and(commitOrderSemantics(co))
-                .and(formulas.get(i).apply(DirectAbstractHistoryEncoding.instance(), co));
+        formula = formula.and(commitOrderSemantics(co)).and(formulas.get(i).apply(enc, co));
       }
     }
 
@@ -145,6 +155,23 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
         DirectAbstractHistoryEncoding.instance(),
         commitOrderRelations,
         new KodkodProblem(formula, b));
+  }
+
+  private Formula noEmptyTransactions() {
+    var e = DirectAbstractHistoryEncoding.instance();
+    return e.finalWrites()
+        .union(e.externalReads())
+        .join(e.values())
+        .join(e.keys())
+        .eq(e.transactions());
+  }
+
+  private Formula noBlindWrites() {
+    Variable t = Variable.unary("t");
+    return DirectAbstractHistoryEncoding.instance()
+        .writeSet(t)
+        .in(DirectAbstractHistoryEncoding.instance().readSet(t))
+        .forAll(t.oneOf(DirectAbstractHistoryEncoding.instance().normalTxns()));
   }
 
   private Formula transactionsWriteToKeyAtMostOnce() {
@@ -161,9 +188,10 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
 
   private Formula sessionSemantics() {
     Variable s = Variable.unary("s");
+    Expression normalTxns = DirectAbstractHistoryEncoding.instance().normalTxns();
 
     return Formula.and(
-        txn_session.function(transactions, sessions),
+        txn_session.function(normalTxns, sessions),
         txn_session.transpose().join(sessionOrder.join(txn_session)).in(Expression.IDEN),
         KodkodUtil.total(sessionOrder, txn_session.join(s)).forAll(s.oneOf(sessions)),
         KodkodUtil.transitive(sessionOrder));
@@ -177,6 +205,9 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
   }
 
   private Formula commitOrderSemantics(Expression commitOrder) {
-    return transitive(commitOrder).and(total(commitOrder, transactions));
+    return Formula.and(
+        transitive(commitOrder),
+        total(commitOrder, transactions),
+        sessionOrder.union(DirectAbstractHistoryEncoding.instance().binaryWr()).in(commitOrder));
   }
 }

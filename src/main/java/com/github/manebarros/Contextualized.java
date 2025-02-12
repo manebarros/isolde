@@ -31,4 +31,8 @@ public class Contextualized<T> {
   public <S> Contextualized<S> fmap(Function<T, S> f) {
     return new Contextualized<S>(historyEncoding, commitOrders, f.apply(content));
   }
+
+  public <S> Contextualized<S> replace(S newContent) {
+    return new Contextualized<S>(historyEncoding, commitOrders, newContent);
+  }
 }
