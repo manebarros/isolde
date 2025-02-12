@@ -134,7 +134,7 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
     var enc = DirectAbstractHistoryEncoding.instance();
     Formula formula =
         Formula.and(
-            // noBlindWrites(),
+            noBlindWrites(),
             noEmptyTransactions(),
             transactionsWriteToKeyAtMostOnce(),
             transactionsReadKeyAtMostOnce(),
