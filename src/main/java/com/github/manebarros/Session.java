@@ -1,8 +1,14 @@
 package com.github.manebarros;
 
+import java.util.Collections;
 import java.util.List;
 
 public record Session(List<Transaction> transactions) {
+
+  public Session(Transaction t) {
+    this(Collections.singletonList(t));
+  }
+
   @Override
   public final String toString() {
     StringBuilder sb = new StringBuilder();

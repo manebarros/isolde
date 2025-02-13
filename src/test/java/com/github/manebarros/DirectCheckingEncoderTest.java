@@ -1,0 +1,135 @@
+package com.github.manebarros;
+
+import static com.github.manebarros.DirectAbstractHistoryEncoding.*;
+import static com.github.manebarros.Operation.readOf;
+import static com.github.manebarros.Operation.writeOf;
+import static org.junit.jupiter.api.Assertions.assertEquals;
+
+import java.util.Arrays;
+import java.util.List;
+import java.util.Map;
+import kodkod.ast.Formula;
+import kodkod.ast.Relation;
+import kodkod.instance.Bounds;
+import kodkod.instance.TupleFactory;
+import kodkod.instance.TupleSet;
+import kodkod.instance.Universe;
+import org.junit.jupiter.api.Test;
+
+public class DirectCheckingEncoderTest {
+
+  @Test
+  public void historyWithOneTxnGetsWellEncoded() {
+    History hist =
+        new History(
+            Arrays.asList(
+                new Session(new Transaction(1, Arrays.asList(readOf(0, 0), writeOf(0, 1))))));
+
+    Bounds b =
+        DirectCheckingEncoder.instance()
+            .encode(hist, (h, co) -> Formula.TRUE)
+            .getContent()
+            .bounds();
+
+    Atom<Integer> initTxnAtom = new Atom<>("t", 0);
+    Atom<Integer> txnAtom = new Atom<>("t", 1);
+    Atom<Integer> sessionAtom = new Atom<>("s", 0);
+    Atom<Integer> keyAtom = new Atom<Integer>("x", 0);
+    Atom<Integer> initialValueAtom = new Atom<Integer>("v", 0);
+    Atom<Integer> valAtom = new Atom<Integer>("v", 1);
+    // Universe u =
+    //    new Universe(initTxnAtom, txnAtom, sessionAtom, keyAtom, initialValueAtom, valAtom);
+    Universe u = b.universe();
+    TupleFactory f = u.factory();
+    Map<Relation, TupleSet> expectedTupleSets =
+        Map.of(
+            transactions, f.setOf(initTxnAtom, txnAtom),
+            keys, f.setOf(keyAtom),
+            values, f.setOf(initialValueAtom, valAtom),
+            sessions, f.setOf(sessionAtom),
+            initialTransaction, f.setOf(initTxnAtom),
+            reads, f.setOf(f.tuple(txnAtom, keyAtom, initialValueAtom)),
+            writes,
+                f.setOf(
+                    f.tuple(initTxnAtom, keyAtom, initialValueAtom),
+                    f.tuple(txnAtom, keyAtom, valAtom)),
+            sessionOrder, f.setOf(f.tuple(initTxnAtom, txnAtom)),
+            txn_session, f.setOf(f.tuple(txnAtom, sessionAtom)));
+
+    for (Relation rel : expectedTupleSets.keySet()) {
+      assertEquals(expectedTupleSets.get(rel), b.lowerBound(rel));
+      assertEquals(expectedTupleSets.get(rel), b.upperBound(rel));
+    }
+
+    Relation coAuxRel =
+        b.relations().stream().filter(r -> !expectedTupleSets.containsKey(r)).findFirst().get();
+    TupleSet coAuxUpperBound = f.setOf(f.tuple(initTxnAtom, txnAtom));
+    assertEquals(f.noneOf(2), b.lowerBound(coAuxRel));
+    assertEquals(coAuxUpperBound, b.upperBound(coAuxRel));
+  }
+
+  @Test
+  public void historyWithTwoTxnGetsWellEncoded() {
+    History hist =
+        new History(
+            Arrays.asList(
+                new Session(new Transaction(1, Arrays.asList(readOf(0, 0), writeOf(0, 1)))),
+                new Session(new Transaction(2, Arrays.asList(readOf(0, 1), writeOf(0, 2))))));
+
+    Bounds b =
+        DirectCheckingEncoder.instance()
+            .encode(hist, (h, co) -> Formula.TRUE)
+            .getContent()
+            .bounds();
+
+    List<Atom<Integer>> txnAtoms =
+        Arrays.asList(new Atom<>("t", 0), new Atom<>("t", 1), new Atom<>("t", 2));
+    List<Atom<Integer>> sessionAtoms = Arrays.asList(new Atom<>("s", 0), new Atom<>("s", 1));
+    Atom<Integer> keyAtom = new Atom<Integer>("x", 0);
+    List<Atom<Integer>> valAtoms =
+        Arrays.asList(new Atom<>("v", 0), new Atom<>("v", 1), new Atom<>("v", 2));
+
+    Universe u = b.universe();
+    TupleFactory f = u.factory();
+    Map<Relation, TupleSet> expectedTupleSets =
+        Map.of(
+            transactions, f.setOf(txnAtoms.toArray()),
+            keys, f.setOf(keyAtom),
+            values, f.setOf(valAtoms.toArray()),
+            sessions, f.setOf(sessionAtoms.toArray()),
+            initialTransaction, f.setOf(txnAtoms.get(0)),
+            reads,
+                f.setOf(
+                    f.tuple(txnAtoms.get(1), keyAtom, valAtoms.get(0)),
+                    f.tuple(txnAtoms.get(2), keyAtom, valAtoms.get(1))),
+            writes,
+                f.setOf(
+                    f.tuple(txnAtoms.get(0), keyAtom, valAtoms.get(0)),
+                    f.tuple(txnAtoms.get(1), keyAtom, valAtoms.get(1)),
+                    f.tuple(txnAtoms.get(2), keyAtom, valAtoms.get(2))),
+            sessionOrder,
+                f.setOf(
+                    f.tuple(txnAtoms.get(0), txnAtoms.get(1)),
+                    f.tuple(txnAtoms.get(0), txnAtoms.get(2))),
+            txn_session,
+                f.setOf(
+                    f.tuple(txnAtoms.get(1), sessionAtoms.get(0)),
+                    f.tuple(txnAtoms.get(2), sessionAtoms.get(1))));
+
+    for (Relation rel : expectedTupleSets.keySet()) {
+      assertEquals(expectedTupleSets.get(rel), b.lowerBound(rel));
+      assertEquals(expectedTupleSets.get(rel), b.upperBound(rel));
+    }
+
+    Relation coAuxRel =
+        b.relations().stream().filter(r -> !expectedTupleSets.containsKey(r)).findFirst().get();
+    TupleSet coAuxUpperBound =
+        f.setOf(
+            f.tuple(txnAtoms.get(0), txnAtoms.get(1)),
+            f.tuple(txnAtoms.get(0), txnAtoms.get(2)),
+            f.tuple(txnAtoms.get(1), txnAtoms.get(2)),
+            f.tuple(txnAtoms.get(2), txnAtoms.get(1)));
+    assertEquals(f.noneOf(2), b.lowerBound(coAuxRel));
+    assertEquals(coAuxUpperBound, b.upperBound(coAuxRel));
+  }
+}

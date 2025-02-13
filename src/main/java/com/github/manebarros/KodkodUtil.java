@@ -3,9 +3,12 @@ package com.github.manebarros;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.stream.Collectors;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
+import kodkod.instance.TupleFactory;
+import kodkod.instance.TupleSet;
 
 public final class KodkodUtil {
   private KodkodUtil() {}
@@ -80,5 +83,9 @@ public final class KodkodUtil {
       }
     }
     return formula;
+  }
+
+  public static TupleSet asTupleSet(TupleFactory f, Collection<?> atoms) {
+    return f.setOf(atoms.stream().map(a -> f.tuple(a)).collect(Collectors.toList()));
   }
 }
