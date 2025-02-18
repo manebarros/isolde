@@ -1,11 +1,16 @@
 package com.github.manebarros;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.List;
 import kodkod.instance.Instance;
 
 public class History {
   private final List<Session> sessions;
+
+  public History(Session session) {
+    this.sessions = Collections.singletonList(session);
+  }
 
   public History(List<Session> sessions) {
     this.sessions = sessions;

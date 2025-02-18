@@ -74,9 +74,10 @@ public final class DirectCheckingEncoder implements CheckingEncoder {
     Formula spec =
         Formula.and(
             commitOrderAux.totalOrder(transactions, initialTransaction, lastTxn),
+            sessionOrder.union(encoding.binaryWr()).in(commitOrder),
             formula.apply(DirectAbstractHistoryEncoding.instance(), commitOrder));
 
-    return new Contextualized<KodkodProblem>(
+    return new Contextualized<>(
         DirectAbstractHistoryEncoding.instance(),
         Collections.singletonList(commitOrder),
         new KodkodProblem(spec, b));

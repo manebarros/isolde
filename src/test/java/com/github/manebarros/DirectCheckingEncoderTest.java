@@ -16,7 +16,12 @@ import kodkod.instance.TupleSet;
 import kodkod.instance.Universe;
 import org.junit.jupiter.api.Test;
 
-public class DirectCheckingEncoderTest {
+public class DirectCheckingEncoderTest implements CheckingEncoderTest {
+
+  @Override
+  public CheckingEncoder encoder() {
+    return DirectCheckingEncoder.instance();
+  }
 
   @Test
   public void historyWithOneTxnGetsWellEncoded() {

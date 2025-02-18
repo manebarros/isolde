@@ -151,7 +151,7 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
       }
     }
 
-    return new Contextualized<KodkodProblem>(
+    return new Contextualized<>(
         DirectAbstractHistoryEncoding.instance(),
         commitOrderRelations,
         new KodkodProblem(formula, b));

@@ -88,6 +88,7 @@ public class CegisSynthesizer {
         new Evaluator(counterexample.getContent())
             .evaluate(counterexample.getCommitOrders().get(0));
     Relation cexCommitOrderRel = Relation.binary("cexCommitOrder");
+    System.out.println("cand");
     Bounds b =
         new Bounds(
             commitOrderVal

@@ -122,4 +122,36 @@ public interface AbstractHistoryK {
   default Expression writeSet(Expression t) {
     return t.join(finalWrites()).join(values());
   }
+
+  default Expression mandatoryCommitOrderEdgesCC() {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return causallyOrdered(t2, t1)
+        .or(
+            Formula.and(t1.eq(t2).not(), writes(t2, x), wr(t1, x, t3), causallyOrdered(t2, t3))
+                .forSome(x.oneOf(keys()).and(t3.oneOf(transactions().difference(t1.union(t2))))))
+        .comprehension(t2.oneOf(transactions()).and(t1.oneOf(transactions())))
+        .closure();
+  }
+
+  default Expression mandatoryCommitOrderEdgesRA() {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return causallyOrdered(t2, t1)
+        .or(
+            Formula.and(
+                    t1.eq(t2).not(),
+                    writes(t2, x),
+                    wr(t1, x, t3),
+                    t2.product(t3).in(sessionOrder().union(binaryWr())))
+                .forSome(x.oneOf(keys()).and(t3.oneOf(transactions().difference(t1.union(t2))))))
+        .comprehension(t2.oneOf(transactions()).and(t1.oneOf(transactions())))
+        .closure();
+  }
 }
