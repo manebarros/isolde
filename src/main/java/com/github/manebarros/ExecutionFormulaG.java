@@ -10,4 +10,8 @@ public interface ExecutionFormulaG {
   default ExecutionFormulaG not() {
     return (h, co) -> this.apply(h, co).not();
   }
+
+  public static ExecutionFormulaG trivial() {
+    return (h, co) -> Formula.TRUE;
+  }
 }
