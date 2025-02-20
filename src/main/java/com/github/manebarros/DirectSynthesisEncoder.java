@@ -38,7 +38,10 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
   }
 
   @Override
-  public Contextualized<KodkodProblem> encode(Scope scope, List<ExecutionFormulaG> formulas) {
+  public Contextualized<KodkodProblem> encode(
+      Scope scope,
+      List<ExecutionFormulaK<BiswasExecutionK>> biswasFormulas,
+      List<ExecutionFormulaK<CeroneExecutionK>> ceroneFormulas) {
     List<Atom<Integer>> txnAtoms =
         IntStream.rangeClosed(0, scope.getTransactions())
             .mapToObj(i -> new Atom<>("t", i))
@@ -94,41 +97,17 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
             .product(f.setOf(valAtoms.toArray()));
     b.bound(reads, readsUpperBound);
 
-    List<Expression> commitOrderRelations =
-        new ArrayList<>(formulas.isEmpty() ? 1 : formulas.size());
-
-    TupleSet mainCommitOrderTs = f.noneOf(2);
-    Relation mainCommitOrder = Relation.binary("Commit order #0");
-
-    commitOrderRelations.add(mainCommitOrder);
-
+    TupleSet txnTotalOrderTs = f.noneOf(2);
     // Traverse the txn indexes from the initial txn (i=0) to the penultimate txn
     for (int i = 0; i < scope.getTransactions(); i++) {
       for (int j = i + 1; j < scope.getTransactions() + 1; j++) {
-        mainCommitOrderTs.add(f.tuple(txnAtoms.get(i), txnAtoms.get(j)));
+        txnTotalOrderTs.add(f.tuple(txnAtoms.get(i), txnAtoms.get(j)));
       }
     }
-    b.boundExactly(mainCommitOrder, mainCommitOrderTs);
 
-    TupleSet commitOrderLowerBound = f.setOf(initialTxn).product(f.setOf(normalTxns.toArray()));
+    TupleSet sessionOrderLowerBound = f.setOf(initialTxn).product(f.setOf(normalTxns.toArray()));
 
-    // TODO: Can we use a more strict upper bound for the remaining commit orders?
-    for (int i = 1; i < formulas.size(); i++) {
-      Relation commitOrder = Relation.binary("Commit order #" + i);
-      commitOrderRelations.add(commitOrder);
-      TupleSet commitOrderTs = f.noneOf(2);
-      commitOrderTs.addAll(commitOrderLowerBound);
-      for (int j = 0; j < scope.getTransactions(); j++) {
-        for (int k = 0; k < scope.getTransactions(); k++) {
-          if (j != k) {
-            commitOrderTs.add(f.tuple(normalTxns.get(j), normalTxns.get(k)));
-          }
-        }
-      }
-      b.bound(commitOrder, commitOrderLowerBound, commitOrderTs);
-    }
-
-    b.bound(sessionOrder, commitOrderLowerBound, mainCommitOrderTs);
+    b.bound(sessionOrder, sessionOrderLowerBound, txnTotalOrderTs);
     b.bound(txn_session, f.setOf(normalTxns.toArray()).product(f.setOf(sessionAtoms.toArray())));
 
     var enc = DirectAbstractHistoryEncoding.instance();
@@ -140,21 +119,94 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
             transactionsReadKeyAtMostOnce(),
             sessionSemantics(),
             enc.noReadsFromThinAir(),
-            enc.sessionOrder().union(enc.binaryWr()).in(mainCommitOrder),
             uniqueWrites());
 
-    if (!formulas.isEmpty()) {
-      formula = formula.and(formulas.get(0).apply(enc, commitOrderRelations.get(0)));
-      for (int i = 1; i < formulas.size(); i++) {
-        Expression co = commitOrderRelations.get(i);
-        formula = formula.and(commitOrderSemantics(co)).and(formulas.get(i).apply(enc, co));
+    boolean preOrdered = false;
+
+    List<Relation> commitOrderRelations = new ArrayList<>();
+    if (!biswasFormulas.isEmpty()) {
+      Relation mainCommitOrder = Relation.binary("Commit order #0");
+      commitOrderRelations.add(mainCommitOrder);
+      b.boundExactly(mainCommitOrder, txnTotalOrderTs);
+      preOrdered = true;
+      formula =
+          formula
+              .and(enc.sessionOrder().union(enc.binaryWr()).in(mainCommitOrder))
+              .and(
+                  biswasFormulas
+                      .get(0)
+                      .apply(new DefaultBiswasExecutionK(enc, commitOrderRelations.get(0))));
+
+      // TODO: Can we use a more strict upper bound for the remaining commit orders?
+      for (int i = 1; i < biswasFormulas.size(); i++) {
+        Relation commitOrder = Relation.binary("Commit order #" + i);
+        commitOrderRelations.add(commitOrder);
+        TupleSet commitOrderTs = f.noneOf(2);
+        commitOrderTs.addAll(sessionOrderLowerBound);
+        for (int j = 0; j < scope.getTransactions(); j++) {
+          for (int k = 0; k < scope.getTransactions(); k++) {
+            if (j != k) {
+              commitOrderTs.add(f.tuple(normalTxns.get(j), normalTxns.get(k)));
+            }
+          }
+        }
+        b.bound(commitOrder, sessionOrderLowerBound, commitOrderTs);
+        formula =
+            formula
+                .and(commitOrderSemantics(commitOrder))
+                .and(biswasFormulas.get(i).apply(new DefaultBiswasExecutionK(enc, commitOrder)));
       }
     }
 
+    List<Relation> visRelations = new ArrayList<>();
+    List<Relation> arRelations = new ArrayList<>();
+    if (!ceroneFormulas.isEmpty()) {
+      int i = 0;
+      if (!preOrdered) {
+        i++;
+        Relation mainVisOrder = Relation.binary("Vis #0");
+        Relation mainArOrder = Relation.binary("Ar #0");
+        visRelations.add(mainVisOrder);
+        arRelations.add(mainArOrder);
+        b.boundExactly(mainArOrder, txnTotalOrderTs);
+        b.bound(mainVisOrder, sessionOrderLowerBound, txnTotalOrderTs);
+        formula =
+            formula.and(
+                ceroneFormulas
+                    .get(0)
+                    .apply(new DefaultCeroneExecutionK(enc, mainVisOrder, mainArOrder)));
+      }
+
+      for (; i < ceroneFormulas.size(); i++) {
+        Relation vis = Relation.binary("Vis #" + i);
+        Relation ar = Relation.binary("Ar #" + i);
+        visRelations.add(vis);
+        arRelations.add(ar);
+        TupleSet commitOrderTs = Util.irreflexiveBound(f, normalTxns);
+        commitOrderTs.addAll(sessionOrderLowerBound);
+        b.bound(vis, commitOrderTs);
+        b.bound(ar, commitOrderTs);
+        formula =
+            formula
+                .and(vis.in(ar))
+                .and(transitive(ar))
+                .and(total(ar, enc.transactions()))
+                .and(ceroneFormulas.get(i).apply(new DefaultCeroneExecutionK(enc, vis, ar)));
+      }
+    }
+
+    List<BiswasExecutionK> biswasExecutions =
+        commitOrderRelations.stream()
+            .map(r -> new DefaultBiswasExecutionK(enc, r))
+            .collect(Collectors.toList());
+    List<CeroneExecutionK> ceroneExecutions = new ArrayList<>();
+    for (int i = 0; i < ceroneFormulas.size(); i++) {
+      ceroneExecutions.add(
+          new DefaultCeroneExecutionK(enc, visRelations.get(i), arRelations.get(i)));
+    }
+
     return new Contextualized<>(
-        DirectAbstractHistoryEncoding.instance(),
-        commitOrderRelations,
-        new KodkodProblem(formula, b));
+        enc, biswasExecutions, ceroneExecutions, new KodkodProblem(formula, b));
   }
 
   private Formula noEmptyTransactions() {
@@ -194,7 +246,7 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
         txn_session.function(normalTxns, sessions),
         txn_session.transpose().join(sessionOrder.join(txn_session)).in(Expression.IDEN),
         KodkodUtil.total(sessionOrder, txn_session.join(s)).forAll(s.oneOf(sessions)),
-        KodkodUtil.transitive(sessionOrder));
+        transitive(sessionOrder));
   }
 
   private Formula uniqueWrites() {

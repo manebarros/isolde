@@ -36,7 +36,7 @@ public final class DirectCheckingEncoder implements CheckingEncoder {
 
   @Override
   public Contextualized<KodkodProblem> encode(
-      AbstractHistoryK encoding, Instance instance, ExecutionFormulaG formula) {
+      AbstractHistoryK encoding, Instance instance, BiswasExecutionFormula formula) {
     Universe u = instance.universe();
     Bounds b = new Bounds(u);
     TupleFactory f = u.factory();
@@ -84,7 +84,7 @@ public final class DirectCheckingEncoder implements CheckingEncoder {
   }
 
   @Override
-  public Contextualized<KodkodProblem> encode(History history, ExecutionFormulaG formula) {
+  public Contextualized<KodkodProblem> encode(History history, BiswasExecutionFormula formula) {
     List<Atom<Integer>> sessAtoms = new ArrayList<>();
     List<List<Atom<Integer>>> txnAtoms = new ArrayList<>();
     Map<Integer, Atom<Integer>> keyAtoms = new LinkedHashMap<>();

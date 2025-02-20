@@ -14,7 +14,7 @@ public class Main {
     CegisSynthesizer synth =
         new CegisSynthesizer(DirectSynthesisEncoder.instance(), DirectCheckingEncoder.instance());
 
-    ExecutionFormulaG formula =
+    BiswasExecutionFormula formula =
         (h, co) -> TransactionalAnomalousPatterns.n(h, h.mandatoryCommitOrderEdgesCC()).not();
     History raViolation =
         new History(

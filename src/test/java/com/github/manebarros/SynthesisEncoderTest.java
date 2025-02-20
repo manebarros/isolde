@@ -18,11 +18,11 @@ public interface SynthesisEncoderTest {
     return new Scope(6, 6, 6, 6);
   }
 
-  default void assertSat(ExecutionFormulaG formula) {
+  default void assertSat(BiswasExecutionFormula formula) {
     assertSat(Collections.singletonList(formula));
   }
 
-  default void assertSat(List<ExecutionFormulaG> formulas) {
+  default void assertSat(List<BiswasExecutionFormula> formulas) {
     Solution sol =
         this.encoder()
             .encode(scope(), formulas)
@@ -32,7 +32,7 @@ public interface SynthesisEncoderTest {
     assertTrue(sol.sat());
   }
 
-  default void assertUnsat(List<ExecutionFormulaG> formulas) {
+  default void assertUnsat(List<BiswasExecutionFormula> formulas) {
     Solution sol =
         this.encoder()
             .encode(scope(), formulas)
@@ -42,7 +42,7 @@ public interface SynthesisEncoderTest {
     assertTrue(sol.unsat());
   }
 
-  default void assertFact(ExecutionFormulaG fact) {
+  default void assertFact(BiswasExecutionFormula fact) {
     Solution sol =
         this.encoder()
             .encode(scope(), fact.not())
@@ -56,7 +56,7 @@ public interface SynthesisEncoderTest {
     assertTrue(sol.unsat());
   }
 
-  default void assertFactOnExtraCommitOrder(ExecutionFormulaG fact) {
+  default void assertFactOnExtraCommitOrder(BiswasExecutionFormula fact) {
     Solution sol =
         this.encoder()
             .encode(scope(), Arrays.asList((h, co) -> Formula.TRUE, fact.not()))
