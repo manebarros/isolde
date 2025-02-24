@@ -1,85 +1,55 @@
 package com.github.manebarros;
 
-import static com.github.manebarros.Operation.readOf;
-import static com.github.manebarros.Operation.writeOf;
-import static java.util.Arrays.asList;
-
-import java.util.Collections;
-import kodkod.ast.Formula;
+import java.util.Arrays;
+import java.util.List;
 import kodkod.engine.Solution;
 
 public class Main {
+  private record Definition(
+      String name,
+      ExecutionFormulaK<BiswasExecutionK> biswasSpec,
+      ExecutionFormulaK<CeroneExecutionK> ceroneSpec) {}
+
+  private static final List<Definition> definitions =
+      Arrays.asList(
+          new Definition("Read Atomic", AxiomaticDefinitions::ReadAtomic, CeroneDefinitions.RA),
+          new Definition("Causal Consistency", AxiomaticDefinitions::Causal, CeroneDefinitions.CC),
+          new Definition("Prefix Consistency", AxiomaticDefinitions::Prefix, CeroneDefinitions.PC),
+          new Definition(
+              "Snapshot Isolation",
+              (h, e) -> AxiomaticDefinitions.Prefix(h, e).and(AxiomaticDefinitions.Conflict(h, e)),
+              CeroneDefinitions.SI),
+          new Definition(
+              "Serializability", AxiomaticDefinitions::Serializability, CeroneDefinitions.SER));
+
   public static void main(String[] args) {
-    Scope scope = new Scope(3, 1, 3, 1);
-    CegisSynthesizer synth =
-        new CegisSynthesizer(DirectSynthesisEncoder.instance(), DirectCheckingEncoder.instance());
+    Scope scope = new Scope(4, 4, 4, 4);
+    CegisSynthesizer synthesizer =
+        new CegisSynthesizer(
+            DirectSynthesisEncoder.instance(),
+            CeroneCheckingEncoder.instance(),
+            BiswasCheckingEncoder.instance());
 
-    BiswasExecutionFormula formula =
-        (h, co) -> TransactionalAnomalousPatterns.n(h, h.mandatoryCommitOrderEdgesCC()).not();
-    History raViolation =
-        new History(
-            Collections.singletonList(
-                new Session(
-                    asList(
-                        new Transaction(1, asList(readOf(0, 0), writeOf(0, 1))),
-                        new Transaction(2, asList(readOf(0, 1), writeOf(0, 2))),
-                        new Transaction(3, asList(readOf(0, 1)))))));
-    //
-    //    History hist =
-    //        new History(
-    //            Collections.singletonList(
-    //                new Session(
-    //                    asList(
-    //                        new Transaction(
-    //                            1, asList(readOf(0, 0), readOf(1, 0), writeOf(0, 1), writeOf(1,
-    // 1))),
-    //                        new Transaction(2, asList(readOf(0, 1), writeOf(1, 2))),
-    //                        new Transaction(3, asList(readOf(1, 1), writeOf(0, 2)))))));
-    //
-    //    History causalityViolation =
-    //        new History(
-    //            Arrays.asList(
-    //                new Session(new Transaction(1, asList(readOf(0, 0), writeOf(0, 1)))),
-    //                new Session(new Transaction(2, asList(readOf(0, 1), writeOf(1, 1)))),
-    //                new Session(new Transaction(3, asList(readOf(1, 1), readOf(0, 0))))));
-    //
-    //    History causalityViolation2 =
-    //        new History(
-    //            Arrays.asList(
-    //                new Session(
-    //                    new Transaction(
-    //                        1, asList(readOf(0, 0), readOf(1, 0), writeOf(0, 1), writeOf(1, 1)))),
-    //                new Session(
-    //                    Arrays.asList(
-    //                        new Transaction(2, asList(readOf(1, 0), writeOf(1, 2))),
-    //                        new Transaction(3, asList(readOf(0, 0), readOf(1, 2), writeOf(0, 2))),
-    //                        new Transaction(4, asList(readOf(0, 1), readOf(1, 2)))))));
+    for (var def : definitions) {
 
-    // Contextualized<Solution> sol =
-    //    synth.synthesize(
-    //        scope,
-    //        Collections.singletonList(formula),
-    //        (h, co) -> AxiomaticDefinitions.Causal(h, co).not());
+      Contextualized<Solution> biswas_not_cerone_sol =
+          synthesizer.synthesize(
+              scope,
+              new SynthesisSpec<>(def.biswasSpec()),
+              SynthesisSpec.fromUniversal(def.ceroneSpec().not()));
 
-    Contextualized<Solution> sol =
-        synth.synthesize(
-            scope,
-            Collections.singletonList(
-                (h, co) ->
-                    FormulaUtil.equivalentToHistory(raViolation)
-                        .apply(h, co)
-                        .and(TransactionalAnomalousPatterns.l(h, co))),
-            (h, co) -> Formula.TRUE);
+      Contextualized<Solution> cerone_not_biswas_sol =
+          synthesizer.synthesize(
+              scope,
+              SynthesisSpec.fromUniversal(def.biswasSpec().not()),
+              new SynthesisSpec<>(def.ceroneSpec()));
 
-    if (sol.getContent().unsat()) {
-      System.out.println("not sat");
-    } else {
-      History h = new History(sol.getHistoryEncoding(), sol.getContent().instance());
-      // System.out.println(sol.getContent().instance());
-      System.out.println(h);
-      // System.out.println(
-      //    new Evaluator(sol.getContent().instance())
-      //        .evaluate(DirectAbstractHistoryEncoding.instance().mandatoryCommitOrderEdgesCC()));
+      if (biswas_not_cerone_sol.getContent().unsat()
+          && cerone_not_biswas_sol.getContent().unsat()) {
+        System.out.println(def.name() + ": OK");
+      } else {
+        System.out.println(def.name() + ": not okay");
+      }
     }
   }
 }

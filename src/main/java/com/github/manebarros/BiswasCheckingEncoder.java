@@ -4,7 +4,6 @@ import static com.github.manebarros.DirectAbstractHistoryEncoding.*;
 import static com.github.manebarros.KodkodUtil.asTupleSet;
 
 import java.util.ArrayList;
-import java.util.Collections;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
@@ -21,22 +20,22 @@ import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 import kodkod.instance.Universe;
 
-public final class DirectCheckingEncoder implements CheckingEncoder {
+public final class BiswasCheckingEncoder implements CheckingEncoder<BiswasExecutionK> {
 
-  private DirectCheckingEncoder() {}
+  private BiswasCheckingEncoder() {}
 
-  private static DirectCheckingEncoder instance = null;
+  private static BiswasCheckingEncoder instance = null;
 
-  public static DirectCheckingEncoder instance() {
+  public static BiswasCheckingEncoder instance() {
     if (instance == null) {
-      instance = new DirectCheckingEncoder();
+      instance = new BiswasCheckingEncoder();
     }
     return instance;
   }
 
   @Override
-  public Contextualized<KodkodProblem> encode(
-      AbstractHistoryK encoding, Instance instance, BiswasExecutionFormula formula) {
+  public CheckingContextualized<BiswasExecutionK, KodkodProblem> encode(
+      AbstractHistoryK encoding, Instance instance, ExecutionFormulaK<BiswasExecutionK> formula) {
     Universe u = instance.universe();
     Bounds b = new Bounds(u);
     TupleFactory f = u.factory();
@@ -75,16 +74,15 @@ public final class DirectCheckingEncoder implements CheckingEncoder {
         Formula.and(
             commitOrderAux.totalOrder(transactions, initialTransaction, lastTxn),
             sessionOrder.union(encoding.binaryWr()).in(commitOrder),
-            formula.apply(DirectAbstractHistoryEncoding.instance(), commitOrder));
+            formula.apply(DirectAbstractHistoryEncoding.instance(), () -> commitOrder));
 
-    return new Contextualized<>(
-        DirectAbstractHistoryEncoding.instance(),
-        Collections.singletonList(commitOrder),
-        new KodkodProblem(spec, b));
+    return new CheckingContextualized<>(
+        DirectAbstractHistoryEncoding.instance(), () -> commitOrder, new KodkodProblem(spec, b));
   }
 
   @Override
-  public Contextualized<KodkodProblem> encode(History history, BiswasExecutionFormula formula) {
+  public CheckingContextualized<BiswasExecutionK, KodkodProblem> encode(
+      History history, ExecutionFormulaK<BiswasExecutionK> formula) {
     List<Atom<Integer>> sessAtoms = new ArrayList<>();
     List<List<Atom<Integer>>> txnAtoms = new ArrayList<>();
     Map<Integer, Atom<Integer>> keyAtoms = new LinkedHashMap<>();
@@ -186,11 +184,9 @@ public final class DirectCheckingEncoder implements CheckingEncoder {
         Formula.and(
             commitOrderAux.totalOrder(transactions, initialTransaction, lastTxn),
             sessionOrder.union(encoding.binaryWr()).in(commitOrder),
-            formula.apply(encoding, commitOrder));
+            formula.apply(encoding, () -> commitOrder));
 
-    return new Contextualized<>(
-        DirectAbstractHistoryEncoding.instance(),
-        Collections.singletonList(commitOrder),
-        new KodkodProblem(spec, b));
+    return new CheckingContextualized<>(
+        DirectAbstractHistoryEncoding.instance(), () -> commitOrder, new KodkodProblem(spec, b));
   }
 }

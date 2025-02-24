@@ -42,6 +42,15 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
       Scope scope,
       List<ExecutionFormulaK<BiswasExecutionK>> biswasFormulas,
       List<ExecutionFormulaK<CeroneExecutionK>> ceroneFormulas) {
+    return encode(scope, h -> Formula.TRUE, biswasFormulas, ceroneFormulas);
+  }
+
+  @Override
+  public Contextualized<KodkodProblem> encode(
+      Scope scope,
+      HistoryFormula historyFormula,
+      List<ExecutionFormulaK<BiswasExecutionK>> biswasFormulas,
+      List<ExecutionFormulaK<CeroneExecutionK>> ceroneFormulas) {
     List<Atom<Integer>> txnAtoms =
         IntStream.rangeClosed(0, scope.getTransactions())
             .mapToObj(i -> new Atom<>("t", i))
@@ -113,6 +122,7 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
     var enc = DirectAbstractHistoryEncoding.instance();
     Formula formula =
         Formula.and(
+            historyFormula.apply(enc),
             noBlindWrites(),
             noEmptyTransactions(),
             transactionsWriteToKeyAtMostOnce(),
@@ -132,10 +142,7 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
       formula =
           formula
               .and(enc.sessionOrder().union(enc.binaryWr()).in(mainCommitOrder))
-              .and(
-                  biswasFormulas
-                      .get(0)
-                      .apply(new DefaultBiswasExecutionK(enc, commitOrderRelations.get(0))));
+              .and(biswasFormulas.get(0).apply(enc, () -> commitOrderRelations.get(0)));
 
       // TODO: Can we use a more strict upper bound for the remaining commit orders?
       for (int i = 1; i < biswasFormulas.size(); i++) {
@@ -154,7 +161,7 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
         formula =
             formula
                 .and(commitOrderSemantics(commitOrder))
-                .and(biswasFormulas.get(i).apply(new DefaultBiswasExecutionK(enc, commitOrder)));
+                .and(biswasFormulas.get(i).apply(enc, () -> commitOrder));
       }
     }
 
@@ -174,7 +181,7 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
             formula.and(
                 ceroneFormulas
                     .get(0)
-                    .apply(new DefaultCeroneExecutionK(enc, mainVisOrder, mainArOrder)));
+                    .apply(enc, CeroneExecutionK.build(mainVisOrder, mainArOrder)));
       }
 
       for (; i < ceroneFormulas.size(); i++) {
@@ -190,19 +197,18 @@ public final class DirectSynthesisEncoder implements SynthesisEncoder {
             formula
                 .and(vis.in(ar))
                 .and(transitive(ar))
+                .and(enc.sessionOrder().in(ar))
                 .and(total(ar, enc.transactions()))
-                .and(ceroneFormulas.get(i).apply(new DefaultCeroneExecutionK(enc, vis, ar)));
+                .and(ceroneFormulas.get(i).apply(enc, CeroneExecutionK.build(vis, ar)));
       }
     }
 
     List<BiswasExecutionK> biswasExecutions =
-        commitOrderRelations.stream()
-            .map(r -> new DefaultBiswasExecutionK(enc, r))
-            .collect(Collectors.toList());
+        commitOrderRelations.stream().map(BiswasExecutionK::build).collect(Collectors.toList());
+
     List<CeroneExecutionK> ceroneExecutions = new ArrayList<>();
     for (int i = 0; i < ceroneFormulas.size(); i++) {
-      ceroneExecutions.add(
-          new DefaultCeroneExecutionK(enc, visRelations.get(i), arRelations.get(i)));
+      ceroneExecutions.add(CeroneExecutionK.build(visRelations.get(i), arRelations.get(i)));
     }
 
     return new Contextualized<>(

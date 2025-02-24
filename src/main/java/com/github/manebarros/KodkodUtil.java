@@ -33,6 +33,24 @@ public final class KodkodUtil {
     return y.eq(x).or(y.product(x).in(rel)).forAll(y.oneOf(set));
   }
 
+  public static Expression max(Expression r, Expression s) {
+    Variable u = Variable.unary("u");
+    Variable v = Variable.unary("v");
+
+    Formula f = v.eq(u).or(v.product(u).in(r)).forAll(v.oneOf(s));
+
+    return f.comprehension(u.oneOf(s));
+  }
+
+  public static Expression min(Expression r, Expression s) {
+    Variable u = Variable.unary("u");
+    Variable v = Variable.unary("v");
+
+    Formula f = v.eq(u).or(u.product(v).in(r)).forAll(v.oneOf(s));
+
+    return f.comprehension(u.oneOf(s));
+  }
+
   public static Formula total(Expression relation, Expression set) {
     Variable x = Variable.unary("x");
     Variable y = Variable.unary("y");

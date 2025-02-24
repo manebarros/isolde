@@ -27,12 +27,11 @@ public class CegisSynthesizer {
     this.biswasCheckingEncoder = biswasCheckingEncoder;
   }
 
-  private <E extends DatabaseExecution> List<ExecutionFormulaK<E>> calculateSearchFormula(
-      SynthesisSpec<E> spec) {
+  private <E> List<ExecutionFormulaK<E>> calculateSearchFormula(SynthesisSpec<E> spec) {
     return calculateSearchFormula(spec.getExistentialConstraints(), spec.getUniversalConstraint());
   }
 
-  private <E extends DatabaseExecution> List<ExecutionFormulaK<E>> calculateSearchFormula(
+  private <E> List<ExecutionFormulaK<E>> calculateSearchFormula(
       List<ExecutionFormulaK<E>> existentialFormulas, ExecutionFormulaK<E> universalFormula) {
     List<ExecutionFormulaK<E>> formulas = new ArrayList<>();
     if (existentialFormulas.isEmpty()) {
@@ -69,7 +68,7 @@ public class CegisSynthesizer {
       return searchProblem.replace(candSol);
     }
 
-    Contextualized<Solution> candBiswasCheckSol =
+    CheckingContextualized<BiswasExecutionK, Solution> candBiswasCheckSol =
         this.biswasCheckingEncoder
             .encode(
                 searchProblem.getHistoryEncoding(),
@@ -77,7 +76,7 @@ public class CegisSynthesizer {
                 biswasSpec.getUniversalConstraint().not())
             .fmap(p -> checker.solve(p.formula(), p.bounds()));
 
-    Contextualized<Solution> candCeroneCheckSol =
+    CheckingContextualized<CeroneExecutionK, Solution> candCeroneCheckSol =
         this.ceroneCheckingEncoder
             .encode(
                 searchProblem.getHistoryEncoding(),
@@ -117,8 +116,8 @@ public class CegisSynthesizer {
 
   private Solution nextCandidate(
       IncrementalSolver solver,
-      Contextualized<Solution> biswasCex,
-      Contextualized<Solution> ceroneCex,
+      CheckingContextualized<BiswasExecutionK, Solution> biswasCex,
+      CheckingContextualized<CeroneExecutionK, Solution> ceroneCex,
       AbstractHistoryK historyEncoding,
       Universe synthesisUniverse,
       ExecutionFormulaK<BiswasExecutionK> biswasUnivFormula,
@@ -129,19 +128,16 @@ public class CegisSynthesizer {
     if (biswasCex.getContent().sat()) {
       TupleSet commitOrderVal =
           new Evaluator(biswasCex.getContent().instance())
-              .evaluate(biswasCex.getBiswasExecutions().get(0).commitOrder());
+              .evaluate(biswasCex.getExecution().commitOrder());
       Relation cexCommitOrderRel = Relation.binary("cexCommitOrder");
       b.boundExactly(cexCommitOrderRel, commitOrderVal);
-      f =
-          f.and(
-              biswasUnivFormula.apply(
-                  new DefaultBiswasExecutionK(historyEncoding, cexCommitOrderRel)));
+      f = f.and(biswasUnivFormula.apply(historyEncoding, () -> cexCommitOrderRel));
     }
 
     if (ceroneCex.getContent().sat()) {
       var eval = new Evaluator(ceroneCex.getContent().instance());
-      TupleSet visVal = eval.evaluate(ceroneCex.getCeroneExecutions().get(0).vis());
-      TupleSet arVal = eval.evaluate(ceroneCex.getCeroneExecutions().get(0).ar());
+      TupleSet visVal = eval.evaluate(ceroneCex.getExecution().vis());
+      TupleSet arVal = eval.evaluate(ceroneCex.getExecution().ar());
       Relation cexVisRel = Relation.binary("cex vis");
       Relation cexArRel = Relation.binary("cex ar");
       b.boundExactly(cexVisRel, visVal);
@@ -149,7 +145,7 @@ public class CegisSynthesizer {
       f =
           f.and(
               ceroneUnivFormula.apply(
-                  new DefaultCeroneExecutionK(historyEncoding, cexVisRel, cexArRel)));
+                  historyEncoding, CeroneExecutionK.build(cexVisRel, cexArRel)));
     }
 
     return solver.solve(f, b);

@@ -10,8 +10,8 @@ import kodkod.ast.Formula;
 import kodkod.ast.Variable;
 
 public final class FormulaUtil {
-  public static final BiswasExecutionFormula equivalentToHistory(History hist) {
-    return (h, co) -> {
+  public static final HistoryFormula equivalentToHistory(History hist) {
+    return h -> {
       Expression transactions = null;
       Variable v0 = Variable.unary("v0");
       Expression writes = h.initialTransaction().product(h.keys()).product(v0);

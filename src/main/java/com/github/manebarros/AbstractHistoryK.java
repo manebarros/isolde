@@ -154,4 +154,8 @@ public interface AbstractHistoryK {
         .comprehension(t2.oneOf(transactions()).and(t1.oneOf(transactions())))
         .closure();
   }
+
+  default Expression initialValue(Expression key) {
+    return key.join(initialTransaction().join(finalWrites()));
+  }
 }

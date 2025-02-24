@@ -2,6 +2,7 @@ package com.github.manebarros;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -18,34 +19,44 @@ public interface SynthesisEncoderTest {
     return new Scope(6, 6, 6, 6);
   }
 
-  default void assertSat(BiswasExecutionFormula formula) {
-    assertSat(Collections.singletonList(formula));
+  default void assertSatCerone(ExecutionFormulaK<CeroneExecutionK> formula) {
+    assertSatCerone(Collections.singletonList(formula));
   }
 
-  default void assertSat(List<BiswasExecutionFormula> formulas) {
+  default void assertSatCerone(List<ExecutionFormulaK<CeroneExecutionK>> formulas) {
     Solution sol =
         this.encoder()
-            .encode(scope(), formulas)
+            .encode(scope(), new ArrayList<>(), formulas)
             .fmap(p -> new Solver().solve(p.formula(), p.bounds()))
             .getContent();
 
     assertTrue(sol.sat());
   }
 
-  default void assertUnsat(List<BiswasExecutionFormula> formulas) {
+  default void assertSatCeroneOnExtraExecution(ExecutionFormulaK<CeroneExecutionK> formula) {
     Solution sol =
         this.encoder()
-            .encode(scope(), formulas)
+            .encode(scope(), new ArrayList<>(), Arrays.asList(ExecutionFormulaK::trivial, formula))
+            .fmap(p -> new Solver().solve(p.formula(), p.bounds()))
+            .getContent();
+
+    assertTrue(sol.sat());
+  }
+
+  default void assertUnsatCerone(List<ExecutionFormulaK<CeroneExecutionK>> formulas) {
+    Solution sol =
+        this.encoder()
+            .encode(scope(), new ArrayList<>(), formulas)
             .fmap(p -> new Solver().solve(p.formula(), p.bounds()))
             .getContent();
 
     assertTrue(sol.unsat());
   }
 
-  default void assertFact(BiswasExecutionFormula fact) {
+  default void assertFactCerone(ExecutionFormulaK<CeroneExecutionK> fact) {
     Solution sol =
         this.encoder()
-            .encode(scope(), fact.not())
+            .encode(scope(), new ArrayList<>(), Collections.singletonList(fact.not()))
             .fmap(p -> new Solver().solve(p.formula(), p.bounds()))
             .getContent();
 
@@ -56,10 +67,62 @@ public interface SynthesisEncoderTest {
     assertTrue(sol.unsat());
   }
 
-  default void assertFactOnExtraCommitOrder(BiswasExecutionFormula fact) {
+  default void assertFactCeroneOnExtraExecution(ExecutionFormulaK<CeroneExecutionK> fact) {
     Solution sol =
         this.encoder()
-            .encode(scope(), Arrays.asList((h, co) -> Formula.TRUE, fact.not()))
+            .encode(scope(), new ArrayList<>(), Arrays.asList((h, co) -> Formula.TRUE, fact.not()))
+            .fmap(p -> new Solver().solve(p.formula(), p.bounds()))
+            .getContent();
+
+    if (sol.sat()) {
+      System.out.println(sol.instance());
+    }
+
+    assertTrue(sol.unsat());
+  }
+
+  default void assertSat(ExecutionFormulaK<BiswasExecutionK> formula) {
+    assertSat(Collections.singletonList(formula));
+  }
+
+  default void assertSat(List<ExecutionFormulaK<BiswasExecutionK>> formulas) {
+    Solution sol =
+        this.encoder()
+            .encode(scope(), formulas, new ArrayList<>())
+            .fmap(p -> new Solver().solve(p.formula(), p.bounds()))
+            .getContent();
+
+    assertTrue(sol.sat());
+  }
+
+  default void assertUnsat(List<ExecutionFormulaK<BiswasExecutionK>> formulas) {
+    Solution sol =
+        this.encoder()
+            .encode(scope(), formulas, new ArrayList<>())
+            .fmap(p -> new Solver().solve(p.formula(), p.bounds()))
+            .getContent();
+
+    assertTrue(sol.unsat());
+  }
+
+  default void assertFact(ExecutionFormulaK<BiswasExecutionK> fact) {
+    Solution sol =
+        this.encoder()
+            .encode(scope(), Collections.singletonList(fact.not()), new ArrayList<>())
+            .fmap(p -> new Solver().solve(p.formula(), p.bounds()))
+            .getContent();
+
+    if (sol.sat()) {
+      System.out.println(sol.instance());
+    }
+
+    assertTrue(sol.unsat());
+  }
+
+  default void assertFactOnExtraCommitOrder(ExecutionFormulaK<BiswasExecutionK> fact) {
+    Solution sol =
+        this.encoder()
+            .encode(scope(), Arrays.asList((h, co) -> Formula.TRUE, fact.not()), new ArrayList<>())
             .fmap(p -> new Solver().solve(p.formula(), p.bounds()))
             .getContent();
 
@@ -161,22 +224,24 @@ public interface SynthesisEncoderTest {
 
   @Test
   default void commitOrderExtendsSessionOrderPlusWr() {
-    assertFact((h, co) -> h.sessionOrder().union(h.binaryWr()).in(co));
+    assertFact((h, co) -> h.sessionOrder().union(h.binaryWr()).in(co.commitOrder()));
   }
 
   @Test
   default void extraCommitOrdersExtendsSessionOrderPlusWr() {
-    assertFactOnExtraCommitOrder((h, co) -> h.sessionOrder().union(h.binaryWr()).in(co));
+    assertFactOnExtraCommitOrder(
+        (h, co) -> h.sessionOrder().union(h.binaryWr()).in(co.commitOrder()));
   }
 
   @Test
   default void commitOrderTotallyOrdersTransactions() {
-    assertFact((h, co) -> KodkodUtil.strictTotalOrder(co, h.transactions()));
+    assertFact((h, co) -> KodkodUtil.strictTotalOrder(co.commitOrder(), h.transactions()));
   }
 
   @Test
   default void initialTxnIsFirstInCommitOrder() {
-    assertFact((h, co) -> KodkodUtil.min(h.initialTransaction(), co, h.transactions()));
+    assertFact(
+        (h, co) -> KodkodUtil.min(h.initialTransaction(), co.commitOrder(), h.transactions()));
   }
 
   @Test
@@ -234,5 +299,42 @@ public interface SynthesisEncoderTest {
   @Test
   default void itIsImpossibleToSynthesizeTriviallyUnsatFormula() {
     assertUnsat(Arrays.asList((h, co) -> Formula.FALSE));
+  }
+
+  @Test
+  default void visIsInAr() {
+    assertFactCerone((h, e) -> e.vis().in(e.ar()));
+  }
+
+  @Test
+  default void arTotallyOrdersTransactions() {
+    assertFactCerone((h, e) -> KodkodUtil.strictTotalOrder(e.ar(), h.transactions()));
+  }
+
+  @Test
+  default void visIsInArInExtraExecution() {
+    assertFactCeroneOnExtraExecution((h, e) -> e.vis().in(e.ar()));
+  }
+
+  @Test
+  default void arTotallyOrdersTransactionsInExtraExecution() {
+    assertFactCeroneOnExtraExecution(
+        (h, e) -> KodkodUtil.strictTotalOrder(e.ar(), h.transactions()));
+  }
+
+  @Test
+  default void soMightNotBeInVis() {
+    assertSatCerone((h, e) -> h.sessionOrder().in(e.vis()).not());
+    assertSatCeroneOnExtraExecution((h, e) -> h.sessionOrder().in(e.vis()).not());
+  }
+
+  @Test
+  default void soInAr() {
+    assertFactCerone((h, e) -> h.sessionOrder().in(e.ar()));
+  }
+
+  @Test
+  default void soInArInExtraExecution() {
+    assertFactCeroneOnExtraExecution((h, e) -> h.sessionOrder().in(e.ar()));
   }
 }

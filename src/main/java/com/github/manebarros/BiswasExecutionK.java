@@ -2,6 +2,11 @@ package com.github.manebarros;
 
 import kodkod.ast.Expression;
 
-public interface BiswasExecutionK extends DatabaseExecution {
+@FunctionalInterface
+public interface BiswasExecutionK {
   Expression commitOrder();
+
+  static BiswasExecutionK build(Expression commitOrder) {
+    return () -> commitOrder;
+  }
 }

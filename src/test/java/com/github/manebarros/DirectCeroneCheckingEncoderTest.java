@@ -16,11 +16,11 @@ import kodkod.instance.TupleSet;
 import kodkod.instance.Universe;
 import org.junit.jupiter.api.Test;
 
-public class DirectCheckingEncoderTest implements CheckingEncoderTest {
+public class DirectCeroneCheckingEncoderTest implements CeroneCheckingEncoderTest {
 
   @Override
-  public CheckingEncoder encoder() {
-    return DirectCheckingEncoder.instance();
+  public CeroneCheckingEncoder encoder() {
+    return CeroneCheckingEncoder.instance();
   }
 
   @Test
@@ -30,11 +30,10 @@ public class DirectCheckingEncoderTest implements CheckingEncoderTest {
             Arrays.asList(
                 new Session(new Transaction(1, Arrays.asList(readOf(0, 0), writeOf(0, 1))))));
 
-    Bounds b =
-        DirectCheckingEncoder.instance()
-            .encode(hist, (h, co) -> Formula.TRUE)
-            .getContent()
-            .bounds();
+    Relation arAux = Relation.binary("Ar's transitive reduction");
+    Relation vis = Relation.binary("vis");
+
+    Bounds b = encoder().encode(hist, (h, co) -> Formula.TRUE, arAux, vis).getContent().bounds();
 
     Atom<Integer> initTxnAtom = new Atom<>("t", 0);
     Atom<Integer> txnAtom = new Atom<>("t", 1);
@@ -66,11 +65,13 @@ public class DirectCheckingEncoderTest implements CheckingEncoderTest {
       assertEquals(expectedTupleSets.get(rel), b.upperBound(rel));
     }
 
-    Relation coAuxRel =
-        b.relations().stream().filter(r -> !expectedTupleSets.containsKey(r)).findFirst().get();
-    TupleSet coAuxUpperBound = f.setOf(f.tuple(initTxnAtom, txnAtom));
-    assertEquals(f.noneOf(2), b.lowerBound(coAuxRel));
-    assertEquals(coAuxUpperBound, b.upperBound(coAuxRel));
+    TupleSet arAuxUpperBound = f.setOf(f.tuple(initTxnAtom, txnAtom));
+    assertEquals(f.noneOf(2), b.lowerBound(arAux));
+    assertEquals(arAuxUpperBound, b.upperBound(arAux));
+
+    TupleSet visExactBound = f.setOf(f.tuple(initTxnAtom, txnAtom));
+    assertEquals(visExactBound, b.lowerBound(vis));
+    assertEquals(visExactBound, b.upperBound(vis));
   }
 
   @Test
@@ -81,11 +82,9 @@ public class DirectCheckingEncoderTest implements CheckingEncoderTest {
                 new Session(new Transaction(1, Arrays.asList(readOf(0, 0), writeOf(0, 1)))),
                 new Session(new Transaction(2, Arrays.asList(readOf(0, 1), writeOf(0, 2))))));
 
-    Bounds b =
-        DirectCheckingEncoder.instance()
-            .encode(hist, (h, co) -> Formula.TRUE)
-            .getContent()
-            .bounds();
+    Relation arAux = Relation.binary("Ar's transitive reduction");
+    Relation vis = Relation.binary("vis");
+    Bounds b = encoder().encode(hist, (h, co) -> Formula.TRUE, arAux, vis).getContent().bounds();
 
     List<Atom<Integer>> txnAtoms =
         Arrays.asList(new Atom<>("t", 0), new Atom<>("t", 1), new Atom<>("t", 2));
@@ -126,15 +125,25 @@ public class DirectCheckingEncoderTest implements CheckingEncoderTest {
       assertEquals(expectedTupleSets.get(rel), b.upperBound(rel));
     }
 
-    Relation coAuxRel =
-        b.relations().stream().filter(r -> !expectedTupleSets.containsKey(r)).findFirst().get();
-    TupleSet coAuxUpperBound =
+    TupleSet arAuxUpperBound =
         f.setOf(
             f.tuple(txnAtoms.get(0), txnAtoms.get(1)),
             f.tuple(txnAtoms.get(0), txnAtoms.get(2)),
             f.tuple(txnAtoms.get(1), txnAtoms.get(2)),
             f.tuple(txnAtoms.get(2), txnAtoms.get(1)));
-    assertEquals(f.noneOf(2), b.lowerBound(coAuxRel));
-    assertEquals(coAuxUpperBound, b.upperBound(coAuxRel));
+    assertEquals(f.noneOf(2), b.lowerBound(arAux));
+    assertEquals(arAuxUpperBound, b.upperBound(arAux));
+
+    TupleSet visExpectedLowerBound =
+        f.setOf(
+            f.tuple(txnAtoms.get(0), txnAtoms.get(1)), f.tuple(txnAtoms.get(0), txnAtoms.get(2)));
+    TupleSet visExpectedUpperBound =
+        f.setOf(
+            f.tuple(txnAtoms.get(0), txnAtoms.get(1)),
+            f.tuple(txnAtoms.get(0), txnAtoms.get(2)),
+            f.tuple(txnAtoms.get(1), txnAtoms.get(2)),
+            f.tuple(txnAtoms.get(2), txnAtoms.get(1)));
+    assertEquals(visExpectedLowerBound, b.lowerBound(vis));
+    assertEquals(visExpectedUpperBound, b.upperBound(vis));
   }
 }

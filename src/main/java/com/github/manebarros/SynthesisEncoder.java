@@ -1,11 +1,15 @@
 package com.github.manebarros;
 
-
 import java.util.Collections;
 import java.util.List;
 
-@FunctionalInterface
 public interface SynthesisEncoder {
+  Contextualized<KodkodProblem> encode(
+      Scope scope,
+      HistoryFormula historyFormula,
+      List<ExecutionFormulaK<BiswasExecutionK>> biswasFormulas,
+      List<ExecutionFormulaK<CeroneExecutionK>> ceroneFormulas);
+
   Contextualized<KodkodProblem> encode(
       Scope scope,
       List<ExecutionFormulaK<BiswasExecutionK>> biswasFormulas,
