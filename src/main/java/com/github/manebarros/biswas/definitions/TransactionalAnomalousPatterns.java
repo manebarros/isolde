@@ -1,0 +1,85 @@
+package com.github.manebarros.biswas.definitions;
+
+import com.github.manebarros.biswas.BiswasExecution;
+import kodkod.ast.Formula;
+import kodkod.ast.Variable;
+
+public final class TransactionalAnomalousPatterns {
+  public static Formula k(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+    Variable y = Variable.unary("y");
+
+    return Formula.and(
+            x.eq(y).not(),
+            t1.eq(t2).not(),
+            e.history().wr(t1, x, t3),
+            e.history().wr(t2, y, t3),
+            e.history().causallyOrdered(t1, t2))
+        .forSome(
+            x.oneOf(e.history().keys())
+                .and(y.oneOf(e.history().keys()))
+                .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));
+  }
+
+  public static Formula l(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+    Variable y = Variable.unary("y");
+
+    return Formula.and(
+            x.eq(y).not(),
+            t1.eq(t2).not(),
+            e.history().wr(t2, y, t3),
+            e.history().wr(t1, x, t3),
+            t1.product(t2).in(e.co()))
+        .forSome(
+            x.oneOf(e.history().keys())
+                .and(y.oneOf(e.history().keys()))
+                .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));
+  }
+
+  public static Formula m(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return Formula.and(
+            t1.eq(t2).not(),
+            e.history().wr(t1, x, t3),
+            e.history().causallyOrdered(t1, t2),
+            e.history().causallyOrdered(t2, t3))
+        .forSome(
+            x.oneOf(e.history().keys())
+                .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t3.oneOf(e.history().txnThatReadAnyOf(x).difference(t1.union(t2)))));
+  }
+
+  public static Formula n(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return Formula.and(
+            t1.eq(t2).not(),
+            e.history().wr(t1, x, t3),
+            t2.in(t1.join(e.co())),
+            e.history().causallyOrdered(t2, t3))
+        .forSome(
+            x.oneOf(e.history().keys())
+                .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t3.oneOf(e.history().txnThatReadAnyOf(x).difference(t1.union(t2)))));
+  }
+}
