@@ -29,6 +29,7 @@ public class BiswasSynthesisModule implements SynthesisModule<BiswasExecution> {
     this.history = history;
     this.formulas = formulas;
     this.historyAtoms = historyAtoms;
+    this.commitOrders = new ArrayList<>(formulas.size());
     for (int i = 0; i < formulas.size(); i++) {
       Relation commitOrder = Relation.binary("co#" + i);
       commitOrders.add(commitOrder);

@@ -71,7 +71,7 @@ public class FolSynthesisEncoder {
     TupleSet txnTotalOrderTs = f.noneOf(2);
     // Traverse the txn indexes from the initial txn (i=0) to the penultimate txn
     for (int i = 0; i < historyAtoms.getTxnAtoms().size() - 1; i++) {
-      for (int j = i + 1; j < historyAtoms.getTxnAtoms().size() - 1; j++) {
+      for (int j = i + 1; j < historyAtoms.getTxnAtoms().size(); j++) {
         txnTotalOrderTs.add(
             f.tuple(historyAtoms.getTxnAtoms().get(i), historyAtoms.getTxnAtoms().get(j)));
       }
@@ -79,9 +79,12 @@ public class FolSynthesisEncoder {
 
     Formula formula =
         this.histEncoder.encode(this.historyAtoms, this.historyFormula, txnTotalOrderTs, b);
-    formula = formula.and(this.extenders.get(0).extend(b, txnTotalOrderTs));
-    for (int i = 1; i < this.extenders.size(); i++) {
-      formula = formula.and(this.extenders.get(i).extend(b));
+    if (!this.extenders.isEmpty()) {
+      formula = formula.and(this.extenders.get(0).extend(b, txnTotalOrderTs));
+
+      for (int i = 1; i < this.extenders.size(); i++) {
+        formula = formula.and(this.extenders.get(i).extend(b));
+      }
     }
 
     return new KodkodProblem(formula, b);
@@ -100,7 +103,7 @@ public class FolSynthesisEncoder {
     TupleSet txnTotalOrderTs = f.noneOf(2);
     // Traverse the txn indexes from the initial txn (i=0) to the penultimate txn
     for (int i = 0; i < historyAtoms.getTxnAtoms().size() - 1; i++) {
-      for (int j = i + 1; j < historyAtoms.getTxnAtoms().size() - 1; j++) {
+      for (int j = i + 1; j < historyAtoms.getTxnAtoms().size(); j++) {
         txnTotalOrderTs.add(
             f.tuple(historyAtoms.getTxnAtoms().get(i), historyAtoms.getTxnAtoms().get(j)));
       }

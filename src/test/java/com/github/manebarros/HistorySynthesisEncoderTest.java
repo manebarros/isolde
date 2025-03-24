@@ -132,4 +132,51 @@ public interface HistorySynthesisEncoderTest {
                 .or(t.in(h.initialTransaction().join(h.sessionOrder())))
                 .forAll(t.oneOf(h.transactions())));
   }
+
+  @Test
+  default void eachNormalTransactionBelongsToOneSession() {
+    Variable t = Variable.unary("t");
+    assertFact(
+        h ->
+            t.join(h.txn_session())
+                .one()
+                .and(t.join(h.txn_session()).in(h.sessions()))
+                .forAll(t.oneOf(h.normalTxns())));
+  }
+
+  @Test
+  default void initialTxnBelongsToNoSession() {
+    assertFact(h -> h.initialTransaction().join(h.txn_session()).no());
+  }
+
+  @Test
+  default void eachSessionTotallyOrdersItsTransactions() {
+    Variable s = Variable.unary("s");
+    assertFact(
+        h ->
+            KodkodUtil.strictTotalOrder(h.sessionOrder(), h.txn_session().join(s))
+                .forAll(s.oneOf(h.sessions())));
+  }
+
+  @Test
+  default void sessionOrderOnlyRelatesTxnFromSameSession() {
+    Variable t = Variable.unary("t");
+    Variable s = Variable.unary("s");
+    assertFact(
+        h ->
+            h.sessionOrdered(t, s)
+                .implies(h.session(t).eq(h.session(s)))
+                .forAll(t.oneOf(h.normalTxns()).and(s.oneOf(h.normalTxns()))));
+  }
+
+  @Test
+  default void noEmptyTransactions() {
+    assertFact(
+        h ->
+            h.finalWrites()
+                .union(h.externalReads())
+                .join(h.values())
+                .join(h.keys())
+                .eq(h.transactions()));
+  }
 }

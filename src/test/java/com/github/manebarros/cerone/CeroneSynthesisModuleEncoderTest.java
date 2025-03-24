@@ -1,6 +1,6 @@
-package com.github.manebarros;
+package com.github.manebarros.cerone;
 
-import com.github.manebarros.cerone.CeroneExecution;
+import com.github.manebarros.SynthesisModuleEncoderTest;
 import com.github.manebarros.core.ExecutionFormula;
 import com.github.manebarros.core.SynthesisModuleEncoder;
 import com.github.manebarros.kodkod.KodkodUtil;
@@ -48,5 +48,4 @@ public interface CeroneSynthesisModuleEncoderTest
     assertSat(f);
     assertSatWoTotalOrder(f);
   }
-
 }

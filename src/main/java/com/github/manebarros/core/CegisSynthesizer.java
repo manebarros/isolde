@@ -50,8 +50,7 @@ public class CegisSynthesizer {
     this.checkingEncoders.add(
         new CegisVerifier<>(checkingEncoder, counterexampleEncoder, spec.universalFormula()));
     SynthesisModule<E> module =
-        synthesisEncoder.encode(
-            calculateSearchFormula(spec), this.synthesisEncoder.getHistoryAtoms());
+        synthesisEncoder.encode(this.synthesisEncoder, calculateSearchFormula(spec));
     this.synthesisEncoder.register(module);
     return new CegisModule<E>(module.executions(), checkingEncoder.execution());
   }
