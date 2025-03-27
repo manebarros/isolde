@@ -28,8 +28,8 @@ public class CeroneSynthesisModule implements SynthesisModule<CeroneExecution> {
 
   public CeroneSynthesisModule(
       AbstractHistoryK history,
-      List<ExecutionFormula<CeroneExecution>> formulas,
-      HistoryAtoms historyAtoms) {
+      HistoryAtoms historyAtoms,
+      List<ExecutionFormula<CeroneExecution>> formulas) {
     this.history = history;
     this.formulas = formulas;
     this.historyAtoms = historyAtoms;

@@ -6,7 +6,6 @@ public class DefaultCeroneSynthesisModuleEncoderTest implements CeroneSynthesisM
 
   @Override
   public SynthesisModuleEncoder<CeroneExecution> encoder() {
-    return (historyEncoding, historyAtoms, formulas) ->
-        new CeroneSynthesisModule(historyEncoding, formulas, historyAtoms);
+    return CeroneSynthesisModule::new;
   }
 }
