@@ -56,6 +56,7 @@ public final class DefaultHistorySynthesisEncoder implements HistorySynthesisEnc
 
     return Formula.and(
         histFormula.resolve(this.encoding()),
+        KodkodUtil.acyclic(encoding().binaryWr().union(encoding().sessionOrder())),
         noBlindWrites(),
         noEmptyTransactions(),
         transactionsWriteToKeyAtMostOnce(),
