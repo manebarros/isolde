@@ -16,13 +16,6 @@ public class FolSynthesisEncoder {
   private final HistorySynthesisEncoder histEncoder;
   private final List<SynthesisProblemExtender> extenders;
 
-  public FolSynthesisEncoder(HistorySynthesisEncoder histEncoder, Scope scope) {
-    this.histEncoder = histEncoder;
-    this.extenders = new ArrayList<>();
-    this.historyAtoms = new HistoryAtoms(scope);
-    this.historyFormula = h -> Formula.TRUE;
-  }
-
   public FolSynthesisEncoder(
       HistorySynthesisEncoder histEncoder, Scope scope, HistoryFormula historyFormula) {
     this.histEncoder = histEncoder;
@@ -31,11 +24,16 @@ public class FolSynthesisEncoder {
     this.historyFormula = historyFormula;
   }
 
+  public FolSynthesisEncoder(Scope scope) {
+    this(scope, h -> Formula.TRUE);
+  }
+
+  public FolSynthesisEncoder(HistorySynthesisEncoder histEncoder, Scope scope) {
+    this(histEncoder, scope, h -> Formula.TRUE);
+  }
+
   public FolSynthesisEncoder(Scope scope, HistoryFormula historyFormula) {
-    this.historyAtoms = new HistoryAtoms(scope);
-    this.historyFormula = historyFormula;
-    this.extenders = new ArrayList<>();
-    this.histEncoder = new DefaultHistorySynthesisEncoder();
+    this(new DefaultHistorySynthesisEncoder(), scope, historyFormula);
   }
 
   public HistoryAtoms getHistoryAtoms() {

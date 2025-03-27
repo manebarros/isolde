@@ -1,12 +1,12 @@
 package com.github.manebarros.history;
 
-import java.util.Collections;
+import java.util.Arrays;
 import java.util.List;
 
 public record Session(List<Transaction> transactions) {
 
-  public Session(Transaction t) {
-    this(Collections.singletonList(t));
+  public Session(Transaction... ts) {
+    this(Arrays.asList(ts));
   }
 
   @Override

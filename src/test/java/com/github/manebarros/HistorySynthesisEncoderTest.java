@@ -6,6 +6,7 @@ import com.github.manebarros.core.FolSynthesisEncoder;
 import com.github.manebarros.core.HistoryFormula;
 import com.github.manebarros.core.HistorySynthesisEncoder;
 import com.github.manebarros.core.Scope;
+import com.github.manebarros.history.History;
 import com.github.manebarros.kodkod.KodkodUtil;
 import kodkod.ast.Variable;
 import kodkod.engine.Solution;
@@ -38,7 +39,7 @@ public interface HistorySynthesisEncoderTest {
         new FolSynthesisEncoder(encoder(), scope(), fact.not()).encode().solve(new Solver());
 
     if (sol.sat()) {
-      System.out.println(sol.instance());
+      System.out.println(new History(this.encoder().encoding(), sol.instance()));
     }
 
     assertTrue(sol.unsat());

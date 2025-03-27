@@ -1,12 +1,11 @@
 package com.github.manebarros.history;
 
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.List;
-
 import com.github.manebarros.core.AbstractHistoryK;
 import com.github.manebarros.core.HistoryIntermediateRepresentation;
-
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 import kodkod.instance.Instance;
 
 public class History {
@@ -14,6 +13,12 @@ public class History {
 
   public History(Session session) {
     this.sessions = Collections.singletonList(session);
+  }
+
+  public History(Session session, Session... s) {
+    this.sessions = new ArrayList<>();
+    this.sessions.add(session);
+    this.sessions.addAll(Arrays.asList(s));
   }
 
   public History(List<Session> sessions) {

@@ -1,5 +1,6 @@
 package com.github.manebarros.core;
 
+import com.github.manebarros.history.History;
 import com.github.manebarros.kodkod.KodkodProblem;
 import java.util.ArrayList;
 import java.util.LinkedList;
@@ -15,6 +16,11 @@ import kodkod.instance.Instance;
 public class CegisSynthesizer {
   private final FolSynthesisEncoder synthesisEncoder;
   private final List<CegisVerifier<?>> checkingEncoders;
+
+  public CegisSynthesizer(Scope scope) {
+    this.synthesisEncoder = new FolSynthesisEncoder(scope);
+    this.checkingEncoders = new ArrayList<>();
+  }
 
   public CegisSynthesizer(Scope scope, HistoryFormula historyFormula) {
     this.synthesisEncoder = new FolSynthesisEncoder(scope, historyFormula);
@@ -63,7 +69,8 @@ public class CegisSynthesizer {
     Optional<HistoryFormula> guide(
         AbstractHistoryK history, Instance instance, Bounds bounds, Solver solver) {
       Solution candCheckSol =
-          checkingEncoder.encode(history, instance, this.universalFormula.not()).solve(solver);
+          checkingEncoder.encode(history, instance, universalFormula.not()).solve(solver);
+
       if (candCheckSol.unsat()) {
         // No counterexample
         return Optional.empty();
@@ -89,6 +96,13 @@ public class CegisSynthesizer {
     return r == null ? Optional.empty() : Optional.of(r);
   }
 
+  public Optional<History> synthesizeH() {
+    Solution r = synthesize().getFirst();
+    return r.unsat()
+        ? Optional.empty()
+        : Optional.of(new History(this.synthesisEncoder.getHistoryEncoding(), r.instance()));
+  }
+
   public List<Solution> synthesize() {
     List<Solution> candidates = new LinkedList<>();
     KodkodProblem searchProblem = this.synthesisEncoder.encode();
@@ -97,31 +111,30 @@ public class CegisSynthesizer {
     Solver checker = new Solver();
 
     Solution candSol = synthesizer.solve(searchProblem.formula(), searchProblem.bounds());
-
     candidates.addFirst(candSol);
 
     if (candSol.unsat()) {
       return candidates;
     }
 
-    Optional<HistoryFormula> of;
     Bounds newBounds = new Bounds(searchProblem.bounds().universe());
-    while ((of =
-                guide(
-                    this.synthesisEncoder.getHistoryEncoding(),
-                    candSol.instance(),
-                    newBounds,
-                    checker))
-            .isPresent()
-        && (candSol =
-                synthesizer.solve(
-                    of.get().resolve(this.synthesisEncoder.getHistoryEncoding()), newBounds))
-            .sat()) {
-      candidates.addFirst(candSol);
-    }
-    if (candSol.unsat()) {
-      candidates.addFirst(candSol);
+    Optional<HistoryFormula> feedback =
+        guide(historyEncoding(), candSol.instance(), newBounds, checker);
+    while (feedback.isPresent()) {
+      candSol = synthesizer.solve(feedback.get().resolve(historyEncoding()), newBounds);
+      candidates.addFirst(candSol); // Register new candidate
+      if (candSol.unsat()) {
+        // Stop if problem is UNSAT
+        break;
+      }
+      // Otherwise, verify the new candidate
+      newBounds = new Bounds(searchProblem.bounds().universe());
+      feedback = guide(historyEncoding(), candSol.instance(), newBounds, checker);
     }
     return candidates;
+  }
+
+  private AbstractHistoryK historyEncoding() {
+    return this.synthesisEncoder.getHistoryEncoding();
   }
 }
