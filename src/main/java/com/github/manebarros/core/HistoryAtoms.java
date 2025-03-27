@@ -43,7 +43,7 @@ public class HistoryAtoms {
   }
 
   public List<Atom<Integer>> normalValues() {
-    return txnAtoms.subList(1, valAtoms.size());
+    return valAtoms.subList(1, valAtoms.size());
   }
 
   public List<Object> atoms() {
