@@ -1,8 +1,10 @@
 package com.github.manebarros.biswas.definitions;
 
 import com.github.manebarros.biswas.BiswasExecution;
+import com.github.manebarros.core.ExecutionFormula;
 import com.github.manebarros.core.HistoryExpression;
 import com.github.manebarros.core.HistoryFormula;
+import com.github.manebarros.kodkod.KodkodUtil;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
 
@@ -126,5 +128,33 @@ public final class TransactionalAnomalousPatterns {
 
   public static HistoryFormula Causal() {
     return h -> n(new BiswasExecution(h, h.mandatoryCommitOrderEdgesCC())).not();
+  }
+
+  public static HistoryFormula CausalSimpler() {
+    return h -> KodkodUtil.acyclic(h.mandatoryCommitOrderEdgesCC());
+  }
+
+  public static HistoryFormula HistBasedRa() {
+    return h -> KodkodUtil.acyclic(h.mandatoryCommitOrderEdgesRA());
+  }
+
+  public static ExecutionFormula<BiswasExecution> raAnomaly() {
+    return e -> {
+      Variable t1 = Variable.unary("t1");
+      Variable t2 = Variable.unary("t2");
+      Variable t3 = Variable.unary("t3");
+      Variable x = Variable.unary("x");
+
+      return Formula.and(
+              t1.eq(t2).not(),
+              e.history().wr(t1, x, t3),
+              t2.in(t1.join(e.co())),
+              t3.in(t2.join(e.history().sessionOrder().union(e.history().binaryWr()))))
+          .forSome(
+              x.oneOf(e.history().keys())
+                  .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                  .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                  .and(t3.oneOf(e.history().txnThatReadAnyOf(x).difference(t1.union(t2)))));
+    };
   }
 }

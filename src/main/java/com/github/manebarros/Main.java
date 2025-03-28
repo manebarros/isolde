@@ -2,12 +2,15 @@ package com.github.manebarros;
 
 import com.github.manebarros.biswas.BiswasExecution;
 import com.github.manebarros.biswas.definitions.AxiomaticDefinitions;
-import com.github.manebarros.biswas.definitions.TransactionalAnomalousPatterns;
+import com.github.manebarros.biswas.definitions.HistoryOnlyIsolationCriterion;
+import com.github.manebarros.cerone.CeroneDefinitions;
+import com.github.manebarros.cerone.CeroneExecution;
 import com.github.manebarros.core.ExecutionFormula;
 import com.github.manebarros.core.Scope;
 import com.github.manebarros.core.SynthesisSpec;
 import com.github.manebarros.history.History;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -52,6 +55,30 @@ public class Main {
     }
   }
 
+  private static ComparisonResult compareBiswasCerone(
+      Scope scope,
+      String a_name,
+      ExecutionFormula<CeroneExecution> a_def,
+      String b_name,
+      ExecutionFormula<BiswasExecution> b_def) {
+    Synthesizer synth = new Synthesizer(scope);
+    synth.registerCerone(new SynthesisSpec<>(a_def));
+    synth.registerBiswas(SynthesisSpec.fromUniversal(b_def.not()));
+    Optional<History> a_not_b = synth.synthesize();
+
+    synth = new Synthesizer(scope);
+    synth.registerBiswas(new SynthesisSpec<>(b_def));
+    synth.registerCerone(SynthesisSpec.fromUniversal(a_def.not()));
+    Optional<History> b_not_a = synth.synthesize();
+
+    return new ComparisonResult(a_name, b_name, a_not_b, b_not_a);
+  }
+
+  private static record Definition(
+      String name,
+      ExecutionFormula<CeroneExecution> ceroneDefinition,
+      ExecutionFormula<BiswasExecution> biswasDefinition) {}
+
   private static ComparisonResult compare(
       Scope scope,
       String a_name,
@@ -69,29 +96,84 @@ public class Main {
     return new ComparisonResult(a_name, b_name, a_not_b, b_not_a);
   }
 
-  public static void main(String[] args) {
+  private static void compareAcrossFrameworks() {
+    List<Definition> definitions =
+        Arrays.asList(
+            new Definition("Read Atomic", CeroneDefinitions.RA, AxiomaticDefinitions::ReadAtomic),
+            new Definition(
+                "Update Atomic",
+                CeroneDefinitions.UA,
+                e -> AxiomaticDefinitions.ReadAtomic(e).and(AxiomaticDefinitions.Conflict(e))),
+            new Definition(
+                "Causal Consistency", CeroneDefinitions.CC, AxiomaticDefinitions::Causal),
+            new Definition(
+                "Prefix Consistency", CeroneDefinitions.PC, AxiomaticDefinitions::Prefix),
+            new Definition(
+                "Parallel Snapshot Isolation",
+                CeroneDefinitions.PSI,
+                e -> AxiomaticDefinitions.Causal(e).and(AxiomaticDefinitions.Conflict(e))),
+            new Definition(
+                "Snapshot Isolation",
+                CeroneDefinitions.SI,
+                e -> AxiomaticDefinitions.Prefix(e).and(AxiomaticDefinitions.Conflict(e))),
+            new Definition(
+                "Serializability", CeroneDefinitions.SER, AxiomaticDefinitions::Serializability));
+
+    for (var def : definitions) {
+      System.out.print(
+          compareBiswasCerone(
+              new Scope(5),
+              "Cerone's " + def.name(),
+              def.ceroneDefinition(),
+              "Biswas' " + def.name(),
+              def.biswasDefinition()));
+    }
+  }
+
+  public static void compareBiswasDefinitions() {
     Map<String, ExecutionFormula<BiswasExecution>> definitions =
         Map.of(
-            "axiomatic RA",
-            AxiomaticDefinitions::ReadAtomic,
+            // "axiomatic RA",
+            // AxiomaticDefinitions::ReadAtomic,
+            // "my history-based RA",
+            // HistoryOnlyIsolationCriterion.ReadAtomic.historyOnlySpec(),
+            // "my RA",
+            // HistoryOnlyIsolationCriterion.ReadAtomic.spec(),
             "axiomatic CC",
             AxiomaticDefinitions::Causal,
-            "TAP-based RA",
-            e -> TransactionalAnomalousPatterns.l(e).not(),
-            "TAP-based CC",
-            e -> TransactionalAnomalousPatterns.n(e).not());
+            "my history-based CC",
+            HistoryOnlyIsolationCriterion.Causal.historyOnlySpec(),
+            "my CC",
+            HistoryOnlyIsolationCriterion.Causal.spec());
+    // "history-based RA",
+    // e -> TransactionalAnomalousPatterns.HistBasedRa().resolve(e.history()),
+    // "My custom TAP-based RA",
+    // TransactionalAnomalousPatterns.raAnomaly().not());
+    // "axiomatic CC",
+    // AxiomaticDefinitions::Causal,
+    // "simpler history-based CC",
+    // e -> TransactionalAnomalousPatterns.CausalSimpler().resolve(e.history()),
+    // "TAP-based RA",
+    // e -> TransactionalAnomalousPatterns.l(e).not(),
+    // "TAP-based CC",
+    // e -> TransactionalAnomalousPatterns.n(e).not(),
+    // "History-based CC",
+    // e -> TransactionalAnomalousPatterns.Causal().resolve(e.history()));
 
     List<String> names = new ArrayList<>(definitions.keySet());
     for (int i = 0; i < names.size(); i++) {
       for (int j = i + 1; j < names.size(); j++) {
         String a = names.get(i);
         String b = names.get(j);
-        System.out.print(
-            compare(new Scope(6, 6, 6, 6), a, definitions.get(a), b, definitions.get(b)));
+        System.out.print(compare(new Scope(5), a, definitions.get(a), b, definitions.get(b)));
         if (i != names.size() - 2 || j != names.size() - 1) {
           System.out.println("----------------------------------------------");
         }
       }
     }
+  }
+
+  public static void main(String[] args) {
+    compareBiswasDefinitions();
   }
 }
