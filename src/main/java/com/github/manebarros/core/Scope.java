@@ -6,6 +6,10 @@ public class Scope {
   private int values;
   private int sessions;
 
+  public Scope(int scope) {
+    this(scope, scope, scope, scope);
+  }
+
   public Scope(int transactions, int objects, int values, int sessions) {
     this.transactions = transactions;
     this.objects = objects;
