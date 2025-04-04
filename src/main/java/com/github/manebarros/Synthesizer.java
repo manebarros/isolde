@@ -9,6 +9,7 @@ import com.github.manebarros.cerone.CeroneCounterexampleEncoder;
 import com.github.manebarros.cerone.CeroneExecution;
 import com.github.manebarros.cerone.CeroneSynthesisModule;
 import com.github.manebarros.core.CegisSynthesizer;
+import com.github.manebarros.core.HistoryFormula;
 import com.github.manebarros.core.Scope;
 import com.github.manebarros.core.SynthesisSpec;
 import com.github.manebarros.history.History;
@@ -22,6 +23,12 @@ public class Synthesizer {
 
   public Synthesizer(Scope scope) {
     this.cegisSynthesizer = new CegisSynthesizer(scope);
+    this.ceroneExecutions = null;
+    this.ceroneExecutions = null;
+  }
+
+  public Synthesizer(Scope scope, HistoryFormula hf) {
+    this.cegisSynthesizer = new CegisSynthesizer(scope, hf);
     this.ceroneExecutions = null;
     this.ceroneExecutions = null;
   }

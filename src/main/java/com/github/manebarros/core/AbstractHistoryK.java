@@ -95,6 +95,10 @@ public interface AbstractHistoryK {
     return t.product(x).product(n).in(externalReads());
   }
 
+  default Expression writerOf(Expression x, Expression v) {
+    return finalWrites().join(v).join(x);
+  }
+
   default Formula writes(Expression t, Expression x) {
     return x.join(t.join(finalWrites())).some();
   }
@@ -157,5 +161,9 @@ public interface AbstractHistoryK {
 
   default Expression initialValue(Expression key) {
     return key.join(initialTransaction().join(finalWrites()));
+  }
+
+  default Expression valuesWrittenTo(Expression x) {
+    return x.join(transactions().join(finalWrites()));
   }
 }

@@ -42,6 +42,17 @@ public final class KodkodUtil {
     return f.comprehension(u.oneOf(s));
   }
 
+  public static Expression maxPartialOrder(Expression r, Expression s) {
+    Variable u = Variable.unary("u");
+    Variable v = Variable.unary("v");
+
+    Formula f =
+        Formula.or(v.in(u.join(r)).not().and(u.in(v.join(r)).not()), v.eq(u), v.product(u).in(r))
+            .forAll(v.oneOf(s));
+
+    return f.comprehension(u.oneOf(s));
+  }
+
   public static Expression min(Expression r, Expression s) {
     Variable u = Variable.unary("u");
     Variable v = Variable.unary("v");

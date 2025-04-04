@@ -13,4 +13,8 @@ public interface HistoryFormula {
   default HistoryFormula and(HistoryFormula f) {
     return h -> this.resolve(h).and(f.resolve(h));
   }
+
+  default <E extends Execution> ExecutionFormula<E> asExecutionFormula() {
+    return e -> resolve(e.history());
+  }
 }

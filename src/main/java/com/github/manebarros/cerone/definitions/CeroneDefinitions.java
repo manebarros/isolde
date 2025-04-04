@@ -1,8 +1,9 @@
-package com.github.manebarros.cerone;
+package com.github.manebarros.cerone.definitions;
 
 import static com.github.manebarros.core.ExecutionFormula.and;
 import static java.util.Arrays.asList;
 
+import com.github.manebarros.cerone.CeroneExecution;
 import com.github.manebarros.core.ExecutionFormula;
 import com.github.manebarros.kodkod.KodkodUtil;
 import kodkod.ast.Expression;

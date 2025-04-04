@@ -1,7 +1,6 @@
 package com.github.manebarros.check;
 
 import static com.github.manebarros.core.DirectAbstractHistoryEncoding.initialTransaction;
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.instance;
 import static com.github.manebarros.core.DirectAbstractHistoryEncoding.keys;
 import static com.github.manebarros.core.DirectAbstractHistoryEncoding.reads;
 import static com.github.manebarros.core.DirectAbstractHistoryEncoding.sessionOrder;
@@ -14,8 +13,8 @@ import static com.github.manebarros.history.Operation.readOf;
 import static com.github.manebarros.history.Operation.writeOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.github.manebarros.cerone.CeroneDefinitions;
 import com.github.manebarros.cerone.CeroneExecution;
+import com.github.manebarros.cerone.definitions.CeroneDefinitions;
 import com.github.manebarros.core.CheckingEncoder;
 import com.github.manebarros.core.DirectAbstractHistoryEncoding;
 import com.github.manebarros.history.History;

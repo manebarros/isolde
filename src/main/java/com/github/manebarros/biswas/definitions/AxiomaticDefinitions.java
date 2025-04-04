@@ -1,6 +1,7 @@
 package com.github.manebarros.biswas.definitions;
 
 import com.github.manebarros.biswas.BiswasExecution;
+import com.github.manebarros.core.ExecutionFormula;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
 
@@ -82,6 +83,10 @@ public final class AxiomaticDefinitions {
                                             .difference(t1.union(t2)))))));
   }
 
+  public static ExecutionFormula<BiswasExecution> Prefix() {
+    return AxiomaticDefinitions::Prefix;
+  }
+
   public static Formula Prefix(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
     Variable t2 = Variable.unary("t2");
@@ -129,6 +134,10 @@ public final class AxiomaticDefinitions {
                             t2.oneOf(e.history().txnThatWriteToAnyOf(x))
                                 .and(t3.oneOf(e.history().txnThatWriteToAnyOf(y)))
                                 .and(t4.oneOf(e.history().txnThatWriteToAnyOf(y))))));
+  }
+
+  public static Formula Snapshot(BiswasExecution e) {
+    return Prefix(e).and(Conflict(e));
   }
 
   public static Formula Serializability(BiswasExecution e) {
