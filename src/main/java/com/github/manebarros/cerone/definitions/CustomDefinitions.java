@@ -5,6 +5,7 @@ import static com.github.manebarros.biswas.definitions.IsolationCriterion.Prefix
 import static com.github.manebarros.cerone.definitions.CeroneDefinitions.EXT;
 import static com.github.manebarros.cerone.definitions.CeroneDefinitions.SESSION;
 import static com.github.manebarros.cerone.definitions.CeroneDefinitions.TRANS_VIS;
+import static com.github.manebarros.kodkod.KodkodUtil.disjoint;
 
 import com.github.manebarros.biswas.BiswasExecution;
 import com.github.manebarros.cerone.CeroneExecution;
@@ -218,7 +219,6 @@ public final class CustomDefinitions {
     return h ->
         Formula.and(
                 x.eq(y).not(),
-                // s.eq(t).not(),
                 h.externalRead(t, x, xi),
                 h.externalRead(s, y, yi),
                 knowsVersionMoreRecentThan(t, y, yi).resolve(h),
@@ -233,6 +233,43 @@ public final class CustomDefinitions {
                             .and(xf.oneOf(h.values()))
                             .and(yi.oneOf(h.values()))
                             .and(yf.oneOf(h.values()))));
+  }
+
+  public static Formula tripleFork(AbstractHistoryK h) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable t4 = Variable.unary("t4");
+    Variable t5 = Variable.unary("t5");
+    Variable t6 = Variable.unary("t6");
+    Variable x = Variable.unary("x");
+    Variable y = Variable.unary("y");
+    Variable z = Variable.unary("z");
+    return Formula.and(
+            disjoint(x, y, z),
+            disjoint(t1, t2, t3, t4, t5, t6),
+            h.writes(t1, x),
+            h.writes(t1, y),
+            h.writes(t2, x),
+            h.writes(t2, z),
+            h.writes(t3, y),
+            h.writes(t3, z),
+            h.wr(t1, y, t4),
+            h.wr(t2, z, t4),
+            h.wr(t2, x, t5),
+            h.wr(t3, y, t5),
+            h.wr(t1, x, t6),
+            h.wr(t3, z, t6))
+        .forSome(
+            t1.oneOf(h.transactions())
+                .and(t2.oneOf(h.transactions()))
+                .and(t3.oneOf(h.transactions()))
+                .and(t4.oneOf(h.transactions()))
+                .and(t5.oneOf(h.transactions()))
+                .and(t6.oneOf(h.transactions()))
+                .and(x.oneOf(h.keys()))
+                .and(y.oneOf(h.keys()))
+                .and(z.oneOf(h.keys())));
   }
 
   public static Formula newLongFork(BiswasExecution e) {
@@ -371,11 +408,10 @@ public final class CustomDefinitions {
     Variable t4 = Variable.unary("t4");
     Variable x = Variable.unary("x");
     return Formula.or(
-            e.history().causallyOrdered(t3, t2),
+            // e.history().causallyOrdered(t3, t2),
             t3.product(t2).in(e.co()),
             Formula.and(
                     e.history().writes(t2, x),
-                    e.history().causallyOrdered(t1, t3),
                     e.history().causallyOrdered(t3, t4),
                     t1.product(t2).in(e.co()),
                     e.history().wr(t1, x, t4))
@@ -388,7 +424,7 @@ public final class CustomDefinitions {
         .closure();
   }
 
-  private static HistoryExpression mandatoryCommitOrderEdgesPrefix(int depth) {
+  public static HistoryExpression mandatoryCommitOrderEdgesPrefix(int depth) {
     return h -> {
       Expression mandatoryEdges = Causal.mandatoryCommitOrderEdges(h);
       for (int i = 0; i < depth; i++) {
@@ -412,10 +448,11 @@ public final class CustomDefinitions {
       //                    h,
       //                    otherPcMandatoryCommitOrderEdges(
       //                        new BiswasExecution(h, Causal.mandatoryCommitOrderEdges(h)))))));
-      Expression mandatoryCommitOrderEdges = mandatoryCommitOrderEdgesPrefix(2).resolve(h);
+      Expression mandatoryCommitOrderEdges = mandatoryCommitOrderEdgesPrefix(3).resolve(h);
 
       return KodkodUtil.acyclic(mandatoryCommitOrderEdges)
-          .and(newLongFork(new BiswasExecution(h, mandatoryCommitOrderEdges)).not());
+          .and(newLongFork(new BiswasExecution(h, mandatoryCommitOrderEdges)).not())
+          .and(tripleFork(h).not());
     };
   }
 }

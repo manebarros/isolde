@@ -183,13 +183,13 @@ public class Main {
   }
 
   public static void verifyHistoryBasedDefinitons() {
-    ExecutionFormula<BiswasExecution> biswasDef = AxiomaticDefinitions::Snapshot;
-    HistoryFormula historyDef = CustomDefinitions.customSI;
+    ExecutionFormula<BiswasExecution> biswasDef = AxiomaticDefinitions::Prefix;
+    HistoryFormula historyDef = CustomDefinitions.newCustomPC();
     System.out.print(
-        // compareBiswasAndHistoryBased(
-        //    new Scope(5), "Biswas' PC", biswasDef, "History PC", historyDef));
         compareBiswasAndHistoryBased(
-            new Scope(5), "Biswas' SI", biswasDef, "History-only SI", historyDef));
+            new Scope(6, 3, 3, 3), "Biswas' PC", biswasDef, "History PC", historyDef));
+    // compareBiswasAndHistoryBased(
+    //    new Scope(5), "Biswas' SI", biswasDef, "History-only SI", historyDef));
   }
 
   public static void compareBiswasDefinitions() {

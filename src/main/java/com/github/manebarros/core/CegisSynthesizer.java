@@ -7,6 +7,8 @@ import com.github.manebarros.biswas.BiswasExecution;
 import com.github.manebarros.cerone.definitions.CustomDefinitions;
 import com.github.manebarros.history.History;
 import com.github.manebarros.kodkod.KodkodProblem;
+import java.time.Duration;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
@@ -123,17 +125,28 @@ public class CegisSynthesizer {
                           new BiswasExecution(
                               historyEncoding(),
                               Causal.mandatoryCommitOrderEdges(historyEncoding())))));
-      System.out.println(
-          "Prefix mandatory commit order edges depth 2:\n"
-              + new Evaluator(r.instance())
-                  .evaluate(
-                      Prefix.mandatoryCommitOrderEdges(
-                          new BiswasExecution(
-                              historyEncoding(),
-                              Prefix.mandatoryCommitOrderEdges(
-                                  new BiswasExecution(
-                                      historyEncoding(),
-                                      Causal.mandatoryCommitOrderEdges(historyEncoding())))))));
+      for (int i = 0; i < 4; i++) {
+
+        System.out.println(
+            "Prefix mandatory commit order edges depth "
+                + i
+                + ":\n"
+                + new Evaluator(r.instance())
+                    .evaluate(
+                        CustomDefinitions.mandatoryCommitOrderEdgesPrefix(i)
+                            .resolve(historyEncoding())));
+      }
+      // System.out.println(
+      //    "Prefix mandatory commit order edges depth 2:\n"
+      //        + new Evaluator(r.instance())
+      //            .evaluate(
+      //                Prefix.mandatoryCommitOrderEdges(
+      //                    new BiswasExecution(
+      //                        historyEncoding(),
+      //                        Prefix.mandatoryCommitOrderEdges(
+      //                            new BiswasExecution(
+      //                                historyEncoding(),
+      //                                Causal.mandatoryCommitOrderEdges(historyEncoding())))))));
     }
     return r.unsat() ? Optional.empty() : Optional.of(new History(historyEncoding(), r.instance()));
   }
@@ -152,13 +165,20 @@ public class CegisSynthesizer {
       return candidates;
     }
 
+    Instant start = Instant.now();
+    int candCount = 1;
     Bounds newBounds = new Bounds(searchProblem.bounds().universe());
     Optional<HistoryFormula> feedback =
         guide(historyEncoding(), candSol.instance(), newBounds, checker);
     while (feedback.isPresent()) {
       candSol = synthesizer.solve(feedback.get().resolve(historyEncoding()), newBounds);
-      System.out.println("cand");
-      candidates.addFirst(candSol); // Register new candidate
+      System.out.println(
+          "cand "
+              + ++candCount
+              + " (after "
+              + Duration.between(start, Instant.now()).toSeconds()
+              + " s).");
+      candidates.addFirst(candSol); // Register new (potential) candidate
       if (candSol.unsat()) {
         // Stop if problem is UNSAT
         break;

@@ -1,6 +1,7 @@
 package com.github.manebarros.kodkod;
 
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -116,5 +117,19 @@ public final class KodkodUtil {
 
   public static TupleSet asTupleSet(TupleFactory f, Collection<?> atoms) {
     return f.setOf(atoms.stream().map(a -> f.tuple(a)).collect(Collectors.toList()));
+  }
+
+  public static Formula disjoint(List<? extends Expression> exps) {
+    Formula f = Formula.TRUE;
+    for (int i = 0; i < exps.size() - 1; i++) {
+      for (int j = i + 1; j < exps.size(); j++) {
+        f = f.and(exps.get(i).eq(exps.get(j)).not());
+      }
+    }
+    return f;
+  }
+
+  public static Formula disjoint(Expression... exps) {
+    return disjoint(Arrays.asList(exps));
   }
 }
