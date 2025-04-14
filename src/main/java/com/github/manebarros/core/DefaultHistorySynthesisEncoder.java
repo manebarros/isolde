@@ -5,6 +5,7 @@ import static com.github.manebarros.core.DirectAbstractHistoryEncoding.*;
 import com.github.manebarros.kodkod.KodkodUtil;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
+import kodkod.ast.Relation;
 import kodkod.ast.Variable;
 import kodkod.instance.Bounds;
 import kodkod.instance.TupleFactory;
@@ -54,9 +55,13 @@ public final class DefaultHistorySynthesisEncoder implements HistorySynthesisEnc
         f.setOf(historyAtoms.normalTxns().toArray())
             .product(f.setOf(historyAtoms.getSessionAtoms().toArray())));
 
+    Relation txnTotalOrderRel = Relation.binary("Txn total order");
+    b.boundExactly(txnTotalOrderRel, txnTotalOrderTs);
+
     return Formula.and(
         histFormula.resolve(this.encoding()),
-        KodkodUtil.acyclic(encoding().binaryWr().union(encoding().sessionOrder())),
+        encoding().sessionOrder().union(encoding().binaryWr()).in(txnTotalOrderRel),
+        // KodkodUtil.acyclic(encoding().binaryWr().union(encoding().sessionOrder())),
         noBlindWrites(),
         noEmptyTransactions(),
         transactionsWriteToKeyAtMostOnce(),

@@ -13,6 +13,10 @@ public record SynthesisSpec<E extends Execution>(
     return new SynthesisSpec<>(new ArrayList<>(), universalConstraint);
   }
 
+  public SynthesisSpec(List<ExecutionFormula<E>> existentialConstraints) {
+    this(existentialConstraints, e -> Formula.TRUE);
+  }
+
   public SynthesisSpec(ExecutionFormula<E> existentialConstraint) {
     this(Collections.singletonList(existentialConstraint), e -> Formula.TRUE);
   }

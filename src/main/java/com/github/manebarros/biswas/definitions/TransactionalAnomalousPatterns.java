@@ -30,6 +30,8 @@ public final class TransactionalAnomalousPatterns {
                 .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));
   }
 
+  public static ExecutionFormula<BiswasExecution> l = TransactionalAnomalousPatterns::l;
+
   public static Formula l(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
     Variable t2 = Variable.unary("t2");
@@ -50,6 +52,9 @@ public final class TransactionalAnomalousPatterns {
                 .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
                 .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));
   }
+
+  public static ExecutionFormula<BiswasExecution> m = TransactionalAnomalousPatterns::m;
+  public static ExecutionFormula<BiswasExecution> n = TransactionalAnomalousPatterns::n;
 
   public static Formula m(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");

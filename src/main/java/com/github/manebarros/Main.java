@@ -2,6 +2,7 @@ package com.github.manebarros;
 
 import com.github.manebarros.biswas.BiswasExecution;
 import com.github.manebarros.biswas.definitions.AxiomaticDefinitions;
+import com.github.manebarros.biswas.definitions.TransactionalAnomalousPatterns;
 import com.github.manebarros.cerone.CeroneExecution;
 import com.github.manebarros.cerone.definitions.CeroneDefinitions;
 import com.github.manebarros.cerone.definitions.CustomDefinitions;
@@ -97,6 +98,23 @@ public class Main {
     return new ComparisonResult(a_name, b_name, a_not_b, b_not_a);
   }
 
+  private static ComparisonResult compareBiswasExecution(
+      Scope scope,
+      String a_name,
+      ExecutionFormula<BiswasExecution> a_def,
+      String b_name,
+      ExecutionFormula<BiswasExecution> b_def) {
+    Synthesizer synth = new Synthesizer(scope);
+    synth.registerBiswas(new SynthesisSpec<>(a_def.and(b_def.not())));
+    Optional<History> a_not_b = synth.synthesize();
+
+    synth = new Synthesizer(scope);
+    synth.registerBiswas(new SynthesisSpec<>(b_def.and(a_def.not())));
+    Optional<History> b_not_a = synth.synthesize();
+
+    return new ComparisonResult(a_name, b_name, a_not_b, b_not_a);
+  }
+
   public static ComparisonResult compareBiswasAndHistoryBased(
       Scope scope,
       String a_name,
@@ -185,22 +203,55 @@ public class Main {
   public static void verifyHistoryBasedDefinitons() {
     ExecutionFormula<BiswasExecution> biswasDef = AxiomaticDefinitions::Prefix;
     HistoryFormula historyDef = CustomDefinitions.newCustomPC();
-    System.out.print(
+    // System.out.print(
+    //    compareBiswasAndHistoryBased(
+    //        new Scope(5), "Biswas' PC", biswasDef, "History PC", historyDef));
+    System.out.println(
         compareBiswasAndHistoryBased(
-            new Scope(6, 3, 3, 3), "Biswas' PC", biswasDef, "History PC", historyDef));
-    // compareBiswasAndHistoryBased(
-    //    new Scope(5), "Biswas' SI", biswasDef, "History-only SI", historyDef));
+            new Scope(5),
+            "Biswas' SI",
+            AxiomaticDefinitions::Snapshot,
+            "History-only SI",
+            CustomDefinitions.customSI));
   }
 
   public static void compareBiswasDefinitions() {
-    Map<String, ExecutionFormula<BiswasExecution>> definitions = Map.of();
+    Map<String, ExecutionFormula<BiswasExecution>> definitions =
+        Map.of(
+            "axiomatic TCC",
+            AxiomaticDefinitions::Causal,
+            "TAP-based TCC",
+            TransactionalAnomalousPatterns.n.not());
 
     List<String> names = new ArrayList<>(definitions.keySet());
     for (int i = 0; i < names.size(); i++) {
       for (int j = i + 1; j < names.size(); j++) {
         String a = names.get(i);
         String b = names.get(j);
-        System.out.print(compareBiswas(new Scope(4), a, definitions.get(a), b, definitions.get(b)));
+        System.out.print(compareBiswas(new Scope(5), a, definitions.get(a), b, definitions.get(b)));
+        if (i != names.size() - 2 || j != names.size() - 1) {
+          System.out.println("----------------------------------------------");
+        }
+      }
+    }
+  }
+
+  public static void compareBiswasDefinitionsExec() {
+    Map<String, ExecutionFormula<BiswasExecution>> definitions =
+        Map.of(
+            "axiomatic RA",
+            AxiomaticDefinitions::ReadAtomic,
+            "TAP-based RA",
+            TransactionalAnomalousPatterns.l.not());
+
+    List<String> names = new ArrayList<>(definitions.keySet());
+    for (int i = 0; i < names.size(); i++) {
+      for (int j = i + 1; j < names.size(); j++) {
+        String a = names.get(i);
+        String b = names.get(j);
+        System.out.print(
+            compareBiswasExecution(
+                new Scope(2, 1, 2, 1), a, definitions.get(a), b, definitions.get(b)));
         if (i != names.size() - 2 || j != names.size() - 1) {
           System.out.println("----------------------------------------------");
         }
