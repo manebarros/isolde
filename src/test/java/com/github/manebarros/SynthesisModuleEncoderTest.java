@@ -2,13 +2,13 @@ package com.github.manebarros;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import com.github.manebarros.core.DefaultHistorySynthesisEncoder;
+import com.github.manebarros.core.synth.DefaultHistorySynthesisEncoder;
 import com.github.manebarros.core.Execution;
 import com.github.manebarros.core.ExecutionFormula;
-import com.github.manebarros.core.FolSynthesisEncoder;
-import com.github.manebarros.core.Scope;
-import com.github.manebarros.core.SynthesisModule;
-import com.github.manebarros.core.SynthesisModuleEncoder;
+import com.github.manebarros.core.synth.FolSynthesisEncoder;
+import com.github.manebarros.core.synth.Scope;
+import com.github.manebarros.core.synth.SynthesisModule;
+import com.github.manebarros.core.synth.SynthesisModuleEncoder;
 import java.util.List;
 import kodkod.ast.Formula;
 import kodkod.engine.Solution;

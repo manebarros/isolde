@@ -1,4 +1,6 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.synth;
+
+import com.github.manebarros.core.Execution;
 
 import java.util.List;
 

@@ -1,12 +1,9 @@
-package com.github.manebarros.core;
+package com.github.manebarros.history;
 
 import static com.github.manebarros.kodkod.Util.readBinaryExpression;
 import static com.github.manebarros.kodkod.Util.readUnaryExpression;
 
-import com.github.manebarros.history.History;
-import com.github.manebarros.history.Operation;
-import com.github.manebarros.history.Session;
-import com.github.manebarros.history.Transaction;
+import com.github.manebarros.core.AbstractHistoryK;
 import com.github.manebarros.kodkod.Atom;
 import java.util.ArrayList;
 import java.util.HashSet;

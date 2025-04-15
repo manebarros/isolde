@@ -2,8 +2,8 @@ package com.github.manebarros.biswas;
 
 import com.github.manebarros.core.AbstractHistoryK;
 import com.github.manebarros.core.ExecutionFormula;
-import com.github.manebarros.core.HistoryAtoms;
-import com.github.manebarros.core.SynthesisModule;
+import com.github.manebarros.core.synth.HistoryAtoms;
+import com.github.manebarros.core.synth.SynthesisModule;
 import com.github.manebarros.kodkod.KodkodUtil;
 import java.util.ArrayList;
 import java.util.Collection;

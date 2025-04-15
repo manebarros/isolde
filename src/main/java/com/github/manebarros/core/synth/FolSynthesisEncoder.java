@@ -1,5 +1,6 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.synth;
 
+import com.github.manebarros.core.*;
 import com.github.manebarros.kodkod.KodkodProblem;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,7 +18,7 @@ public class FolSynthesisEncoder {
   private final List<SynthesisProblemExtender> extenders;
 
   public FolSynthesisEncoder(
-      HistorySynthesisEncoder histEncoder, Scope scope, HistoryFormula historyFormula) {
+          HistorySynthesisEncoder histEncoder, Scope scope, HistoryFormula historyFormula) {
     this.histEncoder = histEncoder;
     this.extenders = new ArrayList<>();
     this.historyAtoms = new HistoryAtoms(scope);

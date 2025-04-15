@@ -1,4 +1,4 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.synth;
 
 public class Scope {
   private int transactions;

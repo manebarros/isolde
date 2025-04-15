@@ -2,7 +2,7 @@ package com.github.manebarros.cerone;
 
 import com.github.manebarros.SynthesisModuleEncoderTest;
 import com.github.manebarros.core.ExecutionFormula;
-import com.github.manebarros.core.SynthesisModuleEncoder;
+import com.github.manebarros.core.synth.SynthesisModuleEncoder;
 import com.github.manebarros.kodkod.KodkodUtil;
 import org.junit.jupiter.api.Test;
 

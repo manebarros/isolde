@@ -1,6 +1,6 @@
 package com.github.manebarros.biswas;
 
-import com.github.manebarros.core.SynthesisModuleEncoder;
+import com.github.manebarros.core.synth.SynthesisModuleEncoder;
 
 public class DefaultBiswasSynthesisModuleEncoderTest implements BiswasSynthesisModuleEncoderTest {
 

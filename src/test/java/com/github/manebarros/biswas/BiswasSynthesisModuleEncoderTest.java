@@ -1,7 +1,7 @@
 package com.github.manebarros.biswas;
 
 import com.github.manebarros.SynthesisModuleEncoderTest;
-import com.github.manebarros.core.SynthesisModuleEncoder;
+import com.github.manebarros.core.synth.SynthesisModuleEncoder;
 import com.github.manebarros.kodkod.KodkodUtil;
 import java.util.Arrays;
 import kodkod.ast.Formula;

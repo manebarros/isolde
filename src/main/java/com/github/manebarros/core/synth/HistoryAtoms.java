@@ -1,4 +1,4 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.synth;
 
 import com.github.manebarros.kodkod.Atom;
 import java.util.ArrayList;

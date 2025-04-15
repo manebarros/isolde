@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.manebarros.biswas.BiswasCheckingEncoder;
 import com.github.manebarros.biswas.BiswasExecution;
-import com.github.manebarros.core.CheckingEncoder;
+import com.github.manebarros.core.check.CheckingEncoder;
 import com.github.manebarros.history.History;
 import com.github.manebarros.history.Session;
 import com.github.manebarros.history.Transaction;

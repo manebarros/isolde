@@ -4,7 +4,7 @@ import static com.github.manebarros.core.DirectAbstractHistoryEncoding.*;
 import static com.github.manebarros.kodkod.KodkodUtil.asTupleSet;
 
 import com.github.manebarros.core.AbstractHistoryK;
-import com.github.manebarros.core.CheckingEncoder;
+import com.github.manebarros.core.check.CheckingEncoder;
 import com.github.manebarros.core.DirectAbstractHistoryEncoding;
 import com.github.manebarros.core.ExecutionFormula;
 import com.github.manebarros.history.AbstractTransaction;

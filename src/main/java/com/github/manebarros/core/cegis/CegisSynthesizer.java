@@ -1,10 +1,16 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.cegis;
 
 import static com.github.manebarros.biswas.definitions.HistoryOnlyIsolationCriterion.Causal;
 import static com.github.manebarros.biswas.definitions.HistoryOnlyIsolationCriterion.Prefix;
 
 import com.github.manebarros.biswas.BiswasExecution;
 import com.github.manebarros.cerone.definitions.CustomDefinitions;
+import com.github.manebarros.core.*;
+import com.github.manebarros.core.check.CheckingEncoder;
+import com.github.manebarros.core.synth.FolSynthesisEncoder;
+import com.github.manebarros.core.synth.Scope;
+import com.github.manebarros.core.synth.SynthesisModule;
+import com.github.manebarros.core.synth.SynthesisModuleEncoder;
 import com.github.manebarros.history.History;
 import com.github.manebarros.kodkod.KodkodProblem;
 import java.time.Duration;
