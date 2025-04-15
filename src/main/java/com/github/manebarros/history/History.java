@@ -1,7 +1,7 @@
 package com.github.manebarros.history;
 
 import com.github.manebarros.core.AbstractHistoryK;
-import com.github.manebarros.core.HistoryIntermediateRepresentation;
+
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
