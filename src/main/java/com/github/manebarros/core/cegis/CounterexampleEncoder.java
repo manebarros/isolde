@@ -1,5 +1,8 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.cegis;
 
+import com.github.manebarros.core.Execution;
+import com.github.manebarros.core.ExecutionFormula;
+import com.github.manebarros.core.HistoryFormula;
 import kodkod.instance.Bounds;
 import kodkod.instance.Instance;
 

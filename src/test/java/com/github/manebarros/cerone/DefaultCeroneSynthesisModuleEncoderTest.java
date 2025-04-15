@@ -1,6 +1,6 @@
 package com.github.manebarros.cerone;
 
-import com.github.manebarros.core.SynthesisModuleEncoder;
+import com.github.manebarros.core.synth.SynthesisModuleEncoder;
 
 public class DefaultCeroneSynthesisModuleEncoderTest implements CeroneSynthesisModuleEncoderTest {
 

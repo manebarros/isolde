@@ -1,4 +1,4 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.synth;
 
 import java.util.Collection;
 import kodkod.ast.Formula;

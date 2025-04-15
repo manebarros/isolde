@@ -1,7 +1,8 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.synth;
 
 import static com.github.manebarros.core.DirectAbstractHistoryEncoding.*;
 
+import com.github.manebarros.core.*;
 import com.github.manebarros.kodkod.KodkodUtil;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
@@ -20,7 +21,7 @@ public final class DefaultHistorySynthesisEncoder implements HistorySynthesisEnc
 
   @Override
   public Formula encode(
-      HistoryAtoms historyAtoms, HistoryFormula histFormula, TupleSet txnTotalOrderTs, Bounds b) {
+          HistoryAtoms historyAtoms, HistoryFormula histFormula, TupleSet txnTotalOrderTs, Bounds b) {
     TupleFactory f = b.universe().factory();
 
     b.boundExactly(transactions, f.setOf(historyAtoms.getTxnAtoms().toArray()));

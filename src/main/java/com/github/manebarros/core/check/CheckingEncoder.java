@@ -1,5 +1,8 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.check;
 
+import com.github.manebarros.core.AbstractHistoryK;
+import com.github.manebarros.core.Execution;
+import com.github.manebarros.core.ExecutionFormula;
 import com.github.manebarros.history.History;
 import com.github.manebarros.kodkod.KodkodProblem;
 import kodkod.instance.Instance;

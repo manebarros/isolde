@@ -15,7 +15,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.manebarros.cerone.CeroneExecution;
 import com.github.manebarros.cerone.definitions.CeroneDefinitions;
-import com.github.manebarros.core.CheckingEncoder;
+import com.github.manebarros.core.check.CheckingEncoder;
 import com.github.manebarros.core.DirectAbstractHistoryEncoding;
 import com.github.manebarros.history.History;
 import com.github.manebarros.history.Session;

@@ -1,12 +1,15 @@
-package com.github.manebarros.core;
+package com.github.manebarros.core.cegis;
 
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+
+import com.github.manebarros.core.Execution;
+import com.github.manebarros.core.ExecutionFormula;
 import kodkod.ast.Formula;
 
 public record SynthesisSpec<E extends Execution>(
-    List<ExecutionFormula<E>> existentialFormulas, ExecutionFormula<E> universalFormula) {
+        List<ExecutionFormula<E>> existentialFormulas, ExecutionFormula<E> universalFormula) {
 
   public static <E extends Execution> SynthesisSpec<E> fromUniversal(
       ExecutionFormula<E> universalConstraint) {

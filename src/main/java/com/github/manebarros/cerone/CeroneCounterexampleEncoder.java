@@ -1,6 +1,6 @@
 package com.github.manebarros.cerone;
 
-import com.github.manebarros.core.CounterexampleEncoder;
+import com.github.manebarros.core.cegis.CounterexampleEncoder;
 import com.github.manebarros.core.ExecutionFormula;
 import com.github.manebarros.core.HistoryFormula;
 import kodkod.ast.Relation;
