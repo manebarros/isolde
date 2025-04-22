@@ -1,13 +1,22 @@
 package com.github.manebarros.check;
 
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.*;
+import static com.github.manebarros.core.DirectAbstractHistoryEncoding.initialTransaction;
+import static com.github.manebarros.core.DirectAbstractHistoryEncoding.keys;
+import static com.github.manebarros.core.DirectAbstractHistoryEncoding.reads;
+import static com.github.manebarros.core.DirectAbstractHistoryEncoding.sessionOrder;
+import static com.github.manebarros.core.DirectAbstractHistoryEncoding.sessions;
+import static com.github.manebarros.core.DirectAbstractHistoryEncoding.transactions;
+import static com.github.manebarros.core.DirectAbstractHistoryEncoding.txn_session;
+import static com.github.manebarros.core.DirectAbstractHistoryEncoding.values;
+import static com.github.manebarros.core.DirectAbstractHistoryEncoding.writes;
 import static com.github.manebarros.history.Operation.readOf;
 import static com.github.manebarros.history.Operation.writeOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import com.github.manebarros.biswas.BiswasCheckingEncoder;
 import com.github.manebarros.biswas.BiswasExecution;
-import com.github.manebarros.core.check.CheckingEncoder;
+import com.github.manebarros.core.check.DefaultHistoryCheckingEncoder;
+import com.github.manebarros.core.check.external.HistCheckEncoder;
 import com.github.manebarros.history.History;
 import com.github.manebarros.history.Session;
 import com.github.manebarros.history.Transaction;
@@ -26,8 +35,9 @@ import org.junit.jupiter.api.Test;
 public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTest {
 
   @Override
-  public CheckingEncoder<BiswasExecution> encoder() {
-    return new BiswasCheckingEncoder();
+  public HistCheckEncoder<BiswasExecution> encoder() {
+    return new HistCheckEncoder<>(
+        DefaultHistoryCheckingEncoder.instance(), BiswasCheckingEncoder::new);
   }
 
   @Test

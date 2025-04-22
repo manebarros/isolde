@@ -30,7 +30,7 @@ public final class DirectAbstractHistoryEncoding implements AbstractHistoryK {
   }
 
   @Override
-  public Expression transactions() {
+  public Relation transactions() {
     return transactions;
   }
 
@@ -50,7 +50,7 @@ public final class DirectAbstractHistoryEncoding implements AbstractHistoryK {
   }
 
   @Override
-  public Expression initialTransaction() {
+  public Relation initialTransaction() {
     return initialTransaction;
   }
 

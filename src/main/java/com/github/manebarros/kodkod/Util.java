@@ -1,5 +1,7 @@
 package com.github.manebarros.kodkod;
 
+import com.github.manebarros.core.AbstractHistoryK;
+import com.github.manebarros.core.HistoryExpression;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -70,5 +72,24 @@ public final class Util {
       mapping.put(k, v);
     }
     return mapping;
+  }
+
+  public static TupleSet convert(
+      Evaluator ev,
+      AbstractHistoryK context,
+      HistoryExpression expression,
+      TupleFactory tf,
+      int arity) {
+    assert arity > 0;
+    TupleSet ts = tf.noneOf(arity);
+    for (var tuple : ev.evaluate(expression.resolve(context))) {
+      Tuple newTuple = tf.tuple(tuple.atom(0));
+      for (int i = 1; i < arity; i++) {
+        newTuple = newTuple.product(tf.tuple(tuple.atom(i)));
+      }
+      ts.add(newTuple);
+    }
+
+    return ts;
   }
 }

@@ -18,7 +18,7 @@ public class FolSynthesisEncoder {
   private final List<SynthesisProblemExtender> extenders;
 
   public FolSynthesisEncoder(
-          HistorySynthesisEncoder histEncoder, Scope scope, HistoryFormula historyFormula) {
+      HistorySynthesisEncoder histEncoder, Scope scope, HistoryFormula historyFormula) {
     this.histEncoder = histEncoder;
     this.extenders = new ArrayList<>();
     this.historyAtoms = new HistoryAtoms(scope);
@@ -55,6 +55,13 @@ public class FolSynthesisEncoder {
 
   public void register(SynthesisProblemExtender extender) {
     this.extenders.add(extender);
+  }
+
+  public <E extends Execution> List<E> register(
+      SynthesisModuleEncoder<E> encoder, List<ExecutionFormula<E>> formulas) {
+    SynthesisModule<E> module = encoder.encode(this, formulas);
+    register(module);
+    return module.executions();
   }
 
   public KodkodProblem encode() {

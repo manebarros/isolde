@@ -7,7 +7,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import com.github.manebarros.biswas.BiswasExecution;
 import com.github.manebarros.biswas.definitions.AxiomaticDefinitions;
 import com.github.manebarros.biswas.definitions.TransactionalAnomalousPatterns;
-import com.github.manebarros.core.check.CheckingEncoder;
+import com.github.manebarros.core.check.external.HistCheckEncoder;
 import com.github.manebarros.history.History;
 import com.github.manebarros.history.Session;
 import com.github.manebarros.history.Transaction;
@@ -20,7 +20,7 @@ import kodkod.engine.Solver;
 import org.junit.jupiter.api.Test;
 
 public interface BiswasCheckingEncoderTest {
-  CheckingEncoder<BiswasExecution> encoder();
+  HistCheckEncoder<BiswasExecution> encoder();
 
   @Test
   default void historyIsDisallowedByReadAtomic() {

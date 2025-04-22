@@ -1,36 +1,22 @@
 package com.github.manebarros.check;
 
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.initialTransaction;
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.keys;
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.reads;
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.sessionOrder;
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.sessions;
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.transactions;
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.txn_session;
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.values;
-import static com.github.manebarros.core.DirectAbstractHistoryEncoding.writes;
 import static com.github.manebarros.history.Operation.readOf;
 import static com.github.manebarros.history.Operation.writeOf;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 import com.github.manebarros.cerone.CeroneExecution;
 import com.github.manebarros.cerone.definitions.CeroneDefinitions;
-import com.github.manebarros.core.check.CheckingEncoder;
-import com.github.manebarros.core.DirectAbstractHistoryEncoding;
+import com.github.manebarros.core.check.DefaultHistoryCheckingEncoder;
+import com.github.manebarros.core.check.external.HistCheckEncoder;
+import com.github.manebarros.core.check.external.HistCheckModuleEncoder;
 import com.github.manebarros.history.History;
 import com.github.manebarros.history.Session;
 import com.github.manebarros.history.Transaction;
-import com.github.manebarros.kodkod.KodkodProblem;
 import com.github.manebarros.kodkod.KodkodUtil;
-import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.List;
 import kodkod.ast.Variable;
 import kodkod.engine.Solution;
 import kodkod.engine.Solver;
-import kodkod.instance.Instance;
-import kodkod.instance.TupleFactory;
-import kodkod.instance.Universe;
 import org.junit.jupiter.api.Test;
 
 /**
@@ -47,7 +33,12 @@ import org.junit.jupiter.api.Test;
  * </ul>
  */
 public interface CeroneCheckingEncoderTest {
-  CheckingEncoder<CeroneExecution> encoder();
+
+  HistCheckModuleEncoder<CeroneExecution> moduleEncoder();
+
+  default HistCheckEncoder<CeroneExecution> histCheckEncoder() {
+    return new HistCheckEncoder<>(DefaultHistoryCheckingEncoder.instance(), moduleEncoder());
+  }
 
   @Test
   default void arbitrationTotallyOrdersTransactions() {
@@ -58,11 +49,12 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(1, Arrays.asList(readOf(0, 0))),
                     new Transaction(2, Arrays.asList(readOf(0, 0))),
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
-    KodkodProblem p =
-        encoder()
-            .encode(
-                hist, e -> KodkodUtil.strictTotalOrder(e.ar(), e.history().transactions()).not());
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+    Solution sol =
+        histCheckEncoder()
+            .solve(
+                hist,
+                e -> KodkodUtil.strictTotalOrder(e.ar(), e.history().transactions()).not(),
+                new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -75,8 +67,7 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(1, Arrays.asList(readOf(0, 0))),
                     new Transaction(2, Arrays.asList(readOf(0, 0))),
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
-    KodkodProblem p = encoder().encode(hist, e -> e.vis().in(e.ar()).not());
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+    Solution sol = histCheckEncoder().solve(hist, e -> e.vis().in(e.ar()).not(), new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -89,8 +80,9 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(1, Arrays.asList(readOf(0, 0))),
                     new Transaction(2, Arrays.asList(readOf(0, 0))),
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
-    KodkodProblem p = encoder().encode(hist, e -> e.history().sessionOrder().in(e.vis()).not());
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+    Solution sol =
+        histCheckEncoder()
+            .solve(hist, e -> e.history().sessionOrder().in(e.vis()).not(), new Solver());
     assertTrue(sol.sat());
   }
 
@@ -103,8 +95,9 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(1, Arrays.asList(readOf(0, 0))),
                     new Transaction(2, Arrays.asList(readOf(0, 0))),
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
-    KodkodProblem p = encoder().encode(hist, e -> e.history().sessionOrder().in(e.ar()).not());
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+    Solution sol =
+        histCheckEncoder()
+            .solve(hist, e -> e.history().sessionOrder().in(e.ar()).not(), new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -117,15 +110,15 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(1, Arrays.asList(readOf(0, 0))),
                     new Transaction(2, Arrays.asList(readOf(0, 0))),
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
-    KodkodProblem p =
-        encoder()
-            .encode(
+    Solution sol =
+        histCheckEncoder()
+            .solve(
                 hist,
                 e ->
                     KodkodUtil.min(
                             e.history().initialTransaction(), e.ar(), e.history().transactions())
-                        .not());
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+                        .not(),
+                new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -140,16 +133,16 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(1, Arrays.asList(readOf(0, 0))),
                     new Transaction(2, Arrays.asList(readOf(0, 0))),
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
-    KodkodProblem p =
-        encoder()
-            .encode(
+    Solution sol =
+        histCheckEncoder()
+            .solve(
                 hist,
                 e ->
                     t.eq(e.history().initialTransaction())
                         .or(t.in(e.history().initialTransaction().join(e.history().sessionOrder())))
                         .forAll(t.oneOf(e.history().transactions()))
-                        .not());
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+                        .not(),
+                new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -164,16 +157,16 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(1, Arrays.asList(readOf(0, 0))),
                     new Transaction(2, Arrays.asList(readOf(0, 0))),
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
-    KodkodProblem p =
-        encoder()
-            .encode(
+    Solution sol =
+        histCheckEncoder()
+            .solve(
                 hist,
                 e ->
                     t.eq(e.history().initialTransaction())
                         .or(t.in(e.history().initialTransaction().join(e.vis())))
                         .forAll(t.oneOf(e.history().transactions()))
-                        .not());
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+                        .not(),
+                new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -184,65 +177,7 @@ public interface CeroneCheckingEncoderTest {
             new Session(new Transaction(1, Arrays.asList(writeOf(0, 1), writeOf(1, 1)))),
             new Session(new Transaction(2, Arrays.asList(readOf(1, 1), writeOf(1, 2)))),
             new Session(new Transaction(3, Arrays.asList(readOf(1, 2), readOf(0, 0)))));
-    KodkodProblem p = encoder().encode(hist, CeroneDefinitions.CC);
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
-    assertTrue(sol.unsat());
-  }
-
-  @Test
-  default void causalityViolationIsDisallowedByCCInstanceEncoding() {
-    List<Object> atoms = new ArrayList<>();
-    atoms.addAll(Arrays.asList("t0", "t1", "t2"));
-    atoms.addAll(Arrays.asList(0, 1));
-    atoms.addAll(Arrays.asList("x"));
-    atoms.addAll(Arrays.asList("s1"));
-    Universe universe = new Universe(atoms);
-    Instance instance = new Instance(universe);
-    TupleFactory tf = universe.factory();
-    instance.add(transactions, tf.setOf("t0", "t1", "t2"));
-    instance.add(keys, tf.setOf("x"));
-    instance.add(values, tf.setOf(0, 1));
-    instance.add(sessions, tf.setOf("s1"));
-    instance.add(initialTransaction, tf.setOf("t0"));
-    instance.add(writes, tf.setOf(tf.tuple("t0", "x", 0), tf.tuple("t1", "x", 1)));
-    instance.add(reads, tf.setOf(tf.tuple("t1", "x", 0), tf.tuple("t2", "x", 0)));
-    instance.add(sessionOrder, tf.setOf(tf.tuple("t1", "t2")));
-    instance.add(txn_session, tf.setOf(tf.tuple("t1", "s1"), tf.tuple("t2", "s1")));
-    KodkodProblem p =
-        encoder()
-            .encode(
-                DirectAbstractHistoryEncoding.instance(),
-                instance,
-                CeroneDefinitions.EXT.and(CeroneDefinitions.SESSION));
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
-    assertTrue(sol.unsat());
-  }
-
-  default void causalityViolationIsDisallowedByCCInstanceEncoding2() {
-    List<Object> atoms = new ArrayList<>();
-    atoms.addAll(Arrays.asList("t0", "t1", "t2", "t3"));
-    atoms.addAll(Arrays.asList(0, 1, 2));
-    atoms.addAll(Arrays.asList("x", "y"));
-    atoms.addAll(Arrays.asList("s1", "s2"));
-    Universe universe = new Universe(atoms);
-    Instance instance = new Instance(universe);
-    TupleFactory tf = universe.factory();
-    instance.add(transactions, tf.setOf("t0", "t1", "t2", "t3"));
-    instance.add(keys, tf.setOf("x", "y"));
-    instance.add(values, tf.setOf(0, 1));
-    instance.add(sessions, tf.setOf("s1", "s2"));
-    instance.add(initialTransaction, tf.setOf("t0"));
-    instance.add(writes, tf.setOf(tf.tuple("t0", "x", 0), tf.tuple("t1", "x", 1)));
-    instance.add(reads, tf.setOf(tf.tuple("t1", "x", 0), tf.tuple("t2", "x", 0)));
-    instance.add(sessionOrder, tf.setOf(tf.tuple("t1", "t2")));
-    instance.add(txn_session, tf.setOf(tf.tuple("t1", "s1"), tf.tuple("t2", "s1")));
-    KodkodProblem p =
-        encoder()
-            .encode(
-                DirectAbstractHistoryEncoding.instance(),
-                instance,
-                CeroneDefinitions.EXT.and(CeroneDefinitions.SESSION));
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+    Solution sol = histCheckEncoder().solve(hist, CeroneDefinitions.CC, new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -253,8 +188,7 @@ public interface CeroneCheckingEncoderTest {
             new Session(new Transaction(1, Arrays.asList(writeOf(0, 1), writeOf(1, 1)))),
             new Session(new Transaction(2, Arrays.asList(readOf(1, 1), writeOf(1, 2)))),
             new Session(new Transaction(3, Arrays.asList(readOf(1, 2), readOf(0, 0)))));
-    KodkodProblem p = encoder().encode(hist, CeroneDefinitions.RA);
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+    Solution sol = histCheckEncoder().solve(hist, CeroneDefinitions.RA, new Solver());
     assertTrue(sol.sat());
   }
 
@@ -267,8 +201,7 @@ public interface CeroneCheckingEncoderTest {
                 new Transaction(2, Arrays.asList(readOf(1, 0), writeOf(0, 2), writeOf(1, 1)))),
             new Session(
                 new Transaction(3, Arrays.asList(readOf(1, 0), writeOf(0, 2), writeOf(1, 1)))));
-    KodkodProblem p = encoder().encode(hist, CeroneDefinitions.RA);
-    Solution sol = new Solver().solve(p.formula(), p.bounds());
+    Solution sol = histCheckEncoder().solve(hist, CeroneDefinitions.RA, new Solver());
     assertTrue(sol.unsat());
   }
 }

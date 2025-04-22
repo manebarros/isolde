@@ -4,14 +4,14 @@ import com.github.manebarros.biswas.BiswasCheckingEncoder;
 import com.github.manebarros.biswas.BiswasCounterexampleEncoder;
 import com.github.manebarros.biswas.BiswasExecution;
 import com.github.manebarros.biswas.BiswasSynthesisModule;
-import com.github.manebarros.cerone.CeroneCheckingEncoder;
 import com.github.manebarros.cerone.CeroneCounterexampleEncoder;
 import com.github.manebarros.cerone.CeroneExecution;
 import com.github.manebarros.cerone.CeroneSynthesisModule;
-import com.github.manebarros.core.cegis.CegisSynthesizer;
+import com.github.manebarros.cerone.check.CeroneCheckingModuleEncoder;
 import com.github.manebarros.core.HistoryFormula;
-import com.github.manebarros.core.synth.Scope;
+import com.github.manebarros.core.cegis.CegisSynthesizer;
 import com.github.manebarros.core.cegis.SynthesisSpec;
+import com.github.manebarros.core.synth.Scope;
 import com.github.manebarros.history.History;
 import java.util.List;
 import java.util.Optional;
@@ -39,7 +39,7 @@ public class Synthesizer {
             .add(
                 spec,
                 CeroneSynthesisModule::new,
-                new CeroneCheckingEncoder(),
+                CeroneCheckingModuleEncoder::new,
                 new CeroneCounterexampleEncoder())
             .synthesisExecutions();
   }
@@ -50,7 +50,7 @@ public class Synthesizer {
             .add(
                 spec,
                 BiswasSynthesisModule::new,
-                new BiswasCheckingEncoder(),
+                BiswasCheckingEncoder::new,
                 new BiswasCounterexampleEncoder())
             .synthesisExecutions();
   }

@@ -2,10 +2,11 @@ package com.github.manebarros.core;
 
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
+import kodkod.ast.Relation;
 import kodkod.ast.Variable;
 
 public interface AbstractHistoryK {
-  Expression transactions();
+  Relation transactions();
 
   Expression keys();
 
@@ -13,7 +14,7 @@ public interface AbstractHistoryK {
 
   Expression sessions();
 
-  Expression initialTransaction();
+  Relation initialTransaction();
 
   Expression externalReads();
 

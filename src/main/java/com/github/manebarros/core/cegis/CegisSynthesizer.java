@@ -1,15 +1,20 @@
 package com.github.manebarros.core.cegis;
 
 import static com.github.manebarros.biswas.definitions.HistoryOnlyIsolationCriterion.Causal;
-import static com.github.manebarros.biswas.definitions.HistoryOnlyIsolationCriterion.Prefix;
+import static com.github.manebarros.biswas.definitions.IsolationCriterion.Prefix;
 
 import com.github.manebarros.biswas.BiswasExecution;
 import com.github.manebarros.cerone.definitions.CustomDefinitions;
-import com.github.manebarros.core.*;
-import com.github.manebarros.core.check.CheckingEncoder;
+import com.github.manebarros.core.AbstractHistoryK;
+import com.github.manebarros.core.Execution;
+import com.github.manebarros.core.ExecutionFormula;
+import com.github.manebarros.core.HistoryFormula;
+import com.github.manebarros.core.check.DefaultHistoryCheckingEncoder;
+import com.github.manebarros.core.check.candidate.CandCheckEncoder;
+import com.github.manebarros.core.check.candidate.CandCheckHistoryEncoder;
+import com.github.manebarros.core.check.candidate.CandCheckModuleEncoderConstructor;
 import com.github.manebarros.core.synth.FolSynthesisEncoder;
 import com.github.manebarros.core.synth.Scope;
-import com.github.manebarros.core.synth.SynthesisModule;
 import com.github.manebarros.core.synth.SynthesisModuleEncoder;
 import com.github.manebarros.history.History;
 import com.github.manebarros.kodkod.KodkodProblem;
@@ -30,6 +35,9 @@ import kodkod.instance.Instance;
 public class CegisSynthesizer {
   private final FolSynthesisEncoder synthesisEncoder;
   private final List<CegisVerifier<?>> checkingEncoders;
+
+  private final CandCheckHistoryEncoder candCheckHistoryEncoder =
+      DefaultHistoryCheckingEncoder.instance();
 
   public CegisSynthesizer(Scope scope) {
     this.synthesisEncoder = new FolSynthesisEncoder(scope);
@@ -65,25 +73,36 @@ public class CegisSynthesizer {
   public <E extends Execution> CegisModule<E> add(
       SynthesisSpec<E> spec,
       SynthesisModuleEncoder<E> synthesisEncoder,
-      CheckingEncoder<E> checkingEncoder,
+      CandCheckEncoder<E> checkingEncoder,
       CounterexampleEncoder<E> counterexampleEncoder) {
     this.checkingEncoders.add(
         new CegisVerifier<>(checkingEncoder, counterexampleEncoder, spec.universalFormula()));
-    SynthesisModule<E> module =
-        synthesisEncoder.encode(this.synthesisEncoder, calculateSearchFormula(spec));
-    this.synthesisEncoder.register(module);
-    return new CegisModule<E>(module.executions(), checkingEncoder.execution());
+    return new CegisModule<E>(
+        this.synthesisEncoder.register(synthesisEncoder, calculateSearchFormula(spec)),
+        checkingEncoder.execution());
+  }
+
+  public <E extends Execution> CegisModule<E> add(
+      SynthesisSpec<E> spec,
+      SynthesisModuleEncoder<E> synthesisEncoder,
+      CandCheckModuleEncoderConstructor<E> moduleEncoderGenerator,
+      CounterexampleEncoder<E> counterexampleEncoder) {
+    return add(
+        spec,
+        synthesisEncoder,
+        new CandCheckEncoder<>(candCheckHistoryEncoder, moduleEncoderGenerator),
+        counterexampleEncoder);
   }
 
   private record CegisVerifier<E extends Execution>(
-      CheckingEncoder<E> checkingEncoder,
+      CandCheckEncoder<E> checkingEncoder,
       CounterexampleEncoder<E> cexEncoder,
       ExecutionFormula<E> universalFormula) {
 
     Optional<HistoryFormula> guide(
         AbstractHistoryK history, Instance instance, Bounds bounds, Solver solver) {
       Solution candCheckSol =
-          checkingEncoder.encode(history, instance, universalFormula.not()).solve(solver);
+          checkingEncoder.solve(instance, history, universalFormula.not(), solver);
 
       if (candCheckSol.unsat()) {
         // No counterexample

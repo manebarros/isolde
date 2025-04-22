@@ -5,7 +5,9 @@ import static com.github.manebarros.history.Operation.readOf;
 import static com.github.manebarros.history.Operation.writeOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import com.github.manebarros.cerone.CeroneCheckingEncoder;
+import com.github.manebarros.cerone.check.CeroneCheckingModuleEncoder;
+import com.github.manebarros.core.check.DefaultHistoryCheckingEncoder;
+import com.github.manebarros.core.check.external.HistCheckEncoder;
 import com.github.manebarros.history.History;
 import com.github.manebarros.history.Session;
 import com.github.manebarros.history.Transaction;
@@ -21,11 +23,12 @@ import kodkod.instance.TupleSet;
 import kodkod.instance.Universe;
 import org.junit.jupiter.api.Test;
 
-public class DirectCeroneCheckingEncoderTest implements CeroneCheckingEncoderTest {
+public class DirectCeroneCheckingEncoderTest
+    implements CeroneCheckingEncoderTest, CeroneCandCheckEncoderTest {
 
   @Override
-  public CeroneCheckingEncoder encoder() {
-    return new CeroneCheckingEncoder();
+  public CeroneCheckingModuleEncoder moduleEncoder() {
+    return new CeroneCheckingModuleEncoder(1);
   }
 
   @Test
@@ -38,7 +41,12 @@ public class DirectCeroneCheckingEncoderTest implements CeroneCheckingEncoderTes
     Relation arAux = Relation.binary("Ar's transitive reduction");
     Relation vis = Relation.binary("vis");
 
-    Bounds b = new CeroneCheckingEncoder(vis, arAux).encode(hist, e -> Formula.TRUE).bounds();
+    Bounds b =
+        new HistCheckEncoder<>(
+                DefaultHistoryCheckingEncoder.instance(),
+                new CeroneCheckingModuleEncoder(vis, arAux))
+            .encode(hist, e -> Formula.TRUE)
+            .bounds();
 
     Atom<Integer> initTxnAtom = new Atom<>("t", 0);
     Atom<Integer> txnAtom = new Atom<>("t", 1);
@@ -89,7 +97,12 @@ public class DirectCeroneCheckingEncoderTest implements CeroneCheckingEncoderTes
 
     Relation arAux = Relation.binary("Ar's transitive reduction");
     Relation vis = Relation.binary("vis");
-    Bounds b = new CeroneCheckingEncoder(vis, arAux).encode(hist, e -> Formula.TRUE).bounds();
+    Bounds b =
+        new HistCheckEncoder<>(
+                DefaultHistoryCheckingEncoder.instance(),
+                new CeroneCheckingModuleEncoder(vis, arAux))
+            .encode(hist, e -> Formula.TRUE)
+            .bounds();
 
     List<Atom<Integer>> txnAtoms =
         Arrays.asList(new Atom<>("t", 0), new Atom<>("t", 1), new Atom<>("t", 2));
