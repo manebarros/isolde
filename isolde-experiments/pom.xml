@@ -5,7 +5,7 @@
 <modelVersion>4.0.0</modelVersion>
 
 <parent>
-    <groupId>com.github.manebarros</groupId>
+    <groupId>haslab</groupId>
     <artifactId>isolde</artifactId>
     <version>1.0-SNAPSHOT</version>
 </parent>
@@ -15,7 +15,7 @@
 
 <dependencies>
     <dependency>
-        <groupId>com.github.manebarros</groupId>
+        <groupId>haslab</groupId>
         <artifactId>isolde-core</artifactId>
         <version>${project.version}</version>
     </dependency>
