@@ -3,6 +3,7 @@ package haslab.isolde.biswas;
 import haslab.isolde.core.cegis.CounterexampleEncoder;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
+import haslab.isolde.kodkod.Util;
 import kodkod.ast.Relation;
 import kodkod.engine.Evaluator;
 import kodkod.instance.Bounds;
@@ -18,7 +19,7 @@ public class BiswasCounterexampleEncoder implements CounterexampleEncoder<Biswas
       ExecutionFormula<BiswasExecution> formula,
       Bounds bounds) {
     var eval = new Evaluator(instance);
-    TupleSet commitOrderVal = eval.evaluate(execution.co());
+    TupleSet commitOrderVal = Util.convert(eval, execution, BiswasExecution::co, bounds.universe().factory(), 2);
     Relation cexCommitOrderRel = Relation.binary("cexCommitOrder");
     bounds.boundExactly(cexCommitOrderRel, commitOrderVal);
     return h -> formula.resolve(new BiswasExecution(h, cexCommitOrderRel));

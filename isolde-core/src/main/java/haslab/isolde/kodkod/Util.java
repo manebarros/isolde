@@ -1,6 +1,8 @@
 package haslab.isolde.kodkod;
 
 import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.Execution;
+import haslab.isolde.core.ExecutionExpression;
 import haslab.isolde.core.HistoryExpression;
 import java.util.Collection;
 import java.util.LinkedHashMap;
@@ -83,6 +85,25 @@ public final class Util {
     assert arity > 0;
     TupleSet ts = tf.noneOf(arity);
     for (var tuple : ev.evaluate(expression.resolve(context))) {
+      Tuple newTuple = tf.tuple(tuple.atom(0));
+      for (int i = 1; i < arity; i++) {
+        newTuple = newTuple.product(tf.tuple(tuple.atom(i)));
+      }
+      ts.add(newTuple);
+    }
+
+    return ts;
+  }
+
+  public static <E extends Execution> TupleSet convert(
+          Evaluator ev,
+          E execution,
+          ExecutionExpression<E> expression,
+          TupleFactory tf,
+          int arity) {
+    assert arity > 0;
+    TupleSet ts = tf.noneOf(arity);
+    for (var tuple : ev.evaluate(expression.resolve(execution))) {
       Tuple newTuple = tf.tuple(tuple.atom(0));
       for (int i = 1; i < arity; i++) {
         newTuple = newTuple.product(tf.tuple(tuple.atom(i)));

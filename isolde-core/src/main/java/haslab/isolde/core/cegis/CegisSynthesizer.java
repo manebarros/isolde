@@ -1,10 +1,5 @@
 package haslab.isolde.core.cegis;
 
-import static haslab.isolde.biswas.definitions.HistoryOnlyIsolationCriterion.Causal;
-import static haslab.isolde.biswas.definitions.IsolationCriterion.Prefix;
-
-import haslab.isolde.biswas.BiswasExecution;
-import haslab.isolde.cerone.definitions.CustomDefinitions;
 import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
@@ -18,17 +13,16 @@ import haslab.isolde.core.synth.Scope;
 import haslab.isolde.core.synth.SynthesisModuleEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.kodkod.KodkodProblem;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
-import kodkod.engine.Evaluator;
 import kodkod.engine.IncrementalSolver;
 import kodkod.engine.Solution;
 import kodkod.engine.Solver;
 import kodkod.engine.config.Options;
+import kodkod.engine.satlab.SATFactory;
 import kodkod.instance.Bounds;
 import kodkod.instance.Instance;
 
@@ -131,57 +125,15 @@ public class CegisSynthesizer {
 
   public Optional<History> synthesizeH() {
     Solution r = synthesize().getFirst();
-    if (r.sat()) {
-      System.out.println(
-          new Evaluator(r.instance())
-              .evaluate(CustomDefinitions.versionOrders().resolve(historyEncoding())));
-      System.out.println(
-          new Evaluator(r.instance())
-              .evaluate(CustomDefinitions.knowsAtLeast().resolve(historyEncoding())));
-      System.out.println(
-          "Causal mandatory commit order edges:\n"
-              + new Evaluator(r.instance())
-                  .evaluate(Causal.mandatoryCommitOrderEdges(historyEncoding())));
-      System.out.println(
-          "Prefix mandatory commit order edges:\n"
-              + new Evaluator(r.instance())
-                  .evaluate(
-                      Prefix.mandatoryCommitOrderEdges(
-                          new BiswasExecution(
-                              historyEncoding(),
-                              Causal.mandatoryCommitOrderEdges(historyEncoding())))));
-      for (int i = 0; i < 4; i++) {
-
-        System.out.println(
-            "Prefix mandatory commit order edges depth "
-                + i
-                + ":\n"
-                + new Evaluator(r.instance())
-                    .evaluate(
-                        CustomDefinitions.mandatoryCommitOrderEdgesPrefix(i)
-                            .resolve(historyEncoding())));
-      }
-      // System.out.println(
-      //    "Prefix mandatory commit order edges depth 2:\n"
-      //        + new Evaluator(r.instance())
-      //            .evaluate(
-      //                Prefix.mandatoryCommitOrderEdges(
-      //                    new BiswasExecution(
-      //                        historyEncoding(),
-      //                        Prefix.mandatoryCommitOrderEdges(
-      //                            new BiswasExecution(
-      //                                historyEncoding(),
-      //                                Causal.mandatoryCommitOrderEdges(historyEncoding())))))));
-    }
     return r.unsat() ? Optional.empty() : Optional.of(new History(historyEncoding(), r.instance()));
   }
 
-  public List<Solution> synthesize() {
+  public List<Solution> synthesize(Options synthOptions, Options checkOptions) {
     List<Solution> candidates = new LinkedList<>();
     KodkodProblem searchProblem = this.synthesisEncoder.encode();
 
-    IncrementalSolver synthesizer = IncrementalSolver.solver(new Options());
-    Solver checker = new Solver();
+    IncrementalSolver synthesizer = IncrementalSolver.solver(synthOptions);
+    Solver checker = new Solver(checkOptions);
 
     Solution candSol = synthesizer.solve(searchProblem.formula(), searchProblem.bounds());
     candidates.addFirst(candSol);
@@ -197,12 +149,12 @@ public class CegisSynthesizer {
         guide(historyEncoding(), candSol.instance(), newBounds, checker);
     while (feedback.isPresent()) {
       candSol = synthesizer.solve(feedback.get().resolve(historyEncoding()), newBounds);
-      System.out.println(
-          "cand "
-              + ++candCount
-              + " (after "
-              + Duration.between(start, Instant.now()).toSeconds()
-              + " s).");
+      // System.out.println(
+      //    "cand "
+      //        + ++candCount
+      //        + " (after "
+      //        + Duration.between(start, Instant.now()).toSeconds()
+      //        + " s).");
       candidates.addFirst(candSol); // Register new (potential) candidate
       if (candSol.unsat()) {
         // Stop if problem is UNSAT
@@ -213,6 +165,20 @@ public class CegisSynthesizer {
       feedback = guide(historyEncoding(), candSol.instance(), newBounds, checker);
     }
     return candidates;
+  }
+
+  public List<Solution> synthesize() {
+    return synthesize(new Options());
+  }
+
+  public List<Solution> synthesize(SATFactory satSolver) {
+    Options opt = new Options();
+    opt.setSolver(satSolver);
+    return synthesize(opt);
+  }
+
+  public List<Solution> synthesize(Options options) {
+    return synthesize(options, options);
   }
 
   private AbstractHistoryK historyEncoding() {

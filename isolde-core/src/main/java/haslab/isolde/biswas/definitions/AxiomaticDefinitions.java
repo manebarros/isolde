@@ -7,6 +7,12 @@ import kodkod.ast.Variable;
 
 public final class AxiomaticDefinitions {
 
+  public static ExecutionFormula<BiswasExecution> ReadAtomic = AxiomaticDefinitions::ReadAtomic;
+  public static ExecutionFormula<BiswasExecution> Causal = AxiomaticDefinitions::Causal;
+  public static ExecutionFormula<BiswasExecution> Prefix = AxiomaticDefinitions::Prefix;
+  public static ExecutionFormula<BiswasExecution> Snapshot = AxiomaticDefinitions::Snapshot;
+  public static ExecutionFormula<BiswasExecution> Ser = AxiomaticDefinitions::Serializability;
+
   public static Formula ReadAtomic(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
     Variable t2 = Variable.unary("t2");
@@ -24,36 +30,6 @@ public final class AxiomaticDefinitions {
                     t1.oneOf(e.history().txnThatWriteToAnyOf(x))
                         .and(
                             t2.oneOf(e.history().txnThatWriteToAnyOf(x))
-                                .and(
-                                    t3.oneOf(
-                                        e.history()
-                                            .txnThatReadAnyOf(x)
-                                            .difference(t1.union(t2)))))));
-  }
-
-  public static Formula ReadAtomicWoInitial(BiswasExecution e) {
-    Variable t1 = Variable.unary("t1");
-    Variable t2 = Variable.unary("t2");
-    Variable t3 = Variable.unary("t3");
-    Variable x = Variable.unary("x");
-
-    return Formula.and(
-            t1.eq(t2).not(),
-            e.history().wr(t1, x, t3),
-            t3.in(t2.join(e.history().sessionOrder().union(e.history().binaryWr()))))
-        .implies(t1.in(t2.join(e.co())))
-        .forAll(
-            x.oneOf(e.history().keys())
-                .and(
-                    t1.oneOf(
-                            e.history()
-                                .txnThatWriteToAnyOf(x)
-                                .intersection(e.history().normalTxns()))
-                        .and(
-                            t2.oneOf(
-                                    e.history()
-                                        .txnThatWriteToAnyOf(x)
-                                        .intersection(e.history().normalTxns()))
                                 .and(
                                     t3.oneOf(
                                         e.history()
@@ -81,10 +57,6 @@ public final class AxiomaticDefinitions {
                                         e.history()
                                             .txnThatReadAnyOf(x)
                                             .difference(t1.union(t2)))))));
-  }
-
-  public static ExecutionFormula<BiswasExecution> Prefix() {
-    return AxiomaticDefinitions::Prefix;
   }
 
   public static Formula Prefix(BiswasExecution e) {

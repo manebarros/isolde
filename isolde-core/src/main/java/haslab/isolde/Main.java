@@ -8,11 +8,10 @@ import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.cerone.definitions.CustomDefinitions;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
-import haslab.isolde.core.synth.Scope;
 import haslab.isolde.core.cegis.SynthesisSpec;
+import haslab.isolde.core.synth.Scope;
 import haslab.isolde.history.History;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
@@ -147,40 +146,6 @@ public class Main {
     Optional<History> b_not_a = synth.synthesize();
 
     return new ComparisonResult(a_name, b_name, a_not_b, b_not_a);
-  }
-
-  private static void compareAcrossFrameworks() {
-    List<Definition> definitions =
-        Arrays.asList(
-            new Definition("Read Atomic", CeroneDefinitions.RA, AxiomaticDefinitions::ReadAtomic),
-            new Definition(
-                "Update Atomic",
-                CeroneDefinitions.UA,
-                e -> AxiomaticDefinitions.ReadAtomic(e).and(AxiomaticDefinitions.Conflict(e))),
-            new Definition(
-                "Causal Consistency", CeroneDefinitions.CC, AxiomaticDefinitions::Causal),
-            new Definition(
-                "Prefix Consistency", CeroneDefinitions.PC, AxiomaticDefinitions::Prefix),
-            new Definition(
-                "Parallel Snapshot Isolation",
-                CeroneDefinitions.PSI,
-                e -> AxiomaticDefinitions.Causal(e).and(AxiomaticDefinitions.Conflict(e))),
-            new Definition(
-                "Snapshot Isolation",
-                CeroneDefinitions.SI,
-                e -> AxiomaticDefinitions.Prefix(e).and(AxiomaticDefinitions.Conflict(e))),
-            new Definition(
-                "Serializability", CeroneDefinitions.SER, AxiomaticDefinitions::Serializability));
-
-    for (var def : definitions) {
-      System.out.print(
-          compareBiswasCerone(
-              new Scope(5),
-              "Cerone's " + def.name(),
-              def.ceroneDefinition(),
-              "Biswas' " + def.name(),
-              def.biswasDefinition()));
-    }
   }
 
   public static void compareCeroneDefinitions() {

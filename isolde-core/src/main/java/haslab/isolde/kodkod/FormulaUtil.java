@@ -69,11 +69,6 @@ public final class FormulaUtil {
         decls = decls.and(vvar.oneOf(h.values()));
       }
 
-      System.out.println(transactions);
-      System.out.println(writes);
-      System.out.println(reads);
-      System.out.println(so);
-
       return Formula.and(
               h.normalTxns().eq(transactions),
               h.finalWrites().eq(writes),
