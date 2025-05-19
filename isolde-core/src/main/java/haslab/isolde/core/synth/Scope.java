@@ -48,4 +48,14 @@ public class Scope {
   public void setSessions(int sessions) {
     this.sessions = sessions;
   }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    sb.append(this.transactions).append(" transactions, ");
+    sb.append(this.objects).append(" objects, ");
+    sb.append(this.values).append(" values, ");
+    sb.append(this.sessions).append(" sessions");
+    return sb.toString();
+  }
 }

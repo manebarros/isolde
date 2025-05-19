@@ -1,0 +1,69 @@
+package haslab.isolde.experiments.benchmark;
+
+import static java.nio.file.StandardOpenOption.APPEND;
+import static java.nio.file.StandardOpenOption.WRITE;
+
+import haslab.isolde.core.synth.Scope;
+import java.io.IOException;
+import java.nio.file.Files;
+import java.nio.file.Path;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+import kodkod.engine.satlab.SATFactory;
+
+public final class Util {
+  public static final Map<String, SATFactory> solvers =
+      Map.of(
+          "minisat", SATFactory.MiniSat,
+          "glucose", SATFactory.Glucose,
+          "sat4j", SATFactory.DefaultSAT4J);
+
+  public static void writeString(String s, Path p) throws IOException {
+    Path dir = p.getParent();
+    if (!Files.exists(dir)) Files.createDirectories(dir);
+    Files.writeString(p, s);
+  }
+
+  public static void appendString(String s, Path p) throws IOException {
+    assert Files.exists(p);
+    Files.writeString(p, s, APPEND, WRITE);
+  }
+
+  public static void writeMeasurements(List<Measurement> measurements, Path p) throws IOException {
+    String str =
+        Measurement.header()
+            + "\n"
+            + unlines(
+                measurements.stream().map(Measurement::asCsvRow).collect(Collectors.toList()));
+    writeString(str, p);
+  }
+
+  public static void appendMeasurements(List<Measurement> measurements, Path p) throws IOException {
+    if (Files.exists(p)) {
+      appendString(unlines(measurements), p);
+    } else {
+      writeMeasurements(measurements, p);
+    }
+  }
+
+  public static <R> String unlines(List<R> rows) {
+    StringBuilder sb = new StringBuilder();
+    for (var row : rows) sb.append(row).append("\n");
+    return sb.toString();
+  }
+
+  public static List<Scope> scopesFromRange(int keys, int val, int sessions, int from, int to) {
+    return scopesFromRange(keys, val, sessions, from, to, 1);
+  }
+
+  public static List<Scope> scopesFromRange(
+      int keys, int val, int sessions, int from, int to, int step) {
+    List<Scope> scopes = new ArrayList<>();
+    for (int txn_num = from; txn_num <= to; txn_num += step) {
+      scopes.add(new Scope(txn_num, keys, val, sessions));
+    }
+    return scopes;
+  }
+}
