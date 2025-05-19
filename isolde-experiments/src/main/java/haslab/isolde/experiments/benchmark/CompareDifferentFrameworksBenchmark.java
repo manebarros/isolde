@@ -27,7 +27,7 @@ public final class CompareDifferentFrameworksBenchmark {
       ExecutionFormula<CeroneExecution> ceroneDef,
       ExecutionFormula<BiswasExecution> biswasDef) {}
 
-  private static final List<Scope> scopes = Util.scopesFromRange(3, 3, 3, 3, 4);
+  private static final List<Scope> scopes = Util.scopesFromRange(3, 3, 3, 3, 5);
 
   private static final List<Definition> levels =
       Arrays.asList(
@@ -88,6 +88,10 @@ public final class CompareDifferentFrameworksBenchmark {
     }
     System.out.printf("SAT: %d\nUNSAT: %d\n", success, failed);
     return rows;
+  }
+
+  public static final void measureBiswasNotCerone(String file) throws IOException {
+    measureBiswasNotCerone(Path.of(file));
   }
 
   public static final void measureBiswasNotCerone(Path file) throws IOException {
