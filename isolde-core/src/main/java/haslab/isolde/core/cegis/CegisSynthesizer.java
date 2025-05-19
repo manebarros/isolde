@@ -181,7 +181,7 @@ public class CegisSynthesizer {
     return synthesize(options, options);
   }
 
-  private AbstractHistoryK historyEncoding() {
+  public AbstractHistoryK historyEncoding() {
     return this.synthesisEncoder.getHistoryEncoding();
   }
 }

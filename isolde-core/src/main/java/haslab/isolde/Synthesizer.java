@@ -15,6 +15,9 @@ import haslab.isolde.core.synth.Scope;
 import haslab.isolde.history.History;
 import java.util.List;
 import java.util.Optional;
+import kodkod.engine.Solution;
+import kodkod.engine.satlab.SATFactory;
+import kodkod.instance.Instance;
 
 public class Synthesizer {
   private CegisSynthesizer cegisSynthesizer;
@@ -53,6 +56,20 @@ public class Synthesizer {
                 BiswasCheckingEncoder::new,
                 new BiswasCounterexampleEncoder())
             .synthesisExecutions();
+  }
+
+  public record CegisHistory(Optional<History> history, int candidates) {}
+
+  public CegisHistory synthesizeWithInfo(SATFactory solver) {
+    List<Solution> solutions = this.cegisSynthesizer.synthesize(solver);
+    boolean success = solutions.getFirst().sat();
+    if (success) {
+      Instance instance = solutions.getFirst().instance();
+      return new CegisHistory(
+          Optional.of(new History(this.cegisSynthesizer.historyEncoding(), instance)),
+          solutions.size());
+    }
+    return new CegisHistory(Optional.empty(), solutions.size() - 1);
   }
 
   public Optional<History> synthesize() {

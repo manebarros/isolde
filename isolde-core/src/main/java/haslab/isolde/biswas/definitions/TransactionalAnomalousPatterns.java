@@ -9,6 +9,16 @@ import kodkod.ast.Formula;
 import kodkod.ast.Variable;
 
 public final class TransactionalAnomalousPatterns {
+
+  public static final ExecutionFormula<BiswasExecution> k = TransactionalAnomalousPatterns::k;
+  public static final ExecutionFormula<BiswasExecution> l = TransactionalAnomalousPatterns::l;
+  public static final ExecutionFormula<BiswasExecution> m = TransactionalAnomalousPatterns::m;
+  public static final ExecutionFormula<BiswasExecution> n = TransactionalAnomalousPatterns::n;
+
+  public static final ExecutionFormula<BiswasExecution> ReadAtomic = k.not().and(l.not());
+  public static final ExecutionFormula<BiswasExecution> Causal =
+      k.not().and(l.not()).and(m.not()).and(n.not());
+
   public static Formula k(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
     Variable t2 = Variable.unary("t2");
@@ -30,8 +40,6 @@ public final class TransactionalAnomalousPatterns {
                 .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));
   }
 
-  public static ExecutionFormula<BiswasExecution> l = TransactionalAnomalousPatterns::l;
-
   public static Formula l(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
     Variable t2 = Variable.unary("t2");
@@ -52,9 +60,6 @@ public final class TransactionalAnomalousPatterns {
                 .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
                 .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));
   }
-
-  public static ExecutionFormula<BiswasExecution> m = TransactionalAnomalousPatterns::m;
-  public static ExecutionFormula<BiswasExecution> n = TransactionalAnomalousPatterns::n;
 
   public static Formula m(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
