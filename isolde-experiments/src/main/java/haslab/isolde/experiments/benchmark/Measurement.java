@@ -19,6 +19,7 @@ public record Measurement(
     Integer num_sessions,
     Long time_ms,
     Integer candidates,
+    Date run,
     Date date) {
 
   public Measurement(
@@ -29,6 +30,7 @@ public record Measurement(
       Scope scope,
       Long time,
       Integer candidates,
+      Date run,
       Date date) {
     this(
         implementation,
@@ -41,6 +43,7 @@ public record Measurement(
         scope.getSessions(),
         time,
         candidates,
+        run,
         date);
   }
 
@@ -58,7 +61,7 @@ public record Measurement(
     DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
     return String.format(
-        "%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%s",
+        "%s,%s,%s,%s,%d,%d,%d,%d,%d,%d,%s,%s",
         implementation,
         solver,
         satisfied,
@@ -69,6 +72,7 @@ public record Measurement(
         num_sessions,
         time_ms,
         candidates,
+        dateFormat.format(run),
         dateFormat.format(date));
   }
 }

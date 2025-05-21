@@ -19,8 +19,8 @@ import java.util.Collection;
 import java.util.Date;
 import java.util.List;
 
-public final class CompareDifferentFrameworksBenchmark {
-  private CompareDifferentFrameworksBenchmark() {}
+public final class EquivalentDefinitionsAcrossFrameworks {
+  private EquivalentDefinitionsAcrossFrameworks() {}
 
   private static record Definition(
       String name,
@@ -37,18 +37,26 @@ public final class CompareDifferentFrameworksBenchmark {
           new Definition("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot),
           new Definition("SER", CeroneDefinitions.SER, AxiomaticDefinitions.Ser));
 
-  public static final List<Measurement> measureBiswasNotCerone(
+  public static final List<Measurement> measure(
       List<Scope> scopes, List<Definition> levels, Collection<String> solvers, int samples) {
-    int uniqueRuns = scopes.size() * levels.size() * solvers.size() * samples;
+    int uniqueRuns = scopes.size() * levels.size() * solvers.size() * samples * 2;
     int count = 0;
     int success = 0;
     int failed = 0;
+    Instant run = Instant.now();
     List<Measurement> rows = new ArrayList<>(uniqueRuns);
     for (Scope scope : scopes) {
       for (Definition level : levels) {
+        //  Biswas and not Cerone
         Synthesizer synth = new Synthesizer(scope);
         synth.registerBiswas(new SynthesisSpec<>(level.biswasDef()));
         synth.registerCerone(SynthesisSpec.fromUniversal(level.ceroneDef().not()));
+
+        // Cerone and not Biswas
+        Synthesizer synth2 = new Synthesizer(scope);
+        synth2.registerCerone(new SynthesisSpec<>(level.ceroneDef()));
+        synth2.registerBiswas(SynthesisSpec.fromUniversal(level.biswasDef().not()));
+
         for (String solver : solvers) {
           for (int sample = 0; sample < samples; sample++) {
             Instant before = Instant.now();
@@ -57,7 +65,7 @@ public final class CompareDifferentFrameworksBenchmark {
             long time = Duration.between(before, after).toMillis();
 
             System.out.printf(
-                "[%3d/%d] (%s, [%s], %s) : %d\n",
+                "[%3d/%d] (%s, [%s], %s - Biswas and not Cerone) : %d\n",
                 ++count,
                 uniqueRuns,
                 "default",
@@ -81,6 +89,40 @@ public final class CompareDifferentFrameworksBenchmark {
                     scope,
                     time,
                     candidates,
+                    Date.from(run),
+                    Date.from(Instant.now())));
+
+            before = Instant.now();
+            hist = synth2.synthesizeWithInfo(Util.solvers.get(solver));
+            after = Instant.now();
+            time = Duration.between(before, after).toMillis();
+
+            System.out.printf(
+                "[%3d/%d] (%s, [%s], %s - Cerone and not Biswas) : %d\n",
+                ++count,
+                uniqueRuns,
+                "default",
+                scope,
+                level.name(),
+                time); // TODO : use different implementations
+
+            if (hist.history().isPresent()) {
+              success++;
+            } else {
+              failed++;
+            }
+
+            candidates = hist.candidates();
+            rows.add(
+                new Measurement(
+                    "default",
+                    solver,
+                    level.name() + "_Cerone",
+                    level.name() + "_Biswas",
+                    scope,
+                    time,
+                    candidates,
+                    Date.from(run),
                     Date.from(Instant.now())));
           }
         }
@@ -90,13 +132,12 @@ public final class CompareDifferentFrameworksBenchmark {
     return rows;
   }
 
-  public static final void measureBiswasNotCerone(String file) throws IOException {
-    measureBiswasNotCerone(Path.of(file));
+  public static final void measure(String file) throws IOException {
+    measure(Path.of(file));
   }
 
-  public static final void measureBiswasNotCerone(Path file) throws IOException {
-    List<Measurement> measurements =
-        measureBiswasNotCerone(scopes, levels, Util.solvers.keySet(), 3);
+  public static final void measure(Path file) throws IOException {
+    List<Measurement> measurements = measure(scopes, levels, Util.solvers.keySet(), 3);
     Util.writeMeasurements(measurements, file);
   }
 }

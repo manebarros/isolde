@@ -1,12 +1,10 @@
 package haslab.isolde.experiments;
 
-import haslab.isolde.experiments.benchmark.CompareDifferentFrameworksBenchmark;
+import haslab.isolde.experiments.benchmark.DifferentDefinitionsAcrossFrameworks;
 import java.io.IOException;
-import java.nio.file.Path;
 
 public class Main {
   public static void main(String[] args) throws IOException {
-    CompareDifferentFrameworksBenchmark.measureBiswasNotCerone(
-        Path.of("/home/mane/Desktop/vldb-experiments/data.csv"));
+    DifferentDefinitionsAcrossFrameworks.measure("/home/mane/Desktop/vldb-experiments/data.csv");
   }
 }
