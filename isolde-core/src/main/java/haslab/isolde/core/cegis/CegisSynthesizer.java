@@ -4,13 +4,16 @@ import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
-import haslab.isolde.core.check.DefaultHistoryCheckingEncoder;
 import haslab.isolde.core.check.candidate.CandCheckEncoder;
-import haslab.isolde.core.check.candidate.CandCheckHistoryEncoder;
-import haslab.isolde.core.check.candidate.CandCheckModuleEncoderConstructor;
-import haslab.isolde.core.synth.FolSynthesisEncoder;
+import haslab.isolde.core.general.ExecutionConstraintsEncoderConstructor;
+import haslab.isolde.core.general.ExecutionModule;
+import haslab.isolde.core.general.HelperStructureProducer;
+import haslab.isolde.core.general.HistoryConstraintProblem;
+import haslab.isolde.core.general.HistoryEncoder;
+import haslab.isolde.core.general.ProblemExtendingStrategy;
+import haslab.isolde.core.synth.FolSynthesisInput;
+import haslab.isolde.core.synth.HistoryAtoms;
 import haslab.isolde.core.synth.Scope;
-import haslab.isolde.core.synth.SynthesisModuleEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.kodkod.KodkodProblem;
 import java.time.Instant;
@@ -26,20 +29,41 @@ import kodkod.engine.satlab.SATFactory;
 import kodkod.instance.Bounds;
 import kodkod.instance.Instance;
 
-public class CegisSynthesizer {
-  private final FolSynthesisEncoder synthesisEncoder;
+public class CegisSynthesizer<T, S> {
+  private final HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder;
   private final List<CegisVerifier<?>> checkingEncoders;
 
-  private final CandCheckHistoryEncoder candCheckHistoryEncoder =
-      DefaultHistoryCheckingEncoder.instance();
-
-  public CegisSynthesizer(Scope scope) {
-    this.synthesisEncoder = new FolSynthesisEncoder(scope);
+  public CegisSynthesizer(HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder) {
+    this.synthesisEncoder = synthesisEncoder;
     this.checkingEncoders = new ArrayList<>();
   }
 
-  public CegisSynthesizer(Scope scope, HistoryFormula historyFormula) {
-    this.synthesisEncoder = new FolSynthesisEncoder(scope, historyFormula);
+  public CegisSynthesizer(
+      Scope scope,
+      HistoryEncoder<FolSynthesisInput, T> historyEncoder,
+      HelperStructureProducer<FolSynthesisInput, T> helperStructureProducer,
+      ProblemExtendingStrategy<T, S> problemExtendingStrategy) {
+    this.synthesisEncoder =
+        new HistoryConstraintProblem<>(
+            new FolSynthesisInput(new HistoryAtoms(scope)),
+            historyEncoder,
+            helperStructureProducer,
+            problemExtendingStrategy);
+    this.checkingEncoders = new ArrayList<>();
+  }
+
+  public CegisSynthesizer(
+      Scope scope,
+      HistoryFormula historyFormula,
+      HistoryEncoder<FolSynthesisInput, T> historyEncoder,
+      HelperStructureProducer<FolSynthesisInput, T> helperStructureProducer,
+      ProblemExtendingStrategy<T, S> problemExtendingStrategy) {
+    this.synthesisEncoder =
+        new HistoryConstraintProblem<>(
+            new FolSynthesisInput(new HistoryAtoms(scope), historyFormula),
+            historyEncoder,
+            helperStructureProducer,
+            problemExtendingStrategy);
     this.checkingEncoders = new ArrayList<>();
   }
 
@@ -66,26 +90,26 @@ public class CegisSynthesizer {
 
   public <E extends Execution> CegisModule<E> add(
       SynthesisSpec<E> spec,
-      SynthesisModuleEncoder<E> synthesisEncoder,
+      ExecutionConstraintsEncoderConstructor<FolSynthesisInput, S, E> encoderConstructor,
       CandCheckEncoder<E> checkingEncoder,
       CounterexampleEncoder<E> counterexampleEncoder) {
     this.checkingEncoders.add(
         new CegisVerifier<>(checkingEncoder, counterexampleEncoder, spec.universalFormula()));
     return new CegisModule<E>(
-        this.synthesisEncoder.register(synthesisEncoder, calculateSearchFormula(spec)),
+        this.synthesisEncoder.register(encoderConstructor, calculateSearchFormula(spec)),
         checkingEncoder.execution());
   }
 
   public <E extends Execution> CegisModule<E> add(
       SynthesisSpec<E> spec,
-      SynthesisModuleEncoder<E> synthesisEncoder,
-      CandCheckModuleEncoderConstructor<E> moduleEncoderGenerator,
+      ExecutionModule<FolSynthesisInput, S, E> encoderConstructor,
+      CandCheckEncoder<E> checkingEncoder,
       CounterexampleEncoder<E> counterexampleEncoder) {
-    return add(
-        spec,
-        synthesisEncoder,
-        new CandCheckEncoder<>(candCheckHistoryEncoder, moduleEncoderGenerator),
-        counterexampleEncoder);
+    this.checkingEncoders.add(
+        new CegisVerifier<>(checkingEncoder, counterexampleEncoder, spec.universalFormula()));
+    return new CegisModule<E>(
+        this.synthesisEncoder.register(encoderConstructor, calculateSearchFormula(spec)),
+        checkingEncoder.execution());
   }
 
   private record CegisVerifier<E extends Execution>(
@@ -182,6 +206,6 @@ public class CegisSynthesizer {
   }
 
   public AbstractHistoryK historyEncoding() {
-    return this.synthesisEncoder.getHistoryEncoding();
+    return this.synthesisEncoder.historyEncoding();
   }
 }

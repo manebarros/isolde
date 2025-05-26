@@ -1,12 +1,13 @@
 package haslab.isolde.biswas;
 
-import haslab.isolde.core.synth.SynthesisModuleEncoder;
+import haslab.isolde.core.general.ExecutionModule;
+import haslab.isolde.core.synth.FolSynthesisInput;
+import haslab.isolde.core.synth.TransactionTotalOrderInfo;
 
 public class DefaultBiswasSynthesisModuleEncoderTest implements BiswasSynthesisModuleEncoderTest {
 
   @Override
-  public SynthesisModuleEncoder<BiswasExecution> encoder() {
-    return (historyEncoding, historyAtoms, formulas) ->
-        new BiswasSynthesisModule(historyEncoding, historyAtoms, formulas);
+  public ExecutionModule<FolSynthesisInput, TransactionTotalOrderInfo, BiswasExecution> encoder() {
+    return BiswasSynthesisModule::new;
   }
 }

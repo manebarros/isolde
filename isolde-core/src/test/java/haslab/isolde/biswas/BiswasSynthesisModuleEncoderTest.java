@@ -1,7 +1,9 @@
 package haslab.isolde.biswas;
 
 import haslab.isolde.SynthesisModuleEncoderTest;
-import haslab.isolde.core.synth.SynthesisModuleEncoder;
+import haslab.isolde.core.general.ExecutionModule;
+import haslab.isolde.core.synth.FolSynthesisInput;
+import haslab.isolde.core.synth.TransactionTotalOrderInfo;
 import haslab.isolde.kodkod.KodkodUtil;
 import java.util.Arrays;
 import kodkod.ast.Formula;
@@ -11,7 +13,7 @@ public interface BiswasSynthesisModuleEncoderTest
     extends SynthesisModuleEncoderTest<BiswasExecution> {
 
   @Override
-  SynthesisModuleEncoder<BiswasExecution> encoder();
+  ExecutionModule<FolSynthesisInput, TransactionTotalOrderInfo, BiswasExecution> encoder();
 
   @Test
   default void commitOrderExtendsSessionOrderPlusWr() {

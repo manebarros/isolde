@@ -1,14 +1,22 @@
 package haslab.isolde.check;
 
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.*;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.initialTransaction;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.keys;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.reads;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessionOrder;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessions;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.transactions;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.txn_session;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.values;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.writes;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
+import haslab.isolde.cerone.CeroneCandCheckingModuleEncoder;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
-import haslab.isolde.core.check.DefaultHistoryCheckingEncoder;
 import haslab.isolde.core.check.candidate.CandCheckEncoder;
-import haslab.isolde.core.check.candidate.CandCheckModuleEncoder;
+import haslab.isolde.core.check.candidate.DefaultCandCheckingEncoder;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -21,10 +29,10 @@ import org.junit.jupiter.api.Test;
 
 public interface CeroneCandCheckEncoderTest {
 
-  CandCheckModuleEncoder<CeroneExecution> moduleEncoder();
+  CeroneCandCheckingModuleEncoder candCheckModuleEncoder();
 
   default CandCheckEncoder<CeroneExecution> candCheckEncoder() {
-    return new CandCheckEncoder<>(DefaultHistoryCheckingEncoder.instance(), moduleEncoder());
+    return new CandCheckEncoder<>(DefaultCandCheckingEncoder.instance(), candCheckModuleEncoder());
   }
 
   @Test

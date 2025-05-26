@@ -3,6 +3,7 @@ package haslab.isolde.core.synth;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.*;
 
 import haslab.isolde.core.*;
+import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.kodkod.KodkodUtil;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
@@ -12,7 +13,8 @@ import kodkod.instance.Bounds;
 import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
-public final class DefaultHistorySynthesisEncoder implements HistorySynthesisEncoder {
+public final class DefaultHistorySynthesisEncoder
+    implements HistoryEncoder<FolSynthesisInput, TupleSet> {
 
   @Override
   public AbstractHistoryK encoding() {
@@ -20,8 +22,9 @@ public final class DefaultHistorySynthesisEncoder implements HistorySynthesisEnc
   }
 
   @Override
-  public Formula encode(
-          HistoryAtoms historyAtoms, HistoryFormula histFormula, TupleSet txnTotalOrderTs, Bounds b) {
+  public Formula encode(FolSynthesisInput input, TupleSet txnTotalOrderTs, Bounds b) {
+    HistoryAtoms historyAtoms = input.historyAtoms();
+    HistoryFormula histFormula = input.historyFormula();
     TupleFactory f = b.universe().factory();
 
     b.boundExactly(transactions, f.setOf(historyAtoms.getTxnAtoms().toArray()));

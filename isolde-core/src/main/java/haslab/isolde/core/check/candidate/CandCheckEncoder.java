@@ -3,24 +3,29 @@ package haslab.isolde.core.check.candidate;
 import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.general.simple.ExecutionConstraintsEncoderConstructorS;
+import haslab.isolde.core.general.simple.ExecutionConstraintsEncoderS;
+import haslab.isolde.core.general.simple.HistoryConstraintProblemS;
+import haslab.isolde.core.general.simple.HistoryEncoderS;
 import haslab.isolde.kodkod.KodkodProblem;
 import kodkod.engine.KodkodSolver;
 import kodkod.engine.Solution;
 import kodkod.instance.Instance;
 
 public class CandCheckEncoder<E extends Execution> {
-  private final CandCheckHistoryEncoder historyEncoder;
-  private final CandCheckModuleEncoder<E> moduleEncoder;
+  private final HistoryEncoderS<ContextualizedInstance> historyEncoder;
+  private final ExecutionConstraintsEncoderS<ContextualizedInstance, E> moduleEncoder;
 
   public CandCheckEncoder(
-      CandCheckHistoryEncoder historyEncoder, CandCheckModuleEncoder<E> moduleEncoder) {
+      HistoryEncoderS<ContextualizedInstance> historyEncoder,
+      ExecutionConstraintsEncoderS<ContextualizedInstance, E> moduleEncoder) {
     this.historyEncoder = historyEncoder;
     this.moduleEncoder = moduleEncoder;
   }
 
   public CandCheckEncoder(
-      CandCheckHistoryEncoder historyEncoder,
-      CandCheckModuleEncoderConstructor<E> moduleEncoderConstructor) {
+      HistoryEncoderS<ContextualizedInstance> historyEncoder,
+      ExecutionConstraintsEncoderConstructorS<ContextualizedInstance, E> moduleEncoderConstructor) {
     this.historyEncoder = historyEncoder;
     this.moduleEncoder = moduleEncoderConstructor.generate(1);
   }
@@ -31,7 +36,9 @@ public class CandCheckEncoder<E extends Execution> {
 
   public KodkodProblem encode(
       Instance instance, AbstractHistoryK context, ExecutionFormula<E> formula) {
-    CandCheckProblem problem = new CandCheckProblem(instance, context, this.historyEncoder);
+    HistoryConstraintProblemS<ContextualizedInstance> problem =
+        new HistoryConstraintProblemS<>(
+            new ContextualizedInstance(context, instance), this.historyEncoder);
     problem.register(this.moduleEncoder, formula);
     return problem.encode();
   }

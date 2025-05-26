@@ -2,19 +2,21 @@ package haslab.isolde;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-import haslab.isolde.core.synth.FolSynthesisEncoder;
 import haslab.isolde.core.HistoryFormula;
-import haslab.isolde.core.synth.HistorySynthesisEncoder;
+import haslab.isolde.core.general.HistoryEncoder;
+import haslab.isolde.core.synth.FolSynthesisInput;
+import haslab.isolde.core.synth.FolSynthesisProblem;
 import haslab.isolde.core.synth.Scope;
 import haslab.isolde.history.History;
 import haslab.isolde.kodkod.KodkodUtil;
 import kodkod.ast.Variable;
 import kodkod.engine.Solution;
 import kodkod.engine.Solver;
+import kodkod.instance.TupleSet;
 import org.junit.jupiter.api.Test;
 
 public interface HistorySynthesisEncoderTest {
-  HistorySynthesisEncoder encoder();
+  HistoryEncoder<FolSynthesisInput, TupleSet> encoder();
 
   default Scope scope() {
     return new Scope(6, 6, 6, 6);
@@ -22,21 +24,21 @@ public interface HistorySynthesisEncoderTest {
 
   default void assertSat(HistoryFormula formula) {
     Solution sol =
-        new FolSynthesisEncoder(encoder(), scope(), formula).encode().solve(new Solver());
+        new FolSynthesisProblem(scope(), formula, encoder()).encode().solve(new Solver());
 
     assertTrue(sol.sat());
   }
 
   default void assertUnsat(HistoryFormula formula) {
     Solution sol =
-        new FolSynthesisEncoder(encoder(), scope(), formula).encode().solve(new Solver());
+        new FolSynthesisProblem(scope(), formula, encoder()).encode().solve(new Solver());
 
     assertTrue(sol.unsat());
   }
 
   default void assertFact(HistoryFormula fact) {
     Solution sol =
-        new FolSynthesisEncoder(encoder(), scope(), fact.not()).encode().solve(new Solver());
+        new FolSynthesisProblem(scope(), fact.not(), encoder()).encode().solve(new Solver());
 
     if (sol.sat()) {
       System.out.println(new History(this.encoder().encoding(), sol.instance()));

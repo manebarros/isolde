@@ -1,9 +1,8 @@
 package haslab.isolde.cerone;
 
-import haslab.isolde.biswas.BiswasExecution;
-import haslab.isolde.core.cegis.CounterexampleEncoder;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
+import haslab.isolde.core.cegis.CounterexampleEncoder;
 import haslab.isolde.kodkod.Util;
 import kodkod.ast.Relation;
 import kodkod.engine.Evaluator;
@@ -20,8 +19,10 @@ public class CeroneCounterexampleEncoder implements CounterexampleEncoder<Cerone
       ExecutionFormula<CeroneExecution> formula,
       Bounds bounds) {
     var eval = new Evaluator(instance);
-    TupleSet visVal = Util.convert(eval, execution, CeroneExecution::vis, bounds.universe().factory(), 2);
-    TupleSet arVal = Util.convert(eval, execution, CeroneExecution::ar, bounds.universe().factory(), 2);
+    TupleSet visVal =
+        Util.convert(eval, execution, CeroneExecution::vis, bounds.universe().factory(), 2);
+    TupleSet arVal =
+        Util.convert(eval, execution, CeroneExecution::ar, bounds.universe().factory(), 2);
     Relation cexVisRel = Relation.binary("cex vis");
     Relation cexArRel = Relation.binary("cex ar");
     bounds.boundExactly(cexVisRel, visVal);

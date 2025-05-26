@@ -1,11 +1,11 @@
-package haslab.isolde.core.check;
+package haslab.isolde.core.general;
 
 import java.util.Collection;
 import kodkod.ast.Formula;
 import kodkod.instance.Bounds;
 
-public interface CheckingProblemExtender {
+public interface ProblemExtender<T> {
   Collection<Object> extraAtoms();
 
-  Formula extend(Bounds b);
+  Formula extend(T extra, Bounds b);
 }

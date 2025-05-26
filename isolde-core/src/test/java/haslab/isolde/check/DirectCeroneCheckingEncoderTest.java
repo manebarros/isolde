@@ -1,12 +1,21 @@
 package haslab.isolde.check;
 
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.*;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.initialTransaction;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.keys;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.reads;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessionOrder;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessions;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.transactions;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.txn_session;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.values;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.writes;
 import static haslab.isolde.history.Operation.readOf;
 import static haslab.isolde.history.Operation.writeOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import haslab.isolde.cerone.check.CeroneCheckingModuleEncoder;
-import haslab.isolde.core.check.DefaultHistoryCheckingEncoder;
+import haslab.isolde.cerone.CeroneCandCheckingModuleEncoder;
+import haslab.isolde.cerone.CeroneHistCheckingModuleEncoder;
+import haslab.isolde.core.check.external.DefaultHistoryCheckingEncoder;
 import haslab.isolde.core.check.external.HistCheckEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
@@ -27,8 +36,13 @@ public class DirectCeroneCheckingEncoderTest
     implements CeroneCheckingEncoderTest, CeroneCandCheckEncoderTest {
 
   @Override
-  public CeroneCheckingModuleEncoder moduleEncoder() {
-    return new CeroneCheckingModuleEncoder(1);
+  public CeroneCandCheckingModuleEncoder candCheckModuleEncoder() {
+    return new CeroneCandCheckingModuleEncoder(1);
+  }
+
+  @Override
+  public CeroneHistCheckingModuleEncoder histCheckModuleEncoder() {
+    return new CeroneHistCheckingModuleEncoder(1);
   }
 
   @Test
@@ -44,7 +58,7 @@ public class DirectCeroneCheckingEncoderTest
     Bounds b =
         new HistCheckEncoder<>(
                 DefaultHistoryCheckingEncoder.instance(),
-                new CeroneCheckingModuleEncoder(vis, arAux))
+                new CeroneHistCheckingModuleEncoder(vis, arAux))
             .encode(hist, e -> Formula.TRUE)
             .bounds();
 
@@ -100,7 +114,7 @@ public class DirectCeroneCheckingEncoderTest
     Bounds b =
         new HistCheckEncoder<>(
                 DefaultHistoryCheckingEncoder.instance(),
-                new CeroneCheckingModuleEncoder(vis, arAux))
+                new CeroneHistCheckingModuleEncoder(vis, arAux))
             .encode(hist, e -> Formula.TRUE)
             .bounds();
 

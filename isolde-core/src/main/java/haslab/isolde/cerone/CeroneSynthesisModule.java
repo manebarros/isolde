@@ -6,8 +6,10 @@ import static haslab.isolde.kodkod.KodkodUtil.transitive;
 import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.general.ContextualizedExtender;
+import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.HistoryAtoms;
-import haslab.isolde.core.synth.SynthesisModule;
+import haslab.isolde.core.synth.TransactionTotalOrderInfo;
 import haslab.isolde.kodkod.Util;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -18,7 +20,8 @@ import kodkod.instance.Bounds;
 import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
-public class CeroneSynthesisModule implements SynthesisModule<CeroneExecution> {
+public class CeroneSynthesisModule
+    implements ContextualizedExtender<CeroneExecution, TransactionTotalOrderInfo> {
   private AbstractHistoryK history;
   private List<VisAndArRels> executions;
   private List<ExecutionFormula<CeroneExecution>> formulas;
@@ -27,8 +30,21 @@ public class CeroneSynthesisModule implements SynthesisModule<CeroneExecution> {
   private record VisAndArRels(Relation vis, Relation ar) {}
 
   public CeroneSynthesisModule(
+      FolSynthesisInput input,
       AbstractHistoryK history,
+      List<ExecutionFormula<CeroneExecution>> formulas) {
+    this.history = history;
+    this.formulas = formulas;
+    this.historyAtoms = input.historyAtoms();
+    this.executions = new ArrayList<>();
+    for (int i = 0; i < formulas.size(); i++) {
+      executions.add(new VisAndArRels(Relation.binary("vis#" + i), Relation.binary("ar#" + i)));
+    }
+  }
+
+  public CeroneSynthesisModule(
       HistoryAtoms historyAtoms,
+      AbstractHistoryK history,
       List<ExecutionFormula<CeroneExecution>> formulas) {
     this.history = history;
     this.formulas = formulas;
@@ -49,6 +65,10 @@ public class CeroneSynthesisModule implements SynthesisModule<CeroneExecution> {
   }
 
   @Override
+  public Formula extend(TransactionTotalOrderInfo totalOrderInfo, Bounds b) {
+    return totalOrderInfo.usable() ? extend(b, totalOrderInfo.txnTotalOrder()) : extend(b);
+  }
+
   public Formula extend(Bounds b) {
     TupleFactory f = b.universe().factory();
     TupleSet commitOrderTs = Util.irreflexiveBound(f, historyAtoms.normalTxns());
@@ -76,7 +96,6 @@ public class CeroneSynthesisModule implements SynthesisModule<CeroneExecution> {
     return formula;
   }
 
-  @Override
   public Formula extend(Bounds b, TupleSet txnTotalOrderTs) {
     TupleFactory tf = b.universe().factory();
     TupleSet visLb =
