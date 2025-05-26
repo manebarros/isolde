@@ -2,6 +2,10 @@ package haslab.isolde.core.check.external;
 
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.general.simple.ExecutionConstraintsEncoderConstructorS;
+import haslab.isolde.core.general.simple.ExecutionConstraintsEncoderS;
+import haslab.isolde.core.general.simple.HistoryConstraintProblemS;
+import haslab.isolde.core.general.simple.HistoryEncoderS;
 import haslab.isolde.history.History;
 import haslab.isolde.kodkod.KodkodProblem;
 import java.util.Collections;
@@ -9,18 +13,21 @@ import kodkod.engine.KodkodSolver;
 import kodkod.engine.Solution;
 
 public class HistCheckEncoder<E extends Execution> {
-  private final HistCheckHistoryEncoder historyEncoder;
-  private final HistCheckModuleEncoder<E> moduleEncoder;
+  private final HistoryEncoderS<CheckingIntermediateRepresentation> historyEncoder;
+  private final ExecutionConstraintsEncoderS<CheckingIntermediateRepresentation, E> moduleEncoder;
 
   public HistCheckEncoder(
-      HistCheckHistoryEncoder historyEncoder, HistCheckModuleEncoder<E> moduleEncoderConstructor) {
+      HistoryEncoderS<CheckingIntermediateRepresentation> historyEncoder,
+      ExecutionConstraintsEncoderS<CheckingIntermediateRepresentation, E>
+          moduleEncoderConstructor) {
     this.historyEncoder = historyEncoder;
     this.moduleEncoder = moduleEncoderConstructor;
   }
 
   public HistCheckEncoder(
-      HistCheckHistoryEncoder historyEncoder,
-      HistCheckModuleEncoderConstructor<E> moduleEncoderConstructor) {
+      HistoryEncoderS<CheckingIntermediateRepresentation> historyEncoder,
+      ExecutionConstraintsEncoderConstructorS<CheckingIntermediateRepresentation, E>
+          moduleEncoderConstructor) {
     this.historyEncoder = historyEncoder;
     this.moduleEncoder = moduleEncoderConstructor.generate(1);
   }
@@ -30,7 +37,9 @@ public class HistCheckEncoder<E extends Execution> {
   }
 
   public KodkodProblem encode(History history, ExecutionFormula<E> formula) {
-    HistCheckProblem problem = new HistCheckProblem(history, this.historyEncoder);
+    HistoryConstraintProblemS<CheckingIntermediateRepresentation> problem =
+        new HistoryConstraintProblemS<>(
+            new CheckingIntermediateRepresentation(history), this.historyEncoder);
     problem.register(this.moduleEncoder, Collections.singletonList(formula));
     return problem.encode();
   }

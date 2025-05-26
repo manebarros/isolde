@@ -2,8 +2,10 @@ package haslab.isolde.biswas;
 
 import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.general.ContextualizedExtender;
+import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.HistoryAtoms;
-import haslab.isolde.core.synth.SynthesisModule;
+import haslab.isolde.core.synth.TransactionTotalOrderInfo;
 import haslab.isolde.kodkod.KodkodUtil;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -16,15 +18,31 @@ import kodkod.instance.Bounds;
 import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
-public class BiswasSynthesisModule implements SynthesisModule<BiswasExecution> {
+public class BiswasSynthesisModule
+    implements ContextualizedExtender<BiswasExecution, TransactionTotalOrderInfo> {
+
   private final AbstractHistoryK history;
   private List<Relation> commitOrders;
   private List<ExecutionFormula<BiswasExecution>> formulas;
   private HistoryAtoms historyAtoms;
 
   public BiswasSynthesisModule(
+      FolSynthesisInput input,
       AbstractHistoryK history,
+      List<ExecutionFormula<BiswasExecution>> formulas) {
+    this.history = history;
+    this.formulas = formulas;
+    this.historyAtoms = input.historyAtoms();
+    this.commitOrders = new ArrayList<>(formulas.size());
+    for (int i = 0; i < formulas.size(); i++) {
+      Relation commitOrder = Relation.binary("co#" + i);
+      commitOrders.add(commitOrder);
+    }
+  }
+
+  public BiswasSynthesisModule(
       HistoryAtoms historyAtoms,
+      AbstractHistoryK history,
       List<ExecutionFormula<BiswasExecution>> formulas) {
     this.history = history;
     this.formulas = formulas;
@@ -37,6 +55,10 @@ public class BiswasSynthesisModule implements SynthesisModule<BiswasExecution> {
   }
 
   @Override
+  public Formula extend(TransactionTotalOrderInfo totalOrderInfo, Bounds b) {
+    return totalOrderInfo.usable() ? extend(b, totalOrderInfo.txnTotalOrder()) : extend(b);
+  }
+
   public Formula extend(Bounds b) {
     TupleFactory f = b.universe().factory();
 
@@ -66,7 +88,6 @@ public class BiswasSynthesisModule implements SynthesisModule<BiswasExecution> {
     return formula;
   }
 
-  @Override
   public Formula extend(Bounds b, TupleSet txnTotalOrderTs) {
     TupleFactory f = b.universe().factory();
     Relation mainCommitOrder = this.commitOrders.get(0);

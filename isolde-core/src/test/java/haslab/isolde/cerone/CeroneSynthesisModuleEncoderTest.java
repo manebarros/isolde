@@ -2,7 +2,9 @@ package haslab.isolde.cerone;
 
 import haslab.isolde.SynthesisModuleEncoderTest;
 import haslab.isolde.core.ExecutionFormula;
-import haslab.isolde.core.synth.SynthesisModuleEncoder;
+import haslab.isolde.core.general.ExecutionModule;
+import haslab.isolde.core.synth.FolSynthesisInput;
+import haslab.isolde.core.synth.TransactionTotalOrderInfo;
 import haslab.isolde.kodkod.KodkodUtil;
 import org.junit.jupiter.api.Test;
 
@@ -10,7 +12,7 @@ public interface CeroneSynthesisModuleEncoderTest
     extends SynthesisModuleEncoderTest<CeroneExecution> {
 
   @Override
-  SynthesisModuleEncoder<CeroneExecution> encoder();
+  ExecutionModule<FolSynthesisInput, TransactionTotalOrderInfo, CeroneExecution> encoder();
 
   @Test
   default void visIsInAr() {

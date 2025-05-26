@@ -1,5 +1,6 @@
 package haslab.isolde.core.check.external;
 
+import haslab.isolde.core.general.Input;
 import haslab.isolde.history.History;
 import haslab.isolde.kodkod.Atom;
 import java.util.ArrayList;
@@ -8,7 +9,7 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class CheckingIntermediateRepresentation {
+public class CheckingIntermediateRepresentation implements Input {
   private List<Atom<Integer>> sessAtoms;
   private List<List<Atom<Integer>>> txnAtoms;
   private Map<Integer, Atom<Integer>> keyAtoms;
@@ -55,6 +56,7 @@ public class CheckingIntermediateRepresentation {
     }
   }
 
+  @Override
   public List<Object> atoms() {
     List<Object> allAtoms = new ArrayList<>();
     allAtoms.addAll(normalTxnAtoms());

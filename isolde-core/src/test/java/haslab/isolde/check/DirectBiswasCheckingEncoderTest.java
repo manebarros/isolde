@@ -13,9 +13,9 @@ import static haslab.isolde.history.Operation.readOf;
 import static haslab.isolde.history.Operation.writeOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
-import haslab.isolde.biswas.BiswasCheckingEncoder;
 import haslab.isolde.biswas.BiswasExecution;
-import haslab.isolde.core.check.DefaultHistoryCheckingEncoder;
+import haslab.isolde.biswas.BiswasHistCheckingEncoder;
+import haslab.isolde.core.check.external.DefaultHistoryCheckingEncoder;
 import haslab.isolde.core.check.external.HistCheckEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
@@ -37,7 +37,7 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
   @Override
   public HistCheckEncoder<BiswasExecution> encoder() {
     return new HistCheckEncoder<>(
-        DefaultHistoryCheckingEncoder.instance(), BiswasCheckingEncoder::new);
+        DefaultHistoryCheckingEncoder.instance(), BiswasHistCheckingEncoder::new);
   }
 
   @Test
