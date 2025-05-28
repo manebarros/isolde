@@ -2,7 +2,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 solver_display_names = { 
-    'minisat' : 'MiniSAT', 
+    'minisat' : 'MiniSat', 
     'glucose' : 'Glucose', 
     'sat4j' : 'Sat4j' 
 }
@@ -40,14 +40,14 @@ def level_name_as_latex(level_name):
 
 # given a cleaned df, draw a matrix of plots for the given `specs`
 # specs is a list of pairs (satisfied, violated)
-def plot_specs(df, specs, path=None, logScaling=False):
+def plot_specs(df, specs, path=None, logScaling=False, plotHeight=4, plotWidth=5):
     col_keys = df['solver'].unique()
 
     # Create subplot grid
     n_rows = len(specs)
     n_cols = len(col_keys)
     
-    fig, axes = plt.subplots(n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows), sharex=True, sharey=False)
+    fig, axes = plt.subplots(n_rows, n_cols, figsize=(plotWidth * n_cols, plotHeight * n_rows), sharex=True, sharey=False)
     
     # If only one row or column, make axes 2D
     if n_rows == 1:
@@ -87,7 +87,6 @@ def plot_specs(df, specs, path=None, logScaling=False):
                 fmt='o-', capsize=3
             )
     
-
             if logScaling:
                 ax.set_yscale("log")
                 ax.set_ylim(bottom=0.95*min_y, top=y_lim)
@@ -101,7 +100,7 @@ def plot_specs(df, specs, path=None, logScaling=False):
     
             # Only the left-most column gets y-axis labels
             if j == 0:
-                ax.set_ylabel(r"$\left\{" + level_name_as_latex(satisfied) + r", \, \overline{" + level_name_as_latex(violated) + r"}\right\}$" + "\n\nAverage time (ms)")
+                ax.set_ylabel(r"$\left\{" + level_name_as_latex(satisfied) + r", \, \overline{" + level_name_as_latex(violated) + r"}\right\}$" + "\n\nTime (ms)")
             else:
                 ax.set_ylabel("")
                 ax.set_yticklabels([])
