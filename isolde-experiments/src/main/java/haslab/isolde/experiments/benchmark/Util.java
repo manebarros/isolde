@@ -19,19 +19,29 @@ public final class Util {
           "glucose", SATFactory.Glucose,
           "sat4j", SATFactory.DefaultSAT4J);
 
-  public static void writeString(String s, Path p) throws IOException {
+  private static void writeString(String s, Path p) throws IOException {
     Path dir = p.getParent();
     if (!Files.exists(dir)) Files.createDirectories(dir);
     Files.writeString(p, s);
   }
 
-  public static void appendString(String s, Path p) throws IOException {
+  private static void appendString(String s, Path p) throws IOException {
     assert Files.exists(p);
     Files.writeString(p, s, APPEND, WRITE);
   }
 
+  public static void writeMeasurements(List<Measurement> measurements, String p)
+      throws IOException {
+    writeMeasurements(measurements, Path.of(p));
+  }
+
   public static void writeMeasurements(List<Measurement> measurements, Path p) throws IOException {
     writeString(Measurement.asCsv(measurements), p);
+  }
+
+  public static void appendMeasurements(List<Measurement> measurements, String p)
+      throws IOException {
+    appendMeasurements(measurements, Path.of(p));
   }
 
   public static void appendMeasurements(List<Measurement> measurements, Path p) throws IOException {

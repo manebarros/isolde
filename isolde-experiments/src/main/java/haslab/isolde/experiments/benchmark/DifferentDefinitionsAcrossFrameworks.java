@@ -10,7 +10,6 @@ import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -42,7 +41,7 @@ public final class DifferentDefinitionsAcrossFrameworks {
       Arrays.asList(
           new Edge("RA", "CC"), new Edge("CC", "PC"), new Edge("PC", "SI"), new Edge("SI", "Ser"));
 
-  private static final List<Scope> scopes = Util.scopesFromRange(3, 3, 3, 4, 8);
+  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 4, 10);
 
   public static final List<Measurement> measure(
       List<Scope> scopes, Collection<Edge> edges, Collection<String> solvers, int samples) {
@@ -74,11 +73,12 @@ public final class DifferentDefinitionsAcrossFrameworks {
             long time = Duration.between(before, after).toMillis();
 
             System.out.printf(
-                "[%3d/%d] (%s, [%s], Biswas' %s and not Cerone's %s) : %d\n",
+                "[%3d/%d] (%s, [%s], %s, Biswas' %s and not Cerone's %s) : %d\n",
                 ++count,
                 uniqueRuns,
                 "default",
                 scope,
+                solver,
                 edge.weaker(),
                 edge.stronger(),
                 time); // TODO : use different implementations
@@ -89,7 +89,7 @@ public final class DifferentDefinitionsAcrossFrameworks {
               failed++;
               System.out.println(
                   String.format(
-                      "Biswas' %s and not Cerone's %s\n", edge.weaker(), edge.stronger()));
+                      "UNSAT: Biswas' %s and not Cerone's %s\n", edge.weaker(), edge.stronger()));
             }
 
             int candidates = hist.candidates();
@@ -111,11 +111,12 @@ public final class DifferentDefinitionsAcrossFrameworks {
             time = Duration.between(before, after).toMillis();
 
             System.out.printf(
-                "[%3d/%d] (%s, [%s], Cerone's %s and not Biswas' %s) : %d\n",
+                "[%3d/%d] (%s, [%s], %s, Cerone's %s and not Biswas' %s) : %d\n",
                 ++count,
                 uniqueRuns,
                 "default",
                 scope,
+                solver,
                 edge.weaker(),
                 edge.stronger(),
                 time); // TODO : use different implementations
@@ -126,7 +127,7 @@ public final class DifferentDefinitionsAcrossFrameworks {
               failed++;
               System.out.println(
                   String.format(
-                      "Cerone's' %s and not Biswas' %s\n", edge.weaker(), edge.stronger()));
+                      "UNSAT: Cerone's' %s and not Biswas' %s\n", edge.weaker(), edge.stronger()));
             }
 
             candidates = hist.candidates();
@@ -149,12 +150,13 @@ public final class DifferentDefinitionsAcrossFrameworks {
     return rows;
   }
 
-  public static final void measure(String file) throws IOException {
-    measure(Path.of(file));
-  }
-
-  public static final void measure(Path file) throws IOException {
+  public static final void measureAndWrite(String file) throws IOException {
     List<Measurement> measurements = measure(scopes, edges, Util.solvers.keySet(), 3);
     Util.writeMeasurements(measurements, file);
+  }
+
+  public static final void measureAndAppend(String file) throws IOException {
+    List<Measurement> measurements = measure(scopes, edges, Util.solvers.keySet(), 3);
+    Util.appendMeasurements(measurements, file);
   }
 }

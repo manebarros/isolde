@@ -10,7 +10,6 @@ import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
 import java.io.IOException;
-import java.nio.file.Path;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -27,7 +26,7 @@ public final class EquivalentDefinitionsAcrossFrameworks {
       ExecutionFormula<CeroneExecution> ceroneDef,
       ExecutionFormula<BiswasExecution> biswasDef) {}
 
-  private static final List<Scope> scopes = Util.scopesFromRange(3, 3, 3, 3, 5);
+  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 5, 7);
 
   private static final List<Definition> levels =
       Arrays.asList(
@@ -35,7 +34,7 @@ public final class EquivalentDefinitionsAcrossFrameworks {
           new Definition("CC", CeroneDefinitions.CC, AxiomaticDefinitions.Causal),
           new Definition("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
           new Definition("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot),
-          new Definition("SER", CeroneDefinitions.SER, AxiomaticDefinitions.Ser));
+          new Definition("Ser", CeroneDefinitions.SER, AxiomaticDefinitions.Ser));
 
   public static final List<Measurement> measure(
       List<Scope> scopes, List<Definition> levels, Collection<String> solvers, int samples) {
@@ -134,12 +133,15 @@ public final class EquivalentDefinitionsAcrossFrameworks {
     return rows;
   }
 
-  public static final void measure(String file) throws IOException {
-    measure(Path.of(file));
+  public static final void measureAndWrite(String file) throws IOException {
+    List<Measurement> measurements =
+        measure(scopes, levels, Arrays.asList("glucose", "minisat"), 3);
+    Util.writeMeasurements(measurements, file);
   }
 
-  public static final void measure(Path file) throws IOException {
-    List<Measurement> measurements = measure(scopes, levels, Util.solvers.keySet(), 3);
-    Util.writeMeasurements(measurements, file);
+  public static final void measureAndAppend(String file) throws IOException {
+    List<Measurement> measurements =
+        measure(scopes, levels, Arrays.asList("glucose", "minisat"), 3);
+    Util.appendMeasurements(measurements, file);
   }
 }
