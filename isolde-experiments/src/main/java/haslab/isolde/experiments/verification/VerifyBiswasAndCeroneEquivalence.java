@@ -28,13 +28,14 @@ public final class VerifyBiswasAndCeroneEquivalence {
 
   public static void verify(int scope) {
     for (var def : levels) {
-      System.out.print(
+      ComparisonResult result =
           ComparisonMethods.compareBiswasCerone(
               new Scope(scope),
               "Cerone's " + def.name(),
               def.ceroneDef(),
               "Biswas' " + def.name(),
-              def.biswasDef()));
+              def.biswasDef());
+      System.out.println(result + "\n" + result.timeInfoString());
     }
   }
 }

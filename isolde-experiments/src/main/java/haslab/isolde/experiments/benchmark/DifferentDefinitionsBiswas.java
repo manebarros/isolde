@@ -26,7 +26,7 @@ public final class DifferentDefinitionsBiswas {
       String strongerName,
       ExecutionFormula<BiswasExecution> strongerDef) {}
 
-  private static final List<Scope> scopes = Util.scopesFromRange(3, 3, 3, 3, 5);
+  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 4, 10);
 
   private static final List<Edge> edges =
       Arrays.asList(
@@ -56,11 +56,12 @@ public final class DifferentDefinitionsBiswas {
             long time = Duration.between(before, after).toMillis();
 
             System.out.printf(
-                "[%3d/%d] (%s, [%s], %s and not %s) : %d\n",
+                "[%3d/%d] (%s, [%s], %s, %s and not %s) : %d\n",
                 ++count,
                 uniqueRuns,
                 "default",
                 scope,
+                solver,
                 edge.weakerName(),
                 edge.strongerName(),
                 time); // TODO : use different implementations

@@ -10,7 +10,6 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
-import java.util.stream.Collectors;
 import kodkod.engine.satlab.SATFactory;
 
 public final class Util {
@@ -32,17 +31,12 @@ public final class Util {
   }
 
   public static void writeMeasurements(List<Measurement> measurements, Path p) throws IOException {
-    String str =
-        Measurement.header()
-            + "\n"
-            + unlines(
-                measurements.stream().map(Measurement::asCsvRow).collect(Collectors.toList()));
-    writeString(str, p);
+    writeString(Measurement.asCsv(measurements), p);
   }
 
   public static void appendMeasurements(List<Measurement> measurements, Path p) throws IOException {
     if (Files.exists(p)) {
-      appendString(unlines(measurements), p);
+      appendString(Measurement.asCsvWithoutHeader(measurements), p);
     } else {
       writeMeasurements(measurements, p);
     }

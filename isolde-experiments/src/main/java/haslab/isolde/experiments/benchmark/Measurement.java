@@ -5,8 +5,10 @@ import java.lang.reflect.RecordComponent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.stream.Collectors;
 
 public record Measurement(
     String implementation,
@@ -74,5 +76,17 @@ public record Measurement(
         candidates,
         dateFormat.format(run),
         dateFormat.format(date));
+  }
+
+  public static String asCsv(Collection<Measurement> measurements) {
+    return Measurement.header()
+        + "\n"
+        + Util.unlines(
+            measurements.stream().map(Measurement::asCsvRow).collect(Collectors.toList()));
+  }
+
+  public static String asCsvWithoutHeader(Collection<Measurement> measurements) {
+    return Util.unlines(
+        measurements.stream().map(Measurement::asCsvRow).collect(Collectors.toList()));
   }
 }

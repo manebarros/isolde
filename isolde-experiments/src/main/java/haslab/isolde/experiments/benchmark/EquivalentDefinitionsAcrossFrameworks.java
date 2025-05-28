@@ -65,11 +65,12 @@ public final class EquivalentDefinitionsAcrossFrameworks {
             long time = Duration.between(before, after).toMillis();
 
             System.out.printf(
-                "[%3d/%d] (%s, [%s], %s - Biswas and not Cerone) : %d\n",
+                "[%3d/%d] (%s, [%s], %s, %s - Biswas and not Cerone) : %d\n",
                 ++count,
                 uniqueRuns,
                 "default",
                 scope,
+                solver,
                 level.name(),
                 time); // TODO : use different implementations
 
@@ -98,11 +99,12 @@ public final class EquivalentDefinitionsAcrossFrameworks {
             time = Duration.between(before, after).toMillis();
 
             System.out.printf(
-                "[%3d/%d] (%s, [%s], %s - Cerone and not Biswas) : %d\n",
+                "[%3d/%d] (%s, [%s], %s, %s - Cerone and not Biswas) : %d\n",
                 ++count,
                 uniqueRuns,
                 "default",
                 scope,
+                solver,
                 level.name(),
                 time); // TODO : use different implementations
 

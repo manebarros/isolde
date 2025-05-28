@@ -36,13 +36,13 @@ public final class DifferentDefinitionsAcrossFrameworks {
           "CC", new Definition("CC", CeroneDefinitions.CC, AxiomaticDefinitions.Causal),
           "PC", new Definition("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
           "SI", new Definition("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot),
-          "SER", new Definition("SER", CeroneDefinitions.SER, AxiomaticDefinitions.Ser));
+          "Ser", new Definition("Ser", CeroneDefinitions.SER, AxiomaticDefinitions.Ser));
 
   private static final List<Edge> edges =
       Arrays.asList(
           new Edge("RA", "CC"), new Edge("CC", "PC"), new Edge("PC", "SI"), new Edge("SI", "Ser"));
 
-  private static final List<Scope> scopes = Util.scopesFromRange(3, 3, 3, 3, 5);
+  private static final List<Scope> scopes = Util.scopesFromRange(3, 3, 3, 4, 8);
 
   public static final List<Measurement> measure(
       List<Scope> scopes, Collection<Edge> edges, Collection<String> solvers, int samples) {
@@ -87,6 +87,9 @@ public final class DifferentDefinitionsAcrossFrameworks {
               success++;
             } else {
               failed++;
+              System.out.println(
+                  String.format(
+                      "Biswas' %s and not Cerone's %s\n", edge.weaker(), edge.stronger()));
             }
 
             int candidates = hist.candidates();
@@ -121,6 +124,9 @@ public final class DifferentDefinitionsAcrossFrameworks {
               success++;
             } else {
               failed++;
+              System.out.println(
+                  String.format(
+                      "Cerone's' %s and not Biswas' %s\n", edge.weaker(), edge.stronger()));
             }
 
             candidates = hist.candidates();
@@ -148,7 +154,7 @@ public final class DifferentDefinitionsAcrossFrameworks {
   }
 
   public static final void measure(Path file) throws IOException {
-    List<Measurement> measurements = measure(scopes, levels, Util.solvers.keySet(), 3);
+    List<Measurement> measurements = measure(scopes, edges, Util.solvers.keySet(), 3);
     Util.writeMeasurements(measurements, file);
   }
 }

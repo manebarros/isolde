@@ -26,7 +26,7 @@ public final class DifferentDefinitionsCerone {
       String strongerName,
       ExecutionFormula<CeroneExecution> strongerDef) {}
 
-  private static final List<Scope> scopes = Util.scopesFromRange(3, 3, 3, 3, 5);
+  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 4, 10);
 
   private static final List<Edge> edges =
       Arrays.asList(
@@ -60,11 +60,12 @@ public final class DifferentDefinitionsCerone {
             long time = Duration.between(before, after).toMillis();
 
             System.out.printf(
-                "[%3d/%d] (%s, [%s], %s and not %s) : %d\n",
+                "[%3d/%d] (%s, [%s], %s, %s and not %s) : %d\n",
                 ++count,
                 uniqueRuns,
                 "default",
                 scope,
+                solver,
                 edge.weakerName(),
                 edge.strongerName(),
                 time); // TODO : use different implementations
@@ -95,11 +96,11 @@ public final class DifferentDefinitionsCerone {
     return rows;
   }
 
-  public static final void measureBiswasNotCerone(String file) throws IOException {
-    measure(Path.of(file));
+  public static final void measureAndWrite(String file) throws IOException {
+    measureAndWrite(Path.of(file));
   }
 
-  public static final void measure(Path file) throws IOException {
+  public static final void measureAndWrite(Path file) throws IOException {
     List<Measurement> measurements = measure(scopes, edges, Util.solvers.keySet(), 3);
     Util.writeMeasurements(measurements, file);
   }
