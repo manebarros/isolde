@@ -1,5 +1,6 @@
 package haslab.isolde.core.synth;
 
+import haslab.isolde.core.synth.noSession.SimpleScope;
 import haslab.isolde.kodkod.Atom;
 import java.util.ArrayList;
 import java.util.List;
@@ -30,6 +31,28 @@ public class HistoryAtoms {
 
     this.sessionAtoms =
         IntStream.range(0, scope.getSessions())
+            .mapToObj(i -> new Atom<>("s", i))
+            .collect(Collectors.toList());
+  }
+
+  public HistoryAtoms(SimpleScope scope) {
+    this.txnAtoms =
+        IntStream.rangeClosed(0, scope.getTransactions())
+            .mapToObj(i -> new Atom<>("t", i))
+            .collect(Collectors.toList());
+
+    this.objAtoms =
+        IntStream.range(0, scope.getObjects())
+            .mapToObj(i -> new Atom<>("x", i))
+            .collect(Collectors.toList());
+
+    this.valAtoms =
+        IntStream.range(0, scope.getValues())
+            .mapToObj(i -> new Atom<>("v", i))
+            .collect(Collectors.toList());
+
+    this.sessionAtoms =
+        IntStream.rangeClosed(1, scope.getTransactions())
             .mapToObj(i -> new Atom<>("s", i))
             .collect(Collectors.toList());
   }

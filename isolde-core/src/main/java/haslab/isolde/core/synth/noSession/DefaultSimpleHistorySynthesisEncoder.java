@@ -1,9 +1,22 @@
-package haslab.isolde.core.synth;
+package haslab.isolde.core.synth.noSession;
 
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.*;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.initialTransaction;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.keys;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.reads;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessionOrder;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessions;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.transactions;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.txn_session;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.values;
+import static haslab.isolde.core.DirectAbstractHistoryEncoding.writes;
 
-import haslab.isolde.core.*;
+import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.DirectAbstractHistoryEncoding;
+import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.general.HistoryEncoder;
+import haslab.isolde.core.synth.FolSynthesisInput;
+import haslab.isolde.core.synth.HistoryAtoms;
+import haslab.isolde.kodkod.Atom;
 import haslab.isolde.kodkod.KodkodUtil;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
@@ -13,7 +26,7 @@ import kodkod.instance.Bounds;
 import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
-public final class DefaultHistorySynthesisEncoder
+public final class DefaultSimpleHistorySynthesisEncoder
     implements HistoryEncoder<FolSynthesisInput, TupleSet> {
 
   @Override
@@ -50,27 +63,30 @@ public final class DefaultHistorySynthesisEncoder
             .product(f.setOf(historyAtoms.getValAtoms().toArray()));
     b.bound(reads, readsUpperBound);
 
-    TupleSet sessionOrderLowerBound =
+    TupleSet sessionOrderExactBound =
         f.setOf(historyAtoms.initialTxn()).product(f.setOf(historyAtoms.normalTxns().toArray()));
 
-    b.bound(sessionOrder, sessionOrderLowerBound, txnTotalOrderTs);
-    b.bound(
-        txn_session,
-        f.setOf(historyAtoms.normalTxns().toArray())
-            .product(f.setOf(historyAtoms.getSessionAtoms().toArray())));
+    b.boundExactly(sessionOrder, sessionOrderExactBound);
+    TupleSet txnSessionExactBound = f.noneOf(2);
+    for (int i = 0; i < historyAtoms.normalTxns().size(); i++) {
+      Atom<Integer> txnAtom = historyAtoms.normalTxns().get(i);
+      Atom<Integer> sessAtom = historyAtoms.getSessionAtoms().get(i);
+      txnSessionExactBound.add(f.tuple(txnAtom, sessAtom));
+    }
+    b.boundExactly(txn_session, txnSessionExactBound);
 
     Relation txnTotalOrderRel = Relation.binary("Txn total order");
     b.boundExactly(txnTotalOrderRel, txnTotalOrderTs);
 
     return Formula.and(
         histFormula.resolve(this.encoding()),
-        encoding().sessionOrder().union(encoding().binaryWr()).in(txnTotalOrderRel),
+        encoding().binaryWr().in(txnTotalOrderRel),
+        // encoding().sessionOrder().union(encoding().binaryWr()).in(txnTotalOrderRel),
         // KodkodUtil.acyclic(encoding().binaryWr().union(encoding().sessionOrder())),
-        // noBlindWrites(),
         noEmptyTransactions(),
         transactionsWriteToKeyAtMostOnce(),
         transactionsReadKeyAtMostOnce(),
-        sessionSemantics(),
+        // sessionSemantics(),
         this.encoding().noReadsFromThinAir(),
         uniqueWrites());
   }

@@ -21,6 +21,7 @@ import haslab.isolde.core.general.simple.ExecutionConstraintsEncoderS;
 import haslab.isolde.core.synth.FolSynthesisProblem;
 import haslab.isolde.core.synth.Scope;
 import haslab.isolde.core.synth.TransactionTotalOrderInfo;
+import haslab.isolde.core.synth.noSession.SimpleScope;
 import haslab.isolde.history.History;
 import java.util.ArrayList;
 import java.util.List;
@@ -36,6 +37,12 @@ public class Synthesizer {
   private CegisModule<BiswasExecution> biswasExecutions;
 
   public Synthesizer(Scope scope) {
+    this.cegisSynthesizer = new CegisSynthesizer<>(new FolSynthesisProblem(scope));
+    this.ceroneExecutions = null;
+    this.ceroneExecutions = null;
+  }
+
+  public Synthesizer(SimpleScope scope) {
     this.cegisSynthesizer = new CegisSynthesizer<>(new FolSynthesisProblem(scope));
     this.ceroneExecutions = null;
     this.ceroneExecutions = null;

@@ -6,6 +6,8 @@ import haslab.isolde.core.general.HistoryConstraintProblem;
 import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.core.general.ProblemExtender;
 import haslab.isolde.core.general.ProblemExtendingStrategy;
+import haslab.isolde.core.synth.noSession.DefaultSimpleHistorySynthesisEncoder;
+import haslab.isolde.core.synth.noSession.SimpleScope;
 import java.util.List;
 import kodkod.ast.Formula;
 import kodkod.instance.Bounds;
@@ -113,6 +115,73 @@ public class FolSynthesisProblem
   }
 
   public FolSynthesisProblem(Scope scope) {
+    this(scope, h -> Formula.TRUE);
+  }
+
+  // Simple Synthesis Problems (no sessions)
+  public static FolSynthesisProblem withNoTotalOrder(
+      SimpleScope scope,
+      HistoryFormula hf,
+      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
+    return new FolSynthesisProblem(
+        scope, hf, histEncoder, FolSynthesisProblem::applyWithNoTotalOrder);
+  }
+
+  public static FolSynthesisProblem withNoTotalOrder(
+      SimpleScope scope, HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
+    return new FolSynthesisProblem(
+        scope, h -> Formula.TRUE, histEncoder, FolSynthesisProblem::applyWithNoTotalOrder);
+  }
+
+  public FolSynthesisProblem(
+      SimpleScope scope,
+      HistoryFormula historyFormula,
+      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
+    super(
+        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula),
+        histEncoder,
+        FolSynthesisProblem::extraForHistoryEncoding,
+        FolSynthesisProblem::apply);
+  }
+
+  public FolSynthesisProblem(
+      SimpleScope scope,
+      HistoryFormula historyFormula,
+      HistoryDecls decls,
+      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
+    super(
+        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula, decls),
+        histEncoder,
+        FolSynthesisProblem::extraForHistoryEncoding,
+        FolSynthesisProblem::apply);
+  }
+
+  public FolSynthesisProblem(
+      SimpleScope scope,
+      HistoryFormula historyFormula,
+      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder,
+      ProblemExtendingStrategy<TupleSet, TransactionTotalOrderInfo> problemExtendingStrategy) {
+    super(
+        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula),
+        histEncoder,
+        FolSynthesisProblem::extraForHistoryEncoding,
+        FolSynthesisProblem::apply);
+  }
+
+  public FolSynthesisProblem(SimpleScope scope, HistoryFormula historyFormula) {
+    this(scope, historyFormula, new DefaultSimpleHistorySynthesisEncoder());
+  }
+
+  public FolSynthesisProblem(SimpleScope scope, HistoryFormula historyFormula, HistoryDecls decls) {
+    this(scope, historyFormula, decls, new DefaultSimpleHistorySynthesisEncoder());
+  }
+
+  public FolSynthesisProblem(
+      SimpleScope scope, HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
+    this(scope, h -> Formula.TRUE, histEncoder);
+  }
+
+  public FolSynthesisProblem(SimpleScope scope) {
     this(scope, h -> Formula.TRUE);
   }
 }
