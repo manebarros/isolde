@@ -36,10 +36,13 @@ public class SynthesizedHistory {
     StringBuilder sb = new StringBuilder();
     sb.append(new History(historyEncoding, instance));
     sb.append("\n\n");
+    var count = 1;
     for (var exec : ceroneExecutions) {
+      sb.append(String.format("Execution #%d:\n", count++));
       sb.append(exec.showAdditionalStructures(instance)).append("\n");
     }
     for (var exec : biswasExecutions) {
+      sb.append(String.format("Execution #%d:\n", count++));
       sb.append(exec.showAdditionalStructures(instance)).append("\n");
     }
     return sb.toString();
@@ -50,7 +53,7 @@ public class SynthesizedHistory {
     Instance instance = candidates.getFirst().instance();
     StringBuilder sb = new StringBuilder();
     sb.append(new History(historyEncoding, instance));
-    sb.append("\n");
+    sb.append("\n\n");
     sb.append(ceroneExecutions.get(0).showAdditionalStructures(instance));
     return sb.toString();
   }

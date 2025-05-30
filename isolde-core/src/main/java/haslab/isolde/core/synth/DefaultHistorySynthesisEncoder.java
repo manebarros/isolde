@@ -17,7 +17,7 @@ public final class DefaultHistorySynthesisEncoder
     implements HistoryEncoder<FolSynthesisInput, TupleSet> {
 
   @Override
-  public AbstractHistoryK encoding() {
+  public AbstractHistoryRel encoding() {
     return DirectAbstractHistoryEncoding.instance();
   }
 

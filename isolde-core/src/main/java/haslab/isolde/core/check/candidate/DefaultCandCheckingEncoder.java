@@ -13,6 +13,7 @@ import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
 import static haslab.isolde.kodkod.Util.unaryTupleSetToAtoms;
 
 import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.general.simple.HistoryEncoderS;
 import haslab.isolde.kodkod.Util;
@@ -36,7 +37,7 @@ public class DefaultCandCheckingEncoder implements HistoryEncoderS<Contextualize
   }
 
   @Override
-  public AbstractHistoryK encoding() {
+  public AbstractHistoryRel encoding() {
     return DirectAbstractHistoryEncoding.instance();
   }
 

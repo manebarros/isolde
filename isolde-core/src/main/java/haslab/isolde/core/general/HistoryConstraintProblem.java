@@ -1,6 +1,6 @@
 package haslab.isolde.core.general;
 
-import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.kodkod.KodkodProblem;
@@ -94,6 +94,10 @@ public class HistoryConstraintProblem<I extends Input, T, S> {
             .encode(input, extra, b)
             .and(problemExtendingStrategy.extend(b, extra, this.extenders));
 
+    if (this.input.decls().isPresent()) {
+      formula = formula.forSome(this.input.decls().get().resolve(historyEncoding()));
+    }
+
     return new KodkodProblem(formula, b);
   }
 
@@ -109,7 +113,7 @@ public class HistoryConstraintProblem<I extends Input, T, S> {
     return extenders;
   }
 
-  public AbstractHistoryK historyEncoding() {
+  public AbstractHistoryRel historyEncoding() {
     return this.histEncoder.encoding();
   }
 }

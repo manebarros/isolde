@@ -1,6 +1,6 @@
 package haslab.isolde.core.general;
 
-import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import java.util.Collection;
@@ -12,7 +12,7 @@ import kodkod.instance.Bounds;
 public interface ExecutionModule<I extends Input, T, E extends Execution> {
 
   ContextualizedExtender<E, T> encode(
-      I input, AbstractHistoryK historyEncoding, List<ExecutionFormula<E>> formulas);
+      I input, AbstractHistoryRel historyEncoding, List<ExecutionFormula<E>> formulas);
 
   public static <I extends Input, T, E extends Execution>
       ExecutionModule<I, T, E> fromExecutionConstraintsEncoderConstructor(

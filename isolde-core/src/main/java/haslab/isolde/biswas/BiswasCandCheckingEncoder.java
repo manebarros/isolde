@@ -1,6 +1,7 @@
 package haslab.isolde.biswas;
 
 import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.check.candidate.ContextualizedInstance;
@@ -48,7 +49,7 @@ public class BiswasCandCheckingEncoder
   @Override
   public ProblemExtenderS encode(
       ContextualizedInstance instance,
-      AbstractHistoryK historyEncoding,
+      AbstractHistoryRel historyEncoding,
       List<ExecutionFormula<BiswasExecution>> formulas) {
 
     var encoder = this;

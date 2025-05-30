@@ -1,11 +1,13 @@
 package haslab.isolde.core.check.candidate;
 
 import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.HistoryDecls;
 import haslab.isolde.core.general.Input;
 import haslab.isolde.kodkod.Util;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import kodkod.engine.Evaluator;
 import kodkod.instance.Instance;
 
@@ -20,5 +22,10 @@ public record ContextualizedInstance(AbstractHistoryK context, Instance instance
     atoms.addAll(Util.unaryTupleSetToAtoms(eval.evaluate(context.keys())));
     atoms.addAll(Util.unaryTupleSetToAtoms(eval.evaluate(context.values())));
     return atoms;
+  }
+
+  @Override
+  public Optional<HistoryDecls> decls() {
+    return Optional.empty();
   }
 }

@@ -1,6 +1,7 @@
 package haslab.isolde.cerone;
 
 import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.general.simple.ExecutionConstraintsEncoderS;
@@ -49,7 +50,7 @@ public class CeroneHistCheckingModuleEncoder
   @Override
   public ProblemExtenderS encode(
       CheckingIntermediateRepresentation intermediateRepresentation,
-      AbstractHistoryK historyEncoding,
+      AbstractHistoryRel historyEncoding,
       List<ExecutionFormula<CeroneExecution>> formulas) {
 
     var encoder = this;

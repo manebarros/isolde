@@ -1,5 +1,6 @@
 package haslab.isolde.core.synth;
 
+import haslab.isolde.core.HistoryDecls;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.general.HistoryConstraintProblem;
 import haslab.isolde.core.general.HistoryEncoder;
@@ -75,6 +76,18 @@ public class FolSynthesisProblem
         FolSynthesisProblem::apply);
   }
 
+  public FolSynthesisProblem(
+      Scope scope,
+      HistoryFormula historyFormula,
+      HistoryDecls decls,
+      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
+    super(
+        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula, decls),
+        histEncoder,
+        FolSynthesisProblem::extraForHistoryEncoding,
+        FolSynthesisProblem::apply);
+  }
+
   private FolSynthesisProblem(
       Scope scope,
       HistoryFormula historyFormula,
@@ -89,6 +102,10 @@ public class FolSynthesisProblem
 
   public FolSynthesisProblem(Scope scope, HistoryFormula historyFormula) {
     this(scope, historyFormula, new DefaultHistorySynthesisEncoder());
+  }
+
+  public FolSynthesisProblem(Scope scope, HistoryFormula historyFormula, HistoryDecls decls) {
+    this(scope, historyFormula, decls, new DefaultHistorySynthesisEncoder());
   }
 
   public FolSynthesisProblem(Scope scope, HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {

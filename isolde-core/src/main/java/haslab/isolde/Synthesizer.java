@@ -9,6 +9,7 @@ import haslab.isolde.cerone.CeroneCounterexampleEncoder;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.CeroneSynthesisModule;
 import haslab.isolde.core.Execution;
+import haslab.isolde.core.HistoryDecls;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.cegis.CegisSynthesizer;
 import haslab.isolde.core.cegis.CegisSynthesizer.CegisModule;
@@ -42,6 +43,12 @@ public class Synthesizer {
 
   public Synthesizer(Scope scope, HistoryFormula hf) {
     this.cegisSynthesizer = new CegisSynthesizer<>(new FolSynthesisProblem(scope, hf));
+    this.ceroneExecutions = null;
+    this.ceroneExecutions = null;
+  }
+
+  public Synthesizer(Scope scope, HistoryFormula hf, HistoryDecls decls) {
+    this.cegisSynthesizer = new CegisSynthesizer<>(new FolSynthesisProblem(scope, hf, decls));
     this.ceroneExecutions = null;
     this.ceroneExecutions = null;
   }

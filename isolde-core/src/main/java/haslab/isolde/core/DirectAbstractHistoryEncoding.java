@@ -3,7 +3,7 @@ package haslab.isolde.core;
 import kodkod.ast.Expression;
 import kodkod.ast.Relation;
 
-public final class DirectAbstractHistoryEncoding implements AbstractHistoryK {
+public final class DirectAbstractHistoryEncoding implements AbstractHistoryRel {
   public static final Relation transactions = Relation.unary("transactions");
   public static final Relation keys = Relation.unary("keys");
   public static final Relation values = Relation.unary("values");

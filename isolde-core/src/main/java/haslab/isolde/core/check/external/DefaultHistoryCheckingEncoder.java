@@ -11,7 +11,7 @@ import static haslab.isolde.core.DirectAbstractHistoryEncoding.values;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.writes;
 import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
 
-import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.general.simple.HistoryEncoderS;
 import haslab.isolde.history.AbstractTransaction;
@@ -38,7 +38,7 @@ public class DefaultHistoryCheckingEncoder
   }
 
   @Override
-  public AbstractHistoryK encoding() {
+  public AbstractHistoryRel encoding() {
     return DirectAbstractHistoryEncoding.instance();
   }
 

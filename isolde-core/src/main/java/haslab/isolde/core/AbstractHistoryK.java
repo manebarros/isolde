@@ -2,11 +2,10 @@ package haslab.isolde.core;
 
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
-import kodkod.ast.Relation;
 import kodkod.ast.Variable;
 
 public interface AbstractHistoryK {
-  Relation transactions();
+  Expression transactions();
 
   Expression keys();
 
@@ -14,7 +13,7 @@ public interface AbstractHistoryK {
 
   Expression sessions();
 
-  Relation initialTransaction();
+  Expression initialTransaction();
 
   Expression externalReads();
 
@@ -120,6 +119,10 @@ public interface AbstractHistoryK {
     return externalReads().join(values()).join(x);
   }
 
+  default Expression txnThatTouchAnyOf(Expression x) {
+    return finalWrites().union(externalReads()).join(values()).join(x);
+  }
+
   default Expression readSet(Expression t) {
     return t.join(externalReads()).join(values());
   }
@@ -166,5 +169,109 @@ public interface AbstractHistoryK {
 
   default Expression valuesWrittenTo(Expression x) {
     return x.join(transactions().join(finalWrites()));
+  }
+
+  default AbstractHistoryK projectionOverKeys(Expression keySubset) {
+    AbstractHistoryK og = this;
+
+    return new AbstractHistoryK() {
+
+      @Override
+      public Expression transactions() {
+        return og.txnThatTouchAnyOf(keySubset);
+      }
+
+      @Override
+      public Expression keys() {
+        return og.keys();
+      }
+
+      @Override
+      public Expression values() {
+        return og.values();
+      }
+
+      @Override
+      public Expression sessions() {
+        return og.sessions();
+      }
+
+      @Override
+      public Expression initialTransaction() {
+        return og.initialTransaction();
+      }
+
+      @Override
+      public Expression externalReads() {
+        return og.externalReads().intersection(transactions().product(keySubset).product(values()));
+      }
+
+      @Override
+      public Expression finalWrites() {
+        return og.finalWrites().intersection(transactions().product(keySubset).product(values()));
+      }
+
+      @Override
+      public Expression sessionOrder() {
+        return og.sessionOrder();
+      }
+
+      @Override
+      public Expression txn_session() {
+        return og.txn_session();
+      }
+    };
+  }
+
+  default AbstractHistoryK subHistory(Expression txnSubset) {
+    AbstractHistoryK og = this;
+
+    return new AbstractHistoryK() {
+
+      @Override
+      public Expression transactions() {
+        return initialTransaction().union(txnSubset);
+      }
+
+      @Override
+      public Expression keys() {
+        return og.keys();
+      }
+
+      @Override
+      public Expression values() {
+        return og.values();
+      }
+
+      @Override
+      public Expression sessions() {
+        return og.sessions();
+      }
+
+      @Override
+      public Expression initialTransaction() {
+        return og.initialTransaction();
+      }
+
+      @Override
+      public Expression externalReads() {
+        return og.externalReads();
+      }
+
+      @Override
+      public Expression finalWrites() {
+        return og.finalWrites();
+      }
+
+      @Override
+      public Expression sessionOrder() {
+        return og.sessionOrder();
+      }
+
+      @Override
+      public Expression txn_session() {
+        return og.txn_session();
+      }
+    };
   }
 }
