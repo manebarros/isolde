@@ -5,12 +5,7 @@ import java.io.IOException;
 
 public class Main {
   public static void main(String[] args) throws IOException {
-    // DifferentDefinitionsCerone.measureAndWrite("/home/mane/Desktop/vldb-experiments/data.csv");
-    // DifferentDefinitionsBiswas.measureAndAppend("/home/mane/Desktop/vldb-experiments/data.csv");
-    // DifferentDefinitionsAcrossFrameworks.measureAndWrite(
-    // "/home/mane/Desktop/vldb-experiments/edges_diff_frameworks.csv");
     EquivalentDefinitionsAcrossFrameworks.measureAndAppend(
-        "/home/mane/Desktop/vldb-experiments/equiv_diff_frameworks_temp.csv");
-    // VerifyBiswasAndCeroneEquivalence.verify(5);
+        "/home/mane/Desktop/vldb-experiments/equiv_diff_frameworks_ser_minisat.csv");
   }
 }

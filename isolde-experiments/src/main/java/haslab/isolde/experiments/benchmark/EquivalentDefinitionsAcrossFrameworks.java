@@ -26,15 +26,15 @@ public final class EquivalentDefinitionsAcrossFrameworks {
       ExecutionFormula<CeroneExecution> ceroneDef,
       ExecutionFormula<BiswasExecution> biswasDef) {}
 
-  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 5, 7);
+  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 6, 6);
 
   private static final List<Definition> levels =
       Arrays.asList(
           new Definition("RA", CeroneDefinitions.RA, AxiomaticDefinitions.ReadAtomic),
-          new Definition("CC", CeroneDefinitions.CC, AxiomaticDefinitions.Causal),
-          new Definition("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
-          new Definition("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot),
-          new Definition("Ser", CeroneDefinitions.SER, AxiomaticDefinitions.Ser));
+          // new Definition("CC", CeroneDefinitions.CC, AxiomaticDefinitions.Causal),
+          // new Definition("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
+          // new Definition("Ser", CeroneDefinitions.SER, AxiomaticDefinitions.Ser));
+          new Definition("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot));
 
   public static final List<Measurement> measure(
       List<Scope> scopes, List<Definition> levels, Collection<String> solvers, int samples) {
@@ -62,16 +62,7 @@ public final class EquivalentDefinitionsAcrossFrameworks {
             CegisHistory hist = synth.synthesizeWithInfo(Util.solvers.get(solver));
             Instant after = Instant.now();
             long time = Duration.between(before, after).toMillis();
-
-            System.out.printf(
-                "[%3d/%d] (%s, [%s], %s, %s - Biswas and not Cerone) : %d\n",
-                ++count,
-                uniqueRuns,
-                "default",
-                scope,
-                solver,
-                level.name(),
-                time); // TODO : use different implementations
+            int candidates = hist.candidates();
 
             if (hist.history().isPresent()) {
               success++;
@@ -79,7 +70,17 @@ public final class EquivalentDefinitionsAcrossFrameworks {
               failed++;
             }
 
-            int candidates = hist.candidates();
+            System.out.printf(
+                "[%3d/%d] (%s, [%s], %s, %s - Biswas and not Cerone) : %d ms, %d candidates\n",
+                ++count,
+                uniqueRuns,
+                "default",
+                scope,
+                solver,
+                level.name(),
+                time,
+                candidates); // TODO : use different implementations
+
             rows.add(
                 new Measurement(
                     "default",
@@ -96,16 +97,7 @@ public final class EquivalentDefinitionsAcrossFrameworks {
             hist = synth2.synthesizeWithInfo(Util.solvers.get(solver));
             after = Instant.now();
             time = Duration.between(before, after).toMillis();
-
-            System.out.printf(
-                "[%3d/%d] (%s, [%s], %s, %s - Cerone and not Biswas) : %d\n",
-                ++count,
-                uniqueRuns,
-                "default",
-                scope,
-                solver,
-                level.name(),
-                time); // TODO : use different implementations
+            candidates = hist.candidates();
 
             if (hist.history().isPresent()) {
               success++;
@@ -113,7 +105,17 @@ public final class EquivalentDefinitionsAcrossFrameworks {
               failed++;
             }
 
-            candidates = hist.candidates();
+            System.out.printf(
+                "[%3d/%d] (%s, [%s], %s, %s - Cerone and not Biswas) : %d ms, %d candidates\n",
+                ++count,
+                uniqueRuns,
+                "default",
+                scope,
+                solver,
+                level.name(),
+                time,
+                candidates); // TODO : use different implementations
+
             rows.add(
                 new Measurement(
                     "default",
@@ -134,14 +136,12 @@ public final class EquivalentDefinitionsAcrossFrameworks {
   }
 
   public static final void measureAndWrite(String file) throws IOException {
-    List<Measurement> measurements =
-        measure(scopes, levels, Arrays.asList("glucose", "minisat"), 3);
+    List<Measurement> measurements = measure(scopes, levels, Arrays.asList("minisat"), 3);
     Util.writeMeasurements(measurements, file);
   }
 
   public static final void measureAndAppend(String file) throws IOException {
-    List<Measurement> measurements =
-        measure(scopes, levels, Arrays.asList("glucose", "minisat"), 3);
+    List<Measurement> measurements = measure(scopes, levels, Arrays.asList("minisat"), 3);
     Util.appendMeasurements(measurements, file);
   }
 }
