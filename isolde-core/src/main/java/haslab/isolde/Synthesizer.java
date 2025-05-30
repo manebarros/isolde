@@ -21,6 +21,7 @@ import haslab.isolde.core.synth.FolSynthesisProblem;
 import haslab.isolde.core.synth.Scope;
 import haslab.isolde.core.synth.TransactionTotalOrderInfo;
 import haslab.isolde.history.History;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import kodkod.engine.Solution;
@@ -80,6 +81,23 @@ public class Synthesizer {
           solutions.size());
     }
     return new CegisHistory(Optional.empty(), solutions.size() - 1);
+  }
+
+  public SynthesizedHistory synthesizeClean() {
+    return synthesizeClean(SATFactory.MiniSat);
+  }
+
+  public SynthesizedHistory synthesizeClean(SATFactory solver) {
+    List<Solution> candidates = this.cegisSynthesizer.synthesize(solver);
+    return new SynthesizedHistory(
+        candidates,
+        this.cegisSynthesizer.historyEncoding(),
+        this.ceroneExecutions != null
+            ? this.ceroneExecutions.synthesisExecutions()
+            : new ArrayList<>(),
+        this.biswasExecutions != null
+            ? this.biswasExecutions.synthesisExecutions()
+            : new ArrayList<>());
   }
 
   public Optional<History> synthesize() {
