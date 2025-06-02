@@ -65,8 +65,8 @@ public final class DefaultSimpleHistorySynthesisEncoder
 
     TupleSet sessionOrderExactBound =
         f.setOf(historyAtoms.initialTxn()).product(f.setOf(historyAtoms.normalTxns().toArray()));
-
     b.boundExactly(sessionOrder, sessionOrderExactBound);
+
     TupleSet txnSessionExactBound = f.noneOf(2);
     for (int i = 0; i < historyAtoms.normalTxns().size(); i++) {
       Atom<Integer> txnAtom = historyAtoms.normalTxns().get(i);

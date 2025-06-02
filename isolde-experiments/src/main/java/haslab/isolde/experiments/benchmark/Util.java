@@ -3,7 +3,13 @@ package haslab.isolde.experiments.benchmark;
 import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.WRITE;
 
+import haslab.isolde.biswas.BiswasExecution;
+import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
+import haslab.isolde.cerone.CeroneExecution;
+import haslab.isolde.cerone.definitions.CeroneDefinitions;
+import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.synth.Scope;
+import haslab.isolde.core.synth.noSession.SimpleScope;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -18,6 +24,19 @@ public final class Util {
           "minisat", SATFactory.MiniSat,
           "glucose", SATFactory.Glucose,
           "sat4j", SATFactory.DefaultSAT4J);
+
+  public static record LevelDefinitions(
+      String name,
+      ExecutionFormula<CeroneExecution> ceroneDef,
+      ExecutionFormula<BiswasExecution> biswasDef) {}
+
+  public static final Map<String, LevelDefinitions> levels =
+      Map.of(
+          "RA", new LevelDefinitions("RA", CeroneDefinitions.RA, AxiomaticDefinitions.ReadAtomic),
+          "CC", new LevelDefinitions("CC", CeroneDefinitions.CC, AxiomaticDefinitions.Causal),
+          "PC", new LevelDefinitions("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
+          "SI", new LevelDefinitions("Ser", CeroneDefinitions.SER, AxiomaticDefinitions.Ser),
+          "Ser", new LevelDefinitions("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot));
 
   private static void writeString(String s, Path p) throws IOException {
     Path dir = p.getParent();
@@ -67,6 +86,19 @@ public final class Util {
     List<Scope> scopes = new ArrayList<>();
     for (int txn_num = from; txn_num <= to; txn_num += step) {
       scopes.add(new Scope(txn_num, keys, val, sessions));
+    }
+    return scopes;
+  }
+
+  public static List<SimpleScope> simpleScopesFromRange(int keys, int val, int from, int to) {
+    return simpleScopesFromRange(keys, val, from, to, 1);
+  }
+
+  public static List<SimpleScope> simpleScopesFromRange(
+      int keys, int val, int from, int to, int step) {
+    List<SimpleScope> scopes = new ArrayList<>();
+    for (int txn_num = from; txn_num <= to; txn_num += step) {
+      scopes.add(new SimpleScope(txn_num, keys, val));
     }
     return scopes;
   }

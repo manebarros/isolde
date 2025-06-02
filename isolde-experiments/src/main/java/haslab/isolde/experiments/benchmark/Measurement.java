@@ -1,6 +1,7 @@
 package haslab.isolde.experiments.benchmark;
 
 import haslab.isolde.core.synth.Scope;
+import haslab.isolde.core.synth.noSession.SimpleScope;
 import java.lang.reflect.RecordComponent;
 import java.text.DateFormat;
 import java.text.SimpleDateFormat;
@@ -43,6 +44,31 @@ public record Measurement(
         scope.getObjects(),
         scope.getValues(),
         scope.getSessions(),
+        time,
+        candidates,
+        run,
+        date);
+  }
+
+  public Measurement(
+      String implementation,
+      String solver,
+      String satisfied,
+      String violated,
+      SimpleScope scope,
+      Long time,
+      Integer candidates,
+      Date run,
+      Date date) {
+    this(
+        implementation,
+        solver,
+        satisfied,
+        violated,
+        scope.getTransactions(),
+        scope.getObjects(),
+        scope.getValues(),
+        scope.getTransactions(),
         time,
         candidates,
         run,
