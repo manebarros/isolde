@@ -16,7 +16,7 @@ public record SynthesisSpec<E extends Execution>(
   }
 
   public static <E extends Execution> SynthesisSpec<E> not(ExecutionFormula<E> formula) {
-    return new SynthesisSpec<>(new ArrayList<>(), formula.not());
+    return fromUniversal(formula.not());
   }
 
   public SynthesisSpec(List<ExecutionFormula<E>> existentialConstraints) {

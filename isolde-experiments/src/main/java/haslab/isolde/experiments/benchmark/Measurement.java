@@ -105,10 +105,7 @@ public record Measurement(
   }
 
   public static String asCsv(Collection<Measurement> measurements) {
-    return Measurement.header()
-        + "\n"
-        + Util.unlines(
-            measurements.stream().map(Measurement::asCsvRow).collect(Collectors.toList()));
+    return Measurement.header() + "\n" + asCsvWithoutHeader(measurements);
   }
 
   public static String asCsvWithoutHeader(Collection<Measurement> measurements) {

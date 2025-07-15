@@ -36,6 +36,24 @@ public class Synthesizer {
   private CegisModule<CeroneExecution> ceroneExecutions;
   private CegisModule<BiswasExecution> biswasExecutions;
 
+  public static Synthesizer withNoTotalOrder(Scope scope) {
+    CegisSynthesizer<TupleSet, TransactionTotalOrderInfo> cegisSynthesizer =
+        new CegisSynthesizer<>(FolSynthesisProblem.withNoTotalOrder(scope));
+    return new Synthesizer(cegisSynthesizer);
+  }
+
+  public static Synthesizer withNoTotalOrder(SimpleScope scope) {
+    CegisSynthesizer<TupleSet, TransactionTotalOrderInfo> cegisSynthesizer =
+        new CegisSynthesizer<>(FolSynthesisProblem.withNoTotalOrder(scope));
+    return new Synthesizer(cegisSynthesizer);
+  }
+
+  public Synthesizer(CegisSynthesizer<TupleSet, TransactionTotalOrderInfo> cegisSynthesizer) {
+    this.cegisSynthesizer = cegisSynthesizer;
+    this.ceroneExecutions = null;
+    this.ceroneExecutions = null;
+  }
+
   public Synthesizer(Scope scope) {
     this.cegisSynthesizer = new CegisSynthesizer<>(new FolSynthesisProblem(scope));
     this.ceroneExecutions = null;

@@ -1,9 +1,15 @@
 package haslab.isolde.core.synth.noSession;
 
+import haslab.isolde.core.synth.Scope;
+
 public class SimpleScope {
   private int transactions;
   private int objects;
   private int values;
+
+  public SimpleScope(Scope scope) {
+    this(scope.getTransactions(), scope.getObjects(), scope.getValues());
+  }
 
   public SimpleScope(int transactions, int objects, int values) {
     this.transactions = transactions;

@@ -2,11 +2,22 @@ import os
 import matplotlib.pyplot as plt
 import numpy as np
 
+BLUE = "#1f77b4"
+ORANGE = "#ff7f0e"
+GREEN = "#2ca02c"
+
 solver_display_names = { 
     'minisat' : 'MiniSat', 
     'glucose' : 'Glucose', 
     'sat4j' : 'Sat4j' 
 }
+
+implementation_styles = {
+    "optimized" : ("Optimized", BLUE, 's', '--'),
+    "no_total_order" : ("No txn total order", ORANGE, '^', ':'),
+    "no_fixed_sessions" : ("No fixed sessions", GREEN, 'o', '-')
+}
+
 
 # These columns identify a particular configuration for an Isolde run
 setup = ['implementation', 'solver', 'satisfied', 'violated', 'num_txn', 'num_keys', 'num_values', 'num_sessions']
@@ -55,7 +66,7 @@ def get_formatter(scale_factor):
 
 # given a cleaned df, draw a matrix of plots for the given `specs`
 # specs is a list of pairs (satisfied, violated)
-def plot_specs(df, specs, logScaling=False, plotHeight=4, plotWidth=5, paths=[], base_dir=None, display_level_fun=level_name_as_latex):
+def plot_specs(df, specs, logScaling=False, plotHeight=4, plotWidth=5, paths=[], base_dir=None, display_level_fun=level_name_as_latex, implementations=["optimized"]):
     col_keys = df['solver'].unique()
     
     # Create subplot grid
@@ -90,21 +101,27 @@ def plot_specs(df, specs, logScaling=False, plotHeight=4, plotWidth=5, paths=[],
         
         for j, solver in enumerate(col_keys):
             ax = axes[i, j]
-    
-            subset = df[
-                (df['satisfied'] == satisfied) &
-                (df['violated'] == violated) &
-                (df['solver'] == solver)
-            ]
-            ax.errorbar(
-                subset['num_txn'],
-                subset['avg_time_ms'],
-                yerr=[
-                    subset['avg_time_ms'] - subset['min_time_ms'],
-                    subset['max_time_ms'] - subset['avg_time_ms']
-                ],
-                fmt='o-', capsize=3
-            )
+
+            for implementation in implementations:
+                subset = df[
+                    (df['satisfied'] == satisfied) &
+                    (df['violated'] == violated) &
+                    (df['solver'] == solver) &
+                    (df['implementation'] == implementation)
+                ]
+                ax.errorbar(
+                    subset['num_txn'],
+                    subset['avg_time_ms'],
+                    yerr=[
+                        subset['avg_time_ms'] - subset['min_time_ms'],
+                        subset['max_time_ms'] - subset['avg_time_ms']
+                    ],
+                    capsize=3, markersize=5,
+                    label=implementation_styles[implementation][0] if len(implementations) > 1 else None,
+                    color=implementation_styles[implementation][1],
+                    marker=implementation_styles[implementation][2],
+                    linestyle=implementation_styles[implementation][3]
+                )
 
             if logScaling==True or (logScaling != False and (satisfied, violated) in logScaling):
                 ax.set_yscale("log")

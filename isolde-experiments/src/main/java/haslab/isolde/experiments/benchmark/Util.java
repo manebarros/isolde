@@ -90,6 +90,19 @@ public final class Util {
     return scopes;
   }
 
+  public static List<Scope> scopesFromRangeWithoutSessions(int keys, int val, int from, int to) {
+    return scopesFromRangeWithoutSessions(keys, val, from, to, 1);
+  }
+
+  public static List<Scope> scopesFromRangeWithoutSessions(
+      int keys, int val, int from, int to, int step) {
+    List<Scope> scopes = new ArrayList<>();
+    for (int txn_num = from; txn_num <= to; txn_num += step) {
+      scopes.add(new Scope(txn_num, keys, val, txn_num));
+    }
+    return scopes;
+  }
+
   public static List<SimpleScope> simpleScopesFromRange(int keys, int val, int from, int to) {
     return simpleScopesFromRange(keys, val, from, to, 1);
   }

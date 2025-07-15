@@ -67,6 +67,14 @@ public class FolSynthesisProblem
         scope, h -> Formula.TRUE, histEncoder, FolSynthesisProblem::applyWithNoTotalOrder);
   }
 
+  public static FolSynthesisProblem withNoTotalOrder(Scope scope) {
+    return new FolSynthesisProblem(
+        scope,
+        h -> Formula.TRUE,
+        new DefaultHistorySynthesisEncoder(),
+        FolSynthesisProblem::applyWithNoTotalOrder);
+  }
+
   public FolSynthesisProblem(
       Scope scope,
       HistoryFormula historyFormula,
@@ -133,6 +141,14 @@ public class FolSynthesisProblem
         scope, h -> Formula.TRUE, histEncoder, FolSynthesisProblem::applyWithNoTotalOrder);
   }
 
+  public static FolSynthesisProblem withNoTotalOrder(SimpleScope scope) {
+    return new FolSynthesisProblem(
+        scope,
+        h -> Formula.TRUE,
+        new DefaultHistorySynthesisEncoder(),
+        FolSynthesisProblem::applyWithNoTotalOrder);
+  }
+
   public FolSynthesisProblem(
       SimpleScope scope,
       HistoryFormula historyFormula,
@@ -165,7 +181,7 @@ public class FolSynthesisProblem
         new FolSynthesisInput(new HistoryAtoms(scope), historyFormula),
         histEncoder,
         FolSynthesisProblem::extraForHistoryEncoding,
-        FolSynthesisProblem::apply);
+        problemExtendingStrategy);
   }
 
   public FolSynthesisProblem(SimpleScope scope, HistoryFormula historyFormula) {

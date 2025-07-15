@@ -7,6 +7,7 @@ import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
+import haslab.isolde.core.synth.noSession.SimpleScope;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.time.Duration;
@@ -16,6 +17,7 @@ import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
 
 public final class DifferentDefinitionsCerone {
   private DifferentDefinitionsCerone() {}
@@ -26,7 +28,7 @@ public final class DifferentDefinitionsCerone {
       String strongerName,
       ExecutionFormula<CeroneExecution> strongerDef) {}
 
-  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 4, 10);
+  private static final List<Scope> scopes = Util.scopesFromRangeWithoutSessions(5, 5, 4, 10);
 
   private static final List<Edge> edges =
       Arrays.asList(
@@ -41,7 +43,7 @@ public final class DifferentDefinitionsCerone {
 
   public static final List<Measurement> measure(
       List<Scope> scopes, List<Edge> levels, Collection<String> solvers, int samples) {
-    int uniqueRuns = scopes.size() * levels.size() * solvers.size() * samples;
+    int uniqueRuns = scopes.size() * levels.size() * solvers.size() * samples * 3;
     int count = 0;
     int success = 0;
     int failed = 0;
@@ -49,45 +51,67 @@ public final class DifferentDefinitionsCerone {
     List<Measurement> rows = new ArrayList<>(uniqueRuns);
     for (Scope scope : scopes) {
       for (Edge edge : levels) {
-        Synthesizer synth = new Synthesizer(scope);
-        synth.registerCerone(new SynthesisSpec<>(edge.weakerDef(), edge.strongerDef().not()));
 
-        for (String solver : solvers) {
-          for (int sample = 0; sample < samples; sample++) {
-            Instant before = Instant.now();
-            CegisHistory hist = synth.synthesizeWithInfo(Util.solvers.get(solver));
-            Instant after = Instant.now();
-            long time = Duration.between(before, after).toMillis();
+        Synthesizer synthOptimized = new Synthesizer(new SimpleScope(scope));
+        synthOptimized.registerCerone(
+            new SynthesisSpec<>(edge.weakerDef(), edge.strongerDef().not()));
 
-            System.out.printf(
-                "[%3d/%d] (%s, [%s], %s, %s and not %s) : %d\n",
-                ++count,
-                uniqueRuns,
-                "default",
-                scope,
-                solver,
-                edge.weakerName(),
-                edge.strongerName(),
-                time); // TODO : use different implementations
+        Synthesizer synthNoTotalOrder = Synthesizer.withNoTotalOrder(new SimpleScope(scope));
+        synthNoTotalOrder.registerCerone(
+            new SynthesisSpec<>(edge.weakerDef(), edge.strongerDef().not()));
 
-            if (hist.history().isPresent()) {
-              success++;
-            } else {
-              failed++;
+        Synthesizer synthNoFixedSessions = new Synthesizer(scope);
+        synthNoFixedSessions.registerCerone(
+            new SynthesisSpec<>(edge.weakerDef(), edge.strongerDef().not()));
+
+        Map<String, Synthesizer> implementations =
+            Map.of(
+                "no_total_order",
+                synthNoTotalOrder,
+                "no_fixed_sessions",
+                synthNoFixedSessions,
+                "optimized",
+                synthOptimized);
+
+        for (String implementation : implementations.keySet()) {
+          Synthesizer synth = implementations.get(implementation);
+          for (String solver : solvers) {
+            for (int sample = 0; sample < samples; sample++) {
+              Instant before = Instant.now();
+              CegisHistory hist = synth.synthesizeWithInfo(Util.solvers.get(solver));
+              Instant after = Instant.now();
+              long time = Duration.between(before, after).toMillis();
+
+              System.out.printf(
+                  "[%3d/%d] (%s, [%s], %s, %s and not %s) : %d ms\n",
+                  ++count,
+                  uniqueRuns,
+                  implementation,
+                  scope,
+                  solver,
+                  edge.weakerName(),
+                  edge.strongerName(),
+                  time);
+
+              if (hist.history().isPresent()) {
+                success++;
+              } else {
+                failed++;
+              }
+
+              int candidates = hist.candidates();
+              rows.add(
+                  new Measurement(
+                      implementation,
+                      solver,
+                      edge.weakerName() + "_Cerone",
+                      edge.strongerName() + "_Cerone",
+                      scope,
+                      time,
+                      candidates,
+                      run,
+                      Date.from(Instant.now())));
             }
-
-            int candidates = hist.candidates();
-            rows.add(
-                new Measurement(
-                    "default",
-                    solver,
-                    edge.weakerName() + "_Cerone",
-                    edge.strongerName() + "_Cerone",
-                    scope,
-                    time,
-                    candidates,
-                    run,
-                    Date.from(Instant.now())));
           }
         }
       }
