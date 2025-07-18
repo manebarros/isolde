@@ -28,7 +28,7 @@ public final class DifferentDefinitionsBiswas {
       String strongerName,
       ExecutionFormula<BiswasExecution> strongerDef) {}
 
-  private static final List<Scope> scopes = Util.scopesFromRangeWithoutSessions(5, 5, 4, 20, 2);
+  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 4, 10);
 
   private static final List<Edge> edges =
       Arrays.asList(
@@ -61,13 +61,7 @@ public final class DifferentDefinitionsBiswas {
             new SynthesisSpec<>(edge.weakerDef(), edge.strongerDef().not()));
 
         Map<String, Synthesizer> implementations =
-            Map.of(
-                "no_total_order",
-                synthNoTotalOrder,
-                "no_fixed_sessions",
-                synthNoFixedSessions,
-                "optimized",
-                synthOptimized);
+            Map.of("no_fixed_sessions", synthNoFixedSessions);
 
         for (String implementation : implementations.keySet()) {
           Synthesizer synth = implementations.get(implementation);

@@ -9,7 +9,6 @@ import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
-import haslab.isolde.core.synth.noSession.SimpleScope;
 import java.io.IOException;
 import java.time.Duration;
 import java.time.Instant;
@@ -42,11 +41,11 @@ public final class DifferentDefinitionsAcrossFrameworks {
       Arrays.asList(
           new Edge("RA", "CC"), new Edge("CC", "PC"), new Edge("PC", "SI"), new Edge("SI", "Ser"));
 
-  private static final List<Scope> scopes = Util.scopesFromRangeWithoutSessions(5, 5, 4, 10);
+  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 4, 10);
 
   public static final List<Measurement> measure(
       List<Scope> scopes, Collection<Edge> edges, Collection<String> solvers, int samples) {
-    int uniqueRuns = scopes.size() * edges.size() * solvers.size() * samples * 2 * 3;
+    int uniqueRuns = scopes.size() * edges.size() * solvers.size() * samples * 2;
     int count = 0;
     int success = 0;
     int failed = 0;
@@ -61,13 +60,7 @@ public final class DifferentDefinitionsAcrossFrameworks {
             SynthesisSpec.not(levels.get(edge.stronger()).ceroneDef());
 
         Map<String, Synthesizer> implementations =
-            Map.of(
-                "no_total_order",
-                Synthesizer.withNoTotalOrder(new SimpleScope(scope)),
-                "no_fixed_sessions",
-                new Synthesizer(scope),
-                "optimized",
-                new Synthesizer(new SimpleScope(scope)));
+            Map.of("no_fixed_sessions", new Synthesizer(scope));
 
         for (Synthesizer synth : implementations.values()) {
           synth.registerBiswas(biswasWeaker);
@@ -81,13 +74,7 @@ public final class DifferentDefinitionsAcrossFrameworks {
             SynthesisSpec.not(levels.get(edge.stronger()).biswasDef());
 
         Map<String, Synthesizer> implementations_cerone_not_biswas =
-            Map.of(
-                "no_total_order",
-                Synthesizer.withNoTotalOrder(new SimpleScope(scope)),
-                "no_fixed_sessions",
-                new Synthesizer(scope),
-                "optimized",
-                new Synthesizer(new SimpleScope(scope)));
+            Map.of("no_fixed_sessions", new Synthesizer(scope));
 
         for (Synthesizer synth : implementations_cerone_not_biswas.values()) {
           synth.registerCerone(ceroneWeaker);

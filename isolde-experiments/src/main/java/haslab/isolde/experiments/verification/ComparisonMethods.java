@@ -23,7 +23,7 @@ public final class ComparisonMethods {
       ExecutionFormula<BiswasExecution> b_def) {
     Synthesizer synth = new Synthesizer(scope);
     synth.registerCerone(new SynthesisSpec<>(a_def));
-    synth.registerBiswas(SynthesisSpec.fromUniversal(b_def.not()));
+    synth.registerBiswas(SynthesisSpec.not(b_def));
     Instant start = Instant.now();
     Optional<History> a_not_b = synth.synthesize();
     Instant finish = Instant.now();
@@ -31,7 +31,7 @@ public final class ComparisonMethods {
 
     synth = new Synthesizer(scope);
     synth.registerBiswas(new SynthesisSpec<>(b_def));
-    synth.registerCerone(SynthesisSpec.fromUniversal(a_def.not()));
+    synth.registerCerone(SynthesisSpec.not(a_def));
     start = Instant.now();
     Optional<History> b_not_a = synth.synthesize();
     finish = Instant.now();

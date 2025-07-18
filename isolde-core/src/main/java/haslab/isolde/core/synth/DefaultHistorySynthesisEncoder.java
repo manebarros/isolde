@@ -66,7 +66,7 @@ public final class DefaultHistorySynthesisEncoder
         histFormula.resolve(this.encoding()),
         encoding().sessionOrder().union(encoding().binaryWr()).in(txnTotalOrderRel),
         // KodkodUtil.acyclic(encoding().binaryWr().union(encoding().sessionOrder())),
-        // noBlindWrites(),
+        noBlindWrites(),
         noEmptyTransactions(),
         transactionsWriteToKeyAtMostOnce(),
         transactionsReadKeyAtMostOnce(),

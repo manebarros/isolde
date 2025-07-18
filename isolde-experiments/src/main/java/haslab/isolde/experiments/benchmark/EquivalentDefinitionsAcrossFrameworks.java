@@ -26,14 +26,14 @@ public final class EquivalentDefinitionsAcrossFrameworks {
       ExecutionFormula<CeroneExecution> ceroneDef,
       ExecutionFormula<BiswasExecution> biswasDef) {}
 
-  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 6, 6);
+  private static final List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 3, 5);
 
   private static final List<Definition> levels =
       Arrays.asList(
           new Definition("RA", CeroneDefinitions.RA, AxiomaticDefinitions.ReadAtomic),
-          // new Definition("CC", CeroneDefinitions.CC, AxiomaticDefinitions.Causal),
-          // new Definition("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
-          // new Definition("Ser", CeroneDefinitions.SER, AxiomaticDefinitions.Ser));
+          new Definition("CC", CeroneDefinitions.CC, AxiomaticDefinitions.Causal),
+          new Definition("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
+          new Definition("Ser", CeroneDefinitions.SER, AxiomaticDefinitions.Ser),
           new Definition("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot));
 
   public static final List<Measurement> measure(
@@ -74,7 +74,7 @@ public final class EquivalentDefinitionsAcrossFrameworks {
                 "[%3d/%d] (%s, [%s], %s, %s - Biswas and not Cerone) : %d ms, %d candidates\n",
                 ++count,
                 uniqueRuns,
-                "default",
+                "no_fixed_sessions",
                 scope,
                 solver,
                 level.name(),
@@ -83,7 +83,7 @@ public final class EquivalentDefinitionsAcrossFrameworks {
 
             rows.add(
                 new Measurement(
-                    "default",
+                    "no_fixed_sessions",
                     solver,
                     level.name() + "_Biswas",
                     level.name() + "_Cerone",
@@ -109,7 +109,7 @@ public final class EquivalentDefinitionsAcrossFrameworks {
                 "[%3d/%d] (%s, [%s], %s, %s - Cerone and not Biswas) : %d ms, %d candidates\n",
                 ++count,
                 uniqueRuns,
-                "default",
+                "no_fixed_sessions",
                 scope,
                 solver,
                 level.name(),
@@ -118,7 +118,7 @@ public final class EquivalentDefinitionsAcrossFrameworks {
 
             rows.add(
                 new Measurement(
-                    "default",
+                    "no_fixed_sessions",
                     solver,
                     level.name() + "_Cerone",
                     level.name() + "_Biswas",
@@ -136,12 +136,12 @@ public final class EquivalentDefinitionsAcrossFrameworks {
   }
 
   public static final void measureAndWrite(String file) throws IOException {
-    List<Measurement> measurements = measure(scopes, levels, Arrays.asList("minisat"), 3);
+    List<Measurement> measurements = measure(scopes, levels, Util.solvers.keySet(), 3);
     Util.writeMeasurements(measurements, file);
   }
 
   public static final void measureAndAppend(String file) throws IOException {
-    List<Measurement> measurements = measure(scopes, levels, Arrays.asList("minisat"), 3);
+    List<Measurement> measurements = measure(scopes, levels, Util.solvers.keySet(), 3);
     Util.appendMeasurements(measurements, file);
   }
 }

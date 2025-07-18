@@ -24,7 +24,9 @@ public final class VerifyBiswasAndCeroneEquivalence {
           new Definition("CC", CeroneDefinitions.CC, AxiomaticDefinitions.Causal),
           new Definition("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
           new Definition("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot),
-          new Definition("SER", CeroneDefinitions.SER, AxiomaticDefinitions.Ser));
+          new Definition("SER", CeroneDefinitions.SER, AxiomaticDefinitions.Ser),
+          new Definition(
+              "UPDATE_SER", FeketeReadOnlyAnomaly::updateSer, FeketeReadOnlyAnomaly::updateSer));
 
   public static void verify(int scope) {
     for (var def : levels) {
@@ -37,5 +39,17 @@ public final class VerifyBiswasAndCeroneEquivalence {
               def.biswasDef());
       System.out.println(result + "\n" + result.timeInfoString());
     }
+  }
+
+  public static void verifyIndex(int index, int scope) {
+    Definition def = levels.get(index);
+    ComparisonResult result =
+        ComparisonMethods.compareBiswasCerone(
+            new Scope(scope),
+            "Cerone's " + def.name(),
+            def.ceroneDef(),
+            "Biswas' " + def.name(),
+            def.biswasDef());
+    System.out.println(result + "\n" + result.timeInfoString());
   }
 }

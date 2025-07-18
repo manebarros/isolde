@@ -123,6 +123,10 @@ public interface AbstractHistoryK {
     return finalWrites().union(externalReads()).join(values()).join(x);
   }
 
+  default Formula isUpdateTransaction(Expression t) {
+    return t.join(finalWrites()).some();
+  }
+
   default Expression readSet(Expression t) {
     return t.join(externalReads()).join(values());
   }

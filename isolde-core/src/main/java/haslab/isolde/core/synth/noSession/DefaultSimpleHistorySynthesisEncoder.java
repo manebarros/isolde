@@ -83,6 +83,7 @@ public final class DefaultSimpleHistorySynthesisEncoder
         encoding().binaryWr().in(txnTotalOrderRel),
         // encoding().sessionOrder().union(encoding().binaryWr()).in(txnTotalOrderRel),
         // KodkodUtil.acyclic(encoding().binaryWr().union(encoding().sessionOrder())),
+        noBlindWrites(),
         noEmptyTransactions(),
         transactionsWriteToKeyAtMostOnce(),
         transactionsReadKeyAtMostOnce(),
