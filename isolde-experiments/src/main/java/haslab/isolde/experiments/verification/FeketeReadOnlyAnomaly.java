@@ -3,7 +3,6 @@ package haslab.isolde.experiments.verification;
 import static haslab.isolde.history.Operation.readOf;
 import static haslab.isolde.history.Operation.writeOf;
 
-import haslab.isolde.Synthesizer;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.BiswasHistCheckingEncoder;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
@@ -21,6 +20,7 @@ import haslab.isolde.history.Session;
 import haslab.isolde.history.Transaction;
 import haslab.isolde.kodkod.KodkodProblem;
 import java.util.Arrays;
+import javax.sound.midi.Synthesizer;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;

@@ -1,19 +1,24 @@
 package haslab.isolde.experiments.verification;
 
-import haslab.isolde.Synthesizer;
+import static haslab.isolde.IsoldeConstraint.biswas;
+import static haslab.isolde.IsoldeConstraint.cerone;
+import static haslab.isolde.IsoldeConstraint.history;
+
+import haslab.isolde.IsoldeSpec;
+import haslab.isolde.IsoldeSynthesizer;
+import haslab.isolde.SynthesizedHistory;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
-import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
-import haslab.isolde.history.History;
-import java.time.Duration;
-import java.time.Instant;
-import java.util.Optional;
 
 public final class ComparisonMethods {
   private ComparisonMethods() {}
+
+  private static IsoldeSynthesizer synthesizer() {
+    return new IsoldeSynthesizer.Builder().build();
+  }
 
   public static ComparisonResult compareBiswasCerone(
       Scope scope,
@@ -21,24 +26,16 @@ public final class ComparisonMethods {
       ExecutionFormula<CeroneExecution> a_def,
       String b_name,
       ExecutionFormula<BiswasExecution> b_def) {
-    Synthesizer synth = new Synthesizer(scope);
-    synth.registerCerone(new SynthesisSpec<>(a_def));
-    synth.registerBiswas(SynthesisSpec.not(b_def));
-    Instant start = Instant.now();
-    Optional<History> a_not_b = synth.synthesize();
-    Instant finish = Instant.now();
-    long a_not_b_time = Duration.between(start, finish).toMillis();
 
-    synth = new Synthesizer(scope);
-    synth.registerBiswas(new SynthesisSpec<>(b_def));
-    synth.registerCerone(SynthesisSpec.not(a_def));
-    start = Instant.now();
-    Optional<History> b_not_a = synth.synthesize();
-    finish = Instant.now();
-    long b_not_a_time = Duration.between(start, finish).toMillis();
+    IsoldeSynthesizer synthesizer = new IsoldeSynthesizer.Builder().build();
 
-    return new ComparisonResult(
-        a_name, b_name, scope, a_not_b, a_not_b_time, b_not_a, b_not_a_time);
+    IsoldeSpec spec = cerone(a_def).andNot(biswas(b_def));
+    SynthesizedHistory a_not_b = synthesizer.synthesize(scope, spec);
+
+    spec = biswas(b_def).andNot(cerone(a_def));
+    SynthesizedHistory b_not_a = synthesizer.synthesize(scope, spec);
+
+    return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);
   }
 
   public static ComparisonResult compareBiswas(
@@ -47,22 +44,16 @@ public final class ComparisonMethods {
       ExecutionFormula<BiswasExecution> a_def,
       String b_name,
       ExecutionFormula<BiswasExecution> b_def) {
-    Synthesizer synth = new Synthesizer(scope);
-    synth.registerBiswas(new SynthesisSpec<>(a_def, b_def.not()));
-    Instant start = Instant.now();
-    Optional<History> a_not_b = synth.synthesize();
-    Instant finish = Instant.now();
-    long a_not_b_time = Duration.between(start, finish).toMillis();
 
-    synth = new Synthesizer(scope);
-    synth.registerBiswas(new SynthesisSpec<>(b_def, a_def.not()));
-    start = Instant.now();
-    Optional<History> b_not_a = synth.synthesize();
-    finish = Instant.now();
-    long b_not_a_time = Duration.between(start, finish).toMillis();
+    IsoldeSynthesizer synthesizer = synthesizer();
 
-    return new ComparisonResult(
-        a_name, b_name, scope, a_not_b, a_not_b_time, b_not_a, b_not_a_time);
+    var spec = biswas(a_def).andNot(biswas(b_def));
+    SynthesizedHistory a_not_b = synthesizer.synthesize(scope, spec);
+
+    spec = biswas(b_def).andNot(biswas(a_def));
+    SynthesizedHistory b_not_a = synthesizer.synthesize(scope, spec);
+
+    return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);
   }
 
   public static ComparisonResult compareBiswasExecution(
@@ -71,22 +62,16 @@ public final class ComparisonMethods {
       ExecutionFormula<BiswasExecution> a_def,
       String b_name,
       ExecutionFormula<BiswasExecution> b_def) {
-    Synthesizer synth = new Synthesizer(scope);
-    synth.registerBiswas(new SynthesisSpec<>(a_def.and(b_def.not())));
-    Instant start = Instant.now();
-    Optional<History> a_not_b = synth.synthesize();
-    Instant finish = Instant.now();
-    long a_not_b_time = Duration.between(start, finish).toMillis();
 
-    synth = new Synthesizer(scope);
-    synth.registerBiswas(new SynthesisSpec<>(b_def.and(a_def.not())));
-    start = Instant.now();
-    Optional<History> b_not_a = synth.synthesize();
-    finish = Instant.now();
-    long b_not_a_time = Duration.between(start, finish).toMillis();
+    var synthesizer = synthesizer();
 
-    return new ComparisonResult(
-        a_name, b_name, scope, a_not_b, a_not_b_time, b_not_a, b_not_a_time);
+    var spec = biswas(a_def.and(b_def.not()));
+    var a_not_b = synthesizer.synthesize(scope, spec);
+
+    spec = biswas(b_def.and(a_def.not()));
+    var b_not_a = synthesizer.synthesize(scope, spec);
+
+    return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);
   }
 
   public static ComparisonResult compareBiswasAndHistoryBased(
@@ -95,22 +80,16 @@ public final class ComparisonMethods {
       ExecutionFormula<BiswasExecution> a_def,
       String b_name,
       HistoryFormula b_def) {
-    Synthesizer synth = new Synthesizer(scope, b_def.not());
-    synth.registerBiswas(new SynthesisSpec<>(a_def));
-    Instant start = Instant.now();
-    Optional<History> a_not_b = synth.synthesize();
-    Instant finish = Instant.now();
-    long a_not_b_time = Duration.between(start, finish).toMillis();
 
-    synth = new Synthesizer(scope, b_def);
-    synth.registerBiswas(SynthesisSpec.fromUniversal(a_def.not()));
-    start = Instant.now();
-    Optional<History> b_not_a = synth.synthesize();
-    finish = Instant.now();
-    long b_not_a_time = Duration.between(start, finish).toMillis();
+    var synthesizer = synthesizer();
 
-    return new ComparisonResult(
-        a_name, b_name, scope, a_not_b, a_not_b_time, b_not_a, b_not_a_time);
+    var spec = biswas(a_def).andNot(history(b_def));
+    var a_not_b = synthesizer.synthesize(scope, spec);
+
+    spec = history(b_def).andNot(biswas(a_def));
+    var b_not_a = synthesizer.synthesize(scope, spec);
+
+    return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);
   }
 
   public static ComparisonResult compareCerone(
@@ -119,21 +98,14 @@ public final class ComparisonMethods {
       ExecutionFormula<CeroneExecution> a_def,
       String b_name,
       ExecutionFormula<CeroneExecution> b_def) {
-    Synthesizer synth = new Synthesizer(scope);
-    synth.registerCerone(new SynthesisSpec<>(a_def, b_def.not()));
-    Instant start = Instant.now();
-    Optional<History> a_not_b = synth.synthesize();
-    Instant finish = Instant.now();
-    long a_not_b_time = Duration.between(start, finish).toMillis();
+    IsoldeSynthesizer synthesizer = synthesizer();
 
-    synth = new Synthesizer(scope);
-    synth.registerCerone(new SynthesisSpec<>(b_def, a_def.not()));
-    start = Instant.now();
-    Optional<History> b_not_a = synth.synthesize();
-    finish = Instant.now();
-    long b_not_a_time = Duration.between(start, finish).toMillis();
+    var spec = cerone(a_def).andNot(cerone(b_def));
+    SynthesizedHistory a_not_b = synthesizer.synthesize(scope, spec);
 
-    return new ComparisonResult(
-        a_name, b_name, scope, a_not_b, a_not_b_time, b_not_a, b_not_a_time);
+    spec = cerone(b_def).andNot(cerone(a_def));
+    SynthesizedHistory b_not_a = synthesizer.synthesize(scope, spec);
+
+    return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);
   }
 }

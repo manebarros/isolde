@@ -7,7 +7,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.CeroneHistCheckingModuleEncoder;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
-import haslab.isolde.core.check.external.DefaultHistoryCheckingEncoder;
 import haslab.isolde.core.check.external.HistCheckEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
@@ -37,8 +36,7 @@ public interface CeroneCheckingEncoderTest {
   CeroneHistCheckingModuleEncoder histCheckModuleEncoder();
 
   default HistCheckEncoder<CeroneExecution> histCheckEncoder() {
-    return new HistCheckEncoder<>(
-        DefaultHistoryCheckingEncoder.instance(), histCheckModuleEncoder());
+    return new HistCheckEncoder<>(histCheckModuleEncoder());
   }
 
   @Test
@@ -52,7 +50,7 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
     Solution sol =
         histCheckEncoder()
-            .solve(
+            .check(
                 hist,
                 e -> KodkodUtil.strictTotalOrder(e.ar(), e.history().transactions()).not(),
                 new Solver());
@@ -68,7 +66,7 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(1, Arrays.asList(readOf(0, 0))),
                     new Transaction(2, Arrays.asList(readOf(0, 0))),
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
-    Solution sol = histCheckEncoder().solve(hist, e -> e.vis().in(e.ar()).not(), new Solver());
+    Solution sol = histCheckEncoder().check(hist, e -> e.vis().in(e.ar()).not(), new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -83,7 +81,7 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
     Solution sol =
         histCheckEncoder()
-            .solve(hist, e -> e.history().sessionOrder().in(e.vis()).not(), new Solver());
+            .check(hist, e -> e.history().sessionOrder().in(e.vis()).not(), new Solver());
     assertTrue(sol.sat());
   }
 
@@ -98,7 +96,7 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
     Solution sol =
         histCheckEncoder()
-            .solve(hist, e -> e.history().sessionOrder().in(e.ar()).not(), new Solver());
+            .check(hist, e -> e.history().sessionOrder().in(e.ar()).not(), new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -113,7 +111,7 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
     Solution sol =
         histCheckEncoder()
-            .solve(
+            .check(
                 hist,
                 e ->
                     KodkodUtil.min(
@@ -136,7 +134,7 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
     Solution sol =
         histCheckEncoder()
-            .solve(
+            .check(
                 hist,
                 e ->
                     t.eq(e.history().initialTransaction())
@@ -160,7 +158,7 @@ public interface CeroneCheckingEncoderTest {
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
     Solution sol =
         histCheckEncoder()
-            .solve(
+            .check(
                 hist,
                 e ->
                     t.eq(e.history().initialTransaction())
@@ -178,7 +176,7 @@ public interface CeroneCheckingEncoderTest {
             new Session(new Transaction(1, Arrays.asList(writeOf(0, 1), writeOf(1, 1)))),
             new Session(new Transaction(2, Arrays.asList(readOf(1, 1), writeOf(1, 2)))),
             new Session(new Transaction(3, Arrays.asList(readOf(1, 2), readOf(0, 0)))));
-    Solution sol = histCheckEncoder().solve(hist, CeroneDefinitions.CC, new Solver());
+    Solution sol = histCheckEncoder().check(hist, CeroneDefinitions.CC, new Solver());
     assertTrue(sol.unsat());
   }
 
@@ -189,7 +187,7 @@ public interface CeroneCheckingEncoderTest {
             new Session(new Transaction(1, Arrays.asList(writeOf(0, 1), writeOf(1, 1)))),
             new Session(new Transaction(2, Arrays.asList(readOf(1, 1), writeOf(1, 2)))),
             new Session(new Transaction(3, Arrays.asList(readOf(1, 2), readOf(0, 0)))));
-    Solution sol = histCheckEncoder().solve(hist, CeroneDefinitions.RA, new Solver());
+    Solution sol = histCheckEncoder().check(hist, CeroneDefinitions.RA, new Solver());
     assertTrue(sol.sat());
   }
 
@@ -202,7 +200,7 @@ public interface CeroneCheckingEncoderTest {
                 new Transaction(2, Arrays.asList(readOf(1, 0), writeOf(0, 2), writeOf(1, 1)))),
             new Session(
                 new Transaction(3, Arrays.asList(readOf(1, 0), writeOf(0, 2), writeOf(1, 1)))));
-    Solution sol = histCheckEncoder().solve(hist, CeroneDefinitions.RA, new Solver());
+    Solution sol = histCheckEncoder().check(hist, CeroneDefinitions.RA, new Solver());
     assertTrue(sol.unsat());
   }
 }

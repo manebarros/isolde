@@ -2,49 +2,34 @@ package haslab.isolde.core.check.external;
 
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
-import haslab.isolde.core.general.simple.ExecutionConstraintsEncoderConstructorS;
-import haslab.isolde.core.general.simple.ExecutionConstraintsEncoderS;
-import haslab.isolde.core.general.simple.HistoryConstraintProblemS;
-import haslab.isolde.core.general.simple.HistoryEncoderS;
+import haslab.isolde.core.general.DirectExecutionModule;
+import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.kodkod.KodkodProblem;
 import java.util.Collections;
-import kodkod.engine.KodkodSolver;
-import kodkod.engine.Solution;
 
-public class HistCheckEncoder<E extends Execution> {
-  private final HistoryEncoderS<CheckingIntermediateRepresentation> historyEncoder;
-  private final ExecutionConstraintsEncoderS<CheckingIntermediateRepresentation, E> moduleEncoder;
+public class HistCheckEncoder<E extends Execution> implements HistCheckerI<E> {
+  private final HistoryEncoder<CheckingIntermediateRepresentation> historyEncoder;
+  private final DirectExecutionModule<E, CheckingIntermediateRepresentation, ?> moduleEncoder;
 
   public HistCheckEncoder(
-      HistoryEncoderS<CheckingIntermediateRepresentation> historyEncoder,
-      ExecutionConstraintsEncoderS<CheckingIntermediateRepresentation, E>
-          moduleEncoderConstructor) {
-    this.historyEncoder = historyEncoder;
-    this.moduleEncoder = moduleEncoderConstructor;
+      DirectExecutionModule<E, CheckingIntermediateRepresentation, ?> moduleEncoder) {
+    this.historyEncoder = DefaultHistoryCheckingEncoder.instance();
+    this.moduleEncoder = moduleEncoder;
   }
 
-  public HistCheckEncoder(
-      HistoryEncoderS<CheckingIntermediateRepresentation> historyEncoder,
-      ExecutionConstraintsEncoderConstructorS<CheckingIntermediateRepresentation, E>
-          moduleEncoderConstructor) {
-    this.historyEncoder = historyEncoder;
-    this.moduleEncoder = moduleEncoderConstructor.generate(1);
-  }
-
+  @Override
   public E execution() {
     return moduleEncoder.executions(historyEncoder.encoding()).get(0);
   }
 
+  @Override
   public KodkodProblem encode(History history, ExecutionFormula<E> formula) {
-    HistoryConstraintProblemS<CheckingIntermediateRepresentation> problem =
-        new HistoryConstraintProblemS<>(
-            new CheckingIntermediateRepresentation(history), this.historyEncoder);
+    HistCheckProblem problem =
+        (HistCheckProblem)
+            new HistCheckProblem(new CheckingIntermediateRepresentation(history))
+                .histEncoder(historyEncoder);
     problem.register(this.moduleEncoder, Collections.singletonList(formula));
     return problem.encode();
-  }
-
-  public Solution solve(History history, ExecutionFormula<E> formula, KodkodSolver solver) {
-    return this.encode(history, formula).solve(solver);
   }
 }

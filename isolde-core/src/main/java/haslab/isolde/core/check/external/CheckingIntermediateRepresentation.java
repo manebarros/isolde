@@ -1,17 +1,15 @@
 package haslab.isolde.core.check.external;
 
-import haslab.isolde.core.HistoryDecls;
-import haslab.isolde.core.general.Input;
+import haslab.isolde.core.general.AtomsContainer;
 import haslab.isolde.history.History;
 import haslab.isolde.kodkod.Atom;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Optional;
 import java.util.stream.Collectors;
 
-public class CheckingIntermediateRepresentation implements Input {
+public class CheckingIntermediateRepresentation implements AtomsContainer {
   private List<Atom<Integer>> sessAtoms;
   private List<List<Atom<Integer>>> txnAtoms;
   private Map<Integer, Atom<Integer>> keyAtoms;
@@ -87,10 +85,5 @@ public class CheckingIntermediateRepresentation implements Input {
 
   public Atom<Integer> getInitialTxnAtom() {
     return initialTxnAtom;
-  }
-
-  @Override
-  public Optional<HistoryDecls> decls() {
-    return Optional.empty();
   }
 }

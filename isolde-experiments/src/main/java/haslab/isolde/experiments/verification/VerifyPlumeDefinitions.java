@@ -1,6 +1,6 @@
 package haslab.isolde.experiments.verification;
 
-import haslab.isolde.Synthesizer;
+import haslab.isolde.IsoldeSynthesizer;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.biswas.definitions.TransactionalAnomalousPatterns;
@@ -10,6 +10,7 @@ import haslab.isolde.core.synth.Scope;
 import haslab.isolde.history.History;
 import java.util.Arrays;
 import java.util.List;
+import javax.sound.midi.Synthesizer;
 
 public final class VerifyPlumeDefinitions {
   private VerifyPlumeDefinitions() {}
@@ -46,6 +47,7 @@ public final class VerifyPlumeDefinitions {
   }
 
   public static History historyAllowedByPlumeRaButNotByBiswasRa() {
+    IsoldeSynthesizer synth = new IsoldeSynthesizer.Builder().build();
     Synthesizer synth = new Synthesizer(new Scope(2, 1, 2, 1));
     synth.registerBiswas(
         new SynthesisSpec<>(

@@ -1,13 +1,13 @@
 package haslab.isolde.core.synth;
 
-import haslab.isolde.core.synth.noSession.SimpleScope;
+import haslab.isolde.core.general.AtomsContainer;
 import haslab.isolde.kodkod.Atom;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.IntStream;
 
-public class HistoryAtoms {
+public class HistoryAtoms implements AtomsContainer {
   private List<Atom<Integer>> txnAtoms;
   private List<Atom<Integer>> objAtoms;
   private List<Atom<Integer>> valAtoms;
@@ -35,28 +35,6 @@ public class HistoryAtoms {
             .collect(Collectors.toList());
   }
 
-  public HistoryAtoms(SimpleScope scope) {
-    this.txnAtoms =
-        IntStream.rangeClosed(0, scope.getTransactions())
-            .mapToObj(i -> new Atom<>("t", i))
-            .collect(Collectors.toList());
-
-    this.objAtoms =
-        IntStream.range(0, scope.getObjects())
-            .mapToObj(i -> new Atom<>("x", i))
-            .collect(Collectors.toList());
-
-    this.valAtoms =
-        IntStream.range(0, scope.getValues())
-            .mapToObj(i -> new Atom<>("v", i))
-            .collect(Collectors.toList());
-
-    this.sessionAtoms =
-        IntStream.rangeClosed(1, scope.getTransactions())
-            .mapToObj(i -> new Atom<>("s", i))
-            .collect(Collectors.toList());
-  }
-
   public Atom<Integer> initialTxn() {
     return this.txnAtoms.get(0);
   }
@@ -69,6 +47,7 @@ public class HistoryAtoms {
     return valAtoms.subList(1, valAtoms.size());
   }
 
+  @Override
   public List<Object> atoms() {
     List<Object> atoms = new ArrayList<>();
     atoms.addAll(this.txnAtoms);

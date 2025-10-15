@@ -1,15 +1,16 @@
 package haslab.isolde.biswas;
 
 import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
-import haslab.isolde.core.general.ContextualizedExtender;
+import haslab.isolde.core.general.ExecutionModule;
+import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.HistoryAtoms;
-import haslab.isolde.core.synth.TransactionTotalOrderInfo;
 import haslab.isolde.kodkod.KodkodUtil;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.List;
+import java.util.Optional;
 import java.util.stream.Collectors;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
@@ -19,47 +20,53 @@ import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
 public class BiswasSynthesisModule
-    implements ContextualizedExtender<BiswasExecution, TransactionTotalOrderInfo> {
+    implements ExecutionModule<
+        BiswasExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>> {
 
-  private final AbstractHistoryK history;
-  private List<Relation> commitOrders;
-  private List<ExecutionFormula<BiswasExecution>> formulas;
-  private HistoryAtoms historyAtoms;
+  private final List<Relation> commitOrders;
 
-  public BiswasSynthesisModule(
-      FolSynthesisInput input,
-      AbstractHistoryK history,
-      List<ExecutionFormula<BiswasExecution>> formulas) {
-    this.history = history;
-    this.formulas = formulas;
-    this.historyAtoms = input.historyAtoms();
-    this.commitOrders = new ArrayList<>(formulas.size());
-    for (int i = 0; i < formulas.size(); i++) {
-      Relation commitOrder = Relation.binary("co#" + i);
-      commitOrders.add(commitOrder);
-    }
-  }
-
-  public BiswasSynthesisModule(
-      HistoryAtoms historyAtoms,
-      AbstractHistoryK history,
-      List<ExecutionFormula<BiswasExecution>> formulas) {
-    this.history = history;
-    this.formulas = formulas;
-    this.historyAtoms = historyAtoms;
-    this.commitOrders = new ArrayList<>(formulas.size());
-    for (int i = 0; i < formulas.size(); i++) {
+  public BiswasSynthesisModule(int executions) {
+    this.commitOrders = new ArrayList<>();
+    for (int i = 0; i < executions; i++) {
       Relation commitOrder = Relation.binary("co#" + i);
       commitOrders.add(commitOrder);
     }
   }
 
   @Override
-  public Formula extend(TransactionTotalOrderInfo totalOrderInfo, Bounds b) {
-    return totalOrderInfo.usable() ? extend(b, totalOrderInfo.txnTotalOrder()) : extend(b);
+  public List<BiswasExecution> executions(AbstractHistoryK historyEncoding) {
+    return this.commitOrders.stream()
+        .map(co -> new BiswasExecution(historyEncoding, co))
+        .collect(Collectors.toList());
   }
 
-  public Formula extend(Bounds b) {
+  @Override
+  public int executions() {
+    return commitOrders.size();
+  }
+
+  @Override
+  public SimpleContext<HistoryAtoms> createContext(FolSynthesisInput input) {
+    return new SimpleContext<>(input.historyAtoms());
+  }
+
+  @Override
+  public Formula encode(
+      Bounds b,
+      List<ExecutionFormula<BiswasExecution>> formulas,
+      SimpleContext<HistoryAtoms> context,
+      Optional<TupleSet> totalOrderInfo,
+      AbstractHistoryRel history) {
+    return totalOrderInfo.isPresent()
+        ? encode(b, formulas, context.val(), totalOrderInfo.get(), history)
+        : encode(b, formulas, context.val(), history);
+  }
+
+  public Formula encode(
+      Bounds b,
+      List<ExecutionFormula<BiswasExecution>> formulas,
+      HistoryAtoms historyAtoms,
+      AbstractHistoryK history) {
     TupleFactory f = b.universe().factory();
 
     TupleSet sessionOrderLowerBound =
@@ -82,13 +89,19 @@ public class BiswasSynthesisModule
       b.bound(commitOrder, sessionOrderLowerBound, commitOrderTs);
       formula =
           formula
-              .and(commitOrderSemantics(commitOrder))
+              .and(commitOrderSemantics(history, commitOrder))
               .and(formulas.get(i).resolve(new BiswasExecution(history, commitOrder)));
     }
     return formula;
   }
 
-  public Formula extend(Bounds b, TupleSet txnTotalOrderTs) {
+  public Formula encode(
+      Bounds b,
+      List<ExecutionFormula<BiswasExecution>> formulas,
+      HistoryAtoms historyAtoms,
+      TupleSet txnTotalOrderTs,
+      AbstractHistoryK history) {
+
     TupleFactory f = b.universe().factory();
     Relation mainCommitOrder = this.commitOrders.get(0);
     b.boundExactly(mainCommitOrder, txnTotalOrderTs);
@@ -99,7 +112,7 @@ public class BiswasSynthesisModule
     Formula formula =
         Formula.and(
             history.sessionOrder().union(history.binaryWr()).in(mainCommitOrder),
-            this.formulas.get(0).resolve(new BiswasExecution(history, mainCommitOrder)));
+            formulas.get(0).resolve(new BiswasExecution(history, mainCommitOrder)));
 
     // TODO: Can we use a more strict upper bound for the remaining commit orders?
     for (int i = 1; i < formulas.size(); i++) {
@@ -117,28 +130,16 @@ public class BiswasSynthesisModule
       b.bound(commitOrder, sessionOrderLowerBound, commitOrderTs);
       formula =
           formula
-              .and(commitOrderSemantics(commitOrder))
+              .and(commitOrderSemantics(history, commitOrder))
               .and(formulas.get(i).resolve(new BiswasExecution(history, commitOrder)));
     }
     return formula;
   }
 
-  private Formula commitOrderSemantics(Expression commitOrder) {
+  private Formula commitOrderSemantics(AbstractHistoryK history, Expression commitOrder) {
     return Formula.and(
         KodkodUtil.transitive(commitOrder),
         KodkodUtil.total(commitOrder, history.transactions()),
         history.sessionOrder().union(history.binaryWr()).in(commitOrder));
-  }
-
-  @Override
-  public Collection<Object> extraAtoms() {
-    return new ArrayList<>();
-  }
-
-  @Override
-  public List<BiswasExecution> executions() {
-    return this.commitOrders.stream()
-        .map(co -> new BiswasExecution(history, co))
-        .collect(Collectors.toList());
   }
 }

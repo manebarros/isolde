@@ -1,12 +1,10 @@
 package haslab.isolde.core.check.candidate;
 
-import haslab.isolde.core.general.simple.HistoryConstraintProblemS;
-import haslab.isolde.core.general.simple.HistoryEncoderS;
+import haslab.isolde.core.general.DirectHistoryConstraintProblem;
 
-public class CandCheckProblem extends HistoryConstraintProblemS<ContextualizedInstance> {
+public class CandCheckProblem extends DirectHistoryConstraintProblem<ContextualizedInstance> {
 
-  public CandCheckProblem(
-      ContextualizedInstance input, HistoryEncoderS<ContextualizedInstance> historyEncoder) {
-    super(input, historyEncoder);
+  public CandCheckProblem(ContextualizedInstance input) {
+    super(input, DefaultCandCheckingEncoder.instance());
   }
 }

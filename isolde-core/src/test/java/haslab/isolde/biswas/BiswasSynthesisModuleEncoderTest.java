@@ -1,19 +1,24 @@
 package haslab.isolde.biswas;
 
 import haslab.isolde.SynthesisModuleEncoderTest;
-import haslab.isolde.core.general.ExecutionModule;
+import haslab.isolde.core.general.ExecutionModuleConstructor;
+import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
-import haslab.isolde.core.synth.TransactionTotalOrderInfo;
+import haslab.isolde.core.synth.HistoryAtoms;
 import haslab.isolde.kodkod.KodkodUtil;
 import java.util.Arrays;
+import java.util.Optional;
 import kodkod.ast.Formula;
+import kodkod.instance.TupleSet;
 import org.junit.jupiter.api.Test;
 
 public interface BiswasSynthesisModuleEncoderTest
     extends SynthesisModuleEncoderTest<BiswasExecution> {
 
   @Override
-  ExecutionModule<FolSynthesisInput, TransactionTotalOrderInfo, BiswasExecution> encoder();
+  ExecutionModuleConstructor<
+          BiswasExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>>
+      constructor();
 
   @Test
   default void commitOrderExtendsSessionOrderPlusWr() {

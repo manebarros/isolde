@@ -1,6 +1,6 @@
 package haslab.isolde.core.general;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.kodkod.KodkodProblem;
@@ -8,21 +8,22 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
 import kodkod.ast.Formula;
+import kodkod.engine.Solution;
+import kodkod.engine.Solver;
 import kodkod.instance.Bounds;
 import kodkod.instance.Universe;
 
-public class HistoryConstraintProblem<I extends Input, T, S> {
+public class HistoryConstraintProblem<I extends AtomsContainer, T, S> {
   private final I input;
+  private final List<ExecutionModuleInstance<?, I, S, ?>> extenders;
 
-  private final HistoryEncoder<I, T> histEncoder;
-  private final List<ProblemExtender<S>> extenders;
-
-  private final HelperStructureProducer<I, T> helperStructureProducer;
-  private final ProblemExtendingStrategy<T, S> problemExtendingStrategy;
+  private HistoryEncoder<T> histEncoder;
+  private HelperStructureProducer<I, T> helperStructureProducer;
+  private ProblemExtendingStrategy<T, S> problemExtendingStrategy;
 
   public HistoryConstraintProblem(
       I input,
-      HistoryEncoder<I, T> historyEncoder,
+      HistoryEncoder<T> historyEncoder,
       HelperStructureProducer<I, T> helperStructureProducer,
       ProblemExtendingStrategy<T, S> problemExtendingStrategy) {
     this.input = input;
@@ -32,88 +33,68 @@ public class HistoryConstraintProblem<I extends Input, T, S> {
     this.problemExtendingStrategy = problemExtendingStrategy;
   }
 
-  public void register(ProblemExtender<S> extender) {
-    this.extenders.add(extender);
-  }
-
-  public <E extends Execution> void register(
-      ExecutionConstraintsEncoder<I, S, E> moduleEncoder, List<ExecutionFormula<E>> formulas) {
-    ProblemExtender<S> extender = moduleEncoder.encode(this, formulas);
-    register(extender);
-  }
-
-  public <E extends Execution> void register(
-      ExecutionConstraintsEncoder<I, S, E> moduleEncoder, ExecutionFormula<E> formula) {
-    this.register(moduleEncoder, Collections.singletonList(formula));
-  }
-
-  public <E extends Execution> List<E> register(
-      ExecutionConstraintsEncoderConstructor<I, S, E> moduleEncoderConstructor,
+  public <E extends Execution, A extends AtomsContainer> List<E> register(
+      ExecutionModuleConstructor<E, I, S, A> moduleConstructor,
       List<ExecutionFormula<E>> formulas) {
-    ExecutionConstraintsEncoder<I, S, E> moduleEncoder =
-        moduleEncoderConstructor.generate(formulas.size());
-    this.register(moduleEncoder, formulas);
-    return moduleEncoder.executions(this.historyEncoding());
+    ExecutionModule<E, I, S, A> module = moduleConstructor.build(formulas.size());
+    A atoms = module.createContext(this.input);
+    this.extenders.add(new ExecutionModuleInstance<>(module, atoms, formulas));
+    return module.executions(histEncoder.encoding());
   }
 
-  public <E extends Execution> E register(
-      ExecutionConstraintsEncoderConstructor<I, S, E> moduleEncoderConstructor,
-      ExecutionFormula<E> formula) {
-    ExecutionConstraintsEncoder<I, S, E> moduleEncoder = moduleEncoderConstructor.generate(1);
-    this.register(moduleEncoder, formula);
-    return moduleEncoder.executions(this.historyEncoding()).get(0);
+  public <E extends Execution, A extends AtomsContainer> List<E> register(
+      ExecutionModuleConstructor<E, I, S, A> moduleConstructor, ExecutionFormula<E> formula) {
+    ExecutionModule<E, I, S, A> module = moduleConstructor.build(1);
+    A atoms = module.createContext(this.input);
+    this.extenders.add(
+        new ExecutionModuleInstance<>(module, atoms, Collections.singletonList(formula)));
+    return module.executions(histEncoder.encoding());
   }
 
-  public <E extends Execution> List<E> register(
-      ExecutionModule<I, S, E> module, List<ExecutionFormula<E>> formulas) {
-    ContextualizedExtender<E, S> extender =
-        module.encode(this.input, this.historyEncoding(), formulas);
-    this.register(extender);
-    return extender.executions();
-  }
-
-  public <E extends Execution> E register(
-      ExecutionModule<I, S, E> module, ExecutionFormula<E> formula) {
-    ContextualizedExtender<E, S> extender =
-        module.encode(this.input, this.historyEncoding(), Collections.singletonList(formula));
-    this.register(extender);
-    return extender.executions().get(0);
+  public <E extends Execution, A extends AtomsContainer> void register(
+      ExecutionModule<E, I, S, A> module, List<ExecutionFormula<E>> formulas) {
+    A atoms = module.createContext(this.input);
+    this.extenders.add(new ExecutionModuleInstance<>(module, atoms, formulas));
   }
 
   public KodkodProblem encode() {
     List<Object> atoms = new ArrayList<>(input.atoms());
     for (var extender : extenders) {
-      atoms.addAll(extender.extraAtoms());
+      atoms.addAll(extender.context().atoms());
     }
     Universe u = new Universe(atoms);
     Bounds b = new Bounds(u);
 
     T extra = helperStructureProducer.produce(this.input, u);
-    Formula formula =
-        this.histEncoder
-            .encode(input, extra, b)
-            .and(problemExtendingStrategy.extend(b, extra, this.extenders));
-
-    if (this.input.decls().isPresent()) {
-      formula = formula.forSome(this.input.decls().get().resolve(historyEncoding()));
-    }
+    Formula formula = this.histEncoder.encode(extra, b);
+    formula =
+        problemExtendingStrategy.extend(formula, b, extra, histEncoder.encoding(), this.extenders);
 
     return new KodkodProblem(formula, b);
   }
 
-  public I getInput() {
-    return input;
+  public Solution solve(Solver solver) {
+    return encode().solve(solver);
   }
 
-  public HistoryEncoder<I, T> getHistEncoder() {
-    return histEncoder;
+  public HistoryConstraintProblem<I, T, S> histEncoder(HistoryEncoder<T> historyEncoder) {
+    this.histEncoder = historyEncoder;
+    return this;
   }
 
-  public List<ProblemExtender<S>> getExtenders() {
-    return extenders;
+  public HistoryConstraintProblem<I, T, S> helperStructureProducer(
+      HelperStructureProducer<I, T> val) {
+    this.helperStructureProducer = val;
+    return this;
   }
 
-  public AbstractHistoryRel historyEncoding() {
+  public HistoryConstraintProblem<I, T, S> problemExtendingStrategy(
+      ProblemExtendingStrategy<T, S> val) {
+    this.problemExtendingStrategy = val;
+    return this;
+  }
+
+  public AbstractHistoryK historyEncoding() {
     return this.histEncoder.encoding();
   }
 }

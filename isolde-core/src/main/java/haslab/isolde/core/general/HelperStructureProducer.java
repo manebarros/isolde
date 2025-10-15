@@ -2,6 +2,7 @@ package haslab.isolde.core.general;
 
 import kodkod.instance.Universe;
 
-public interface HelperStructureProducer<I extends Input, T> {
+@FunctionalInterface
+public interface HelperStructureProducer<I extends AtomsContainer, T> {
   T produce(I input, Universe u);
 }

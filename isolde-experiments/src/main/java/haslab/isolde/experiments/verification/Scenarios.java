@@ -94,6 +94,6 @@ public class Scenarios {
     if (scenario.biswasSpec() != null) {
       synth.registerBiswas(scenario.biswasSpec());
     }
-    return synth.synthesizeClean();
+    return synth.synthesize();
   }
 }

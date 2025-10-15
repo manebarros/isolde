@@ -4,8 +4,8 @@ import haslab.isolde.core.AbstractHistoryRel;
 import kodkod.ast.Formula;
 import kodkod.instance.Bounds;
 
-public interface HistoryEncoder<I extends Input, T> {
+public interface HistoryEncoder<T> {
   AbstractHistoryRel encoding();
 
-  Formula encode(I input, T extra, Bounds bounds);
+  Formula encode(T extra, Bounds bounds);
 }

@@ -4,6 +4,7 @@ import static haslab.isolde.core.DirectAbstractHistoryEncoding.*;
 
 import haslab.isolde.core.*;
 import haslab.isolde.core.general.HistoryEncoder;
+import haslab.isolde.core.synth.FolSynthesisProblem.InputWithTotalOrder;
 import haslab.isolde.kodkod.KodkodUtil;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
@@ -13,8 +14,7 @@ import kodkod.instance.Bounds;
 import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
-public final class DefaultHistorySynthesisEncoder
-    implements HistoryEncoder<FolSynthesisInput, TupleSet> {
+public final class DefaultHistorySynthesisEncoder implements HistoryEncoder<InputWithTotalOrder> {
 
   @Override
   public AbstractHistoryRel encoding() {
@@ -22,7 +22,9 @@ public final class DefaultHistorySynthesisEncoder
   }
 
   @Override
-  public Formula encode(FolSynthesisInput input, TupleSet txnTotalOrderTs, Bounds b) {
+  public Formula encode(InputWithTotalOrder inputWithTotalOrder, Bounds b) {
+    FolSynthesisInput input = inputWithTotalOrder.input();
+    TupleSet txnTotalOrderTs = inputWithTotalOrder.totalOrder();
     HistoryAtoms historyAtoms = input.historyAtoms();
     HistoryFormula histFormula = input.historyFormula();
     TupleFactory f = b.universe().factory();

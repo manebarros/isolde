@@ -2,39 +2,47 @@ package haslab.isolde;
 
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.cerone.CeroneExecution;
-import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.cegis.CegisResult;
 import haslab.isolde.history.History;
 import java.util.List;
-import kodkod.engine.Solution;
 import kodkod.instance.Instance;
 
 public class SynthesizedHistory {
-  private final List<Solution> candidates;
-  private final AbstractHistoryK historyEncoding;
+  private final CegisResult cegisResult;
   private final List<CeroneExecution> ceroneExecutions;
   private final List<BiswasExecution> biswasExecutions;
 
   public SynthesizedHistory(
-      List<Solution> candidates,
-      AbstractHistoryK historyEncoding,
+      CegisResult cegisResult,
       List<CeroneExecution> ceroneExecutions,
       List<BiswasExecution> biswasExecutions) {
-    this.candidates = candidates;
-    this.historyEncoding = historyEncoding;
+    this.cegisResult = cegisResult;
     this.ceroneExecutions = ceroneExecutions;
     this.biswasExecutions = biswasExecutions;
   }
 
   public boolean sat() {
-    return candidates.getFirst().sat();
+    return cegisResult.sat();
+  }
+
+  public boolean unsat() {
+    return !sat();
+  }
+
+  public long time() {
+    return this.cegisResult.getTime();
+  }
+
+  public History history() {
+    return cegisResult.history();
   }
 
   @Override
   public String toString() {
     if (!sat()) return "No History";
-    Instance instance = candidates.getFirst().instance();
+    Instance instance = cegisResult.getSolution().get();
     StringBuilder sb = new StringBuilder();
-    sb.append(new History(historyEncoding, instance));
+    sb.append(new History(cegisResult.getHistoryEncoding(), instance));
     sb.append("\n\n");
     var count = 1;
     for (var exec : ceroneExecutions) {
@@ -50,9 +58,9 @@ public class SynthesizedHistory {
 
   public String showWithFirstCerone() {
     if (!sat()) return "No History";
-    Instance instance = candidates.getFirst().instance();
+    Instance instance = cegisResult.getSolution().get();
     StringBuilder sb = new StringBuilder();
-    sb.append(new History(historyEncoding, instance));
+    sb.append(new History(cegisResult.getHistoryEncoding(), instance));
     sb.append("\n\n");
     sb.append(ceroneExecutions.get(0).showAdditionalStructures(instance));
     return sb.toString();

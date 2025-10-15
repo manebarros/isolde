@@ -12,33 +12,38 @@ import haslab.isolde.kodkod.KodkodUtil;
 import kodkod.ast.Variable;
 import kodkod.engine.Solution;
 import kodkod.engine.Solver;
-import kodkod.instance.TupleSet;
 import org.junit.jupiter.api.Test;
 
 public interface HistorySynthesisEncoderTest {
-  HistoryEncoder<FolSynthesisInput, TupleSet> encoder();
+  HistoryEncoder<FolSynthesisProblem.InputWithTotalOrder> encoder();
 
   default Scope scope() {
     return new Scope(6, 6, 6, 6);
   }
 
   default void assertSat(HistoryFormula formula) {
+    FolSynthesisInput input = new FolSynthesisInput.Builder(scope()).formula(formula).build();
     Solution sol =
-        new FolSynthesisProblem(scope(), formula, encoder()).encode().solve(new Solver());
+        ((FolSynthesisProblem) FolSynthesisProblem.withTotalOrder(input).histEncoder(encoder()))
+            .solve(new Solver());
 
     assertTrue(sol.sat());
   }
 
   default void assertUnsat(HistoryFormula formula) {
+    FolSynthesisInput input = new FolSynthesisInput.Builder(scope()).formula(formula).build();
     Solution sol =
-        new FolSynthesisProblem(scope(), formula, encoder()).encode().solve(new Solver());
+        ((FolSynthesisProblem) FolSynthesisProblem.withTotalOrder(input).histEncoder(encoder()))
+            .solve(new Solver());
 
     assertTrue(sol.unsat());
   }
 
   default void assertFact(HistoryFormula fact) {
+    FolSynthesisInput input = new FolSynthesisInput.Builder(scope()).formula(fact.not()).build();
     Solution sol =
-        new FolSynthesisProblem(scope(), fact.not(), encoder()).encode().solve(new Solver());
+        ((FolSynthesisProblem) FolSynthesisProblem.withTotalOrder(input).histEncoder(encoder()))
+            .solve(new Solver());
 
     if (sol.sat()) {
       System.out.println(new History(this.encoder().encoding(), sol.instance()));

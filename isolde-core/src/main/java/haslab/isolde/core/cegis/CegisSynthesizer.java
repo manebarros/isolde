@@ -4,23 +4,19 @@ import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
-import haslab.isolde.core.check.candidate.CandCheckEncoder;
-import haslab.isolde.core.general.ExecutionConstraintsEncoderConstructor;
-import haslab.isolde.core.general.ExecutionModule;
-import haslab.isolde.core.general.HelperStructureProducer;
+import haslab.isolde.core.cegis.CegisResult.Counterexample;
+import haslab.isolde.core.cegis.CegisResult.FailedCandidate;
+import haslab.isolde.core.check.candidate.CandCheckerI;
+import haslab.isolde.core.general.ExecutionModuleConstructor;
 import haslab.isolde.core.general.HistoryConstraintProblem;
-import haslab.isolde.core.general.HistoryEncoder;
-import haslab.isolde.core.general.ProblemExtendingStrategy;
 import haslab.isolde.core.synth.FolSynthesisInput;
-import haslab.isolde.core.synth.HistoryAtoms;
-import haslab.isolde.core.synth.Scope;
-import haslab.isolde.history.History;
 import haslab.isolde.kodkod.KodkodProblem;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Optional;
+import kodkod.ast.Formula;
 import kodkod.engine.IncrementalSolver;
 import kodkod.engine.Solution;
 import kodkod.engine.Solver;
@@ -38,33 +34,38 @@ public class CegisSynthesizer<T, S> {
     this.checkingEncoders = new ArrayList<>();
   }
 
-  public CegisSynthesizer(
-      Scope scope,
-      HistoryEncoder<FolSynthesisInput, T> historyEncoder,
-      HelperStructureProducer<FolSynthesisInput, T> helperStructureProducer,
-      ProblemExtendingStrategy<T, S> problemExtendingStrategy) {
-    this.synthesisEncoder =
-        new HistoryConstraintProblem<>(
-            new FolSynthesisInput(new HistoryAtoms(scope)),
-            historyEncoder,
-            helperStructureProducer,
-            problemExtendingStrategy);
-    this.checkingEncoders = new ArrayList<>();
-  }
+  private record CegisFeedback<E extends Execution>(
+      Counterexample<E> counterexample, HistoryFormula guidingFormula) {}
 
-  public CegisSynthesizer(
-      Scope scope,
-      HistoryFormula historyFormula,
-      HistoryEncoder<FolSynthesisInput, T> historyEncoder,
-      HelperStructureProducer<FolSynthesisInput, T> helperStructureProducer,
-      ProblemExtendingStrategy<T, S> problemExtendingStrategy) {
-    this.synthesisEncoder =
-        new HistoryConstraintProblem<>(
-            new FolSynthesisInput(new HistoryAtoms(scope), historyFormula),
-            historyEncoder,
-            helperStructureProducer,
-            problemExtendingStrategy);
-    this.checkingEncoders = new ArrayList<>();
+  private record CegisAggregatedFeedback(
+      List<Counterexample<?>> counterexamples, HistoryFormula guidingFormula) {}
+
+  private record CegisVerifier<E extends Execution>(
+      CandCheckerI<E> checkingEncoder,
+      CounterexampleEncoder<E> cexEncoder,
+      ExecutionFormula<E> universalFormula) {
+
+    Optional<CegisFeedback<E>> verify(
+        AbstractHistoryK history, Instance instance, Bounds bounds, Solver solver) {
+
+      Solution candCheckSol =
+          checkingEncoder.check(instance, history, universalFormula.not(), solver);
+
+      if (candCheckSol.unsat()) {
+        // No counterexample
+        return Optional.empty();
+      }
+
+      Instance cexInstance = candCheckSol.instance();
+
+      HistoryFormula guidingFormula =
+          this.cexEncoder.guide(cexInstance, checkingEncoder.execution(), universalFormula, bounds);
+
+      return Optional.of(
+          new CegisFeedback<>(
+              new Counterexample<>(cexInstance, checkingEncoder.execution(), universalFormula),
+              guidingFormula));
+    }
   }
 
   private <E extends Execution> List<ExecutionFormula<E>> calculateSearchFormula(
@@ -85,123 +86,80 @@ public class CegisSynthesizer<T, S> {
     return formulas;
   }
 
-  public record CegisModule<E extends Execution>(
-      List<E> synthesisExecutions, E checkingExecution) {}
-
-  public <E extends Execution> CegisModule<E> add(
+  public <E extends Execution> List<E> register(
       SynthesisSpec<E> spec,
-      ExecutionConstraintsEncoderConstructor<FolSynthesisInput, S, E> encoderConstructor,
-      CandCheckEncoder<E> checkingEncoder,
+      ExecutionModuleConstructor<E, FolSynthesisInput, S, ?> encoderConstructor,
+      CandCheckerI<E> checkingEncoder,
       CounterexampleEncoder<E> counterexampleEncoder) {
     this.checkingEncoders.add(
         new CegisVerifier<>(checkingEncoder, counterexampleEncoder, spec.universalFormula()));
-    return new CegisModule<E>(
-        this.synthesisEncoder.register(encoderConstructor, calculateSearchFormula(spec)),
-        checkingEncoder.execution());
+    return this.synthesisEncoder.register(encoderConstructor, calculateSearchFormula(spec));
   }
 
-  public <E extends Execution> CegisModule<E> add(
-      SynthesisSpec<E> spec,
-      ExecutionModule<FolSynthesisInput, S, E> encoderConstructor,
-      CandCheckEncoder<E> checkingEncoder,
-      CounterexampleEncoder<E> counterexampleEncoder) {
-    this.checkingEncoders.add(
-        new CegisVerifier<>(checkingEncoder, counterexampleEncoder, spec.universalFormula()));
-    return new CegisModule<E>(
-        this.synthesisEncoder.register(encoderConstructor, calculateSearchFormula(spec)),
-        checkingEncoder.execution());
-  }
-
-  private record CegisVerifier<E extends Execution>(
-      CandCheckEncoder<E> checkingEncoder,
-      CounterexampleEncoder<E> cexEncoder,
-      ExecutionFormula<E> universalFormula) {
-
-    Optional<HistoryFormula> guide(
-        AbstractHistoryK history, Instance instance, Bounds bounds, Solver solver) {
-      Solution candCheckSol =
-          checkingEncoder.solve(instance, history, universalFormula.not(), solver);
-
-      if (candCheckSol.unsat()) {
-        // No counterexample
-        return Optional.empty();
-      }
-      return Optional.of(
-          this.cexEncoder.guide(
-              candCheckSol.instance(),
-              this.checkingEncoder.execution(),
-              this.universalFormula,
-              bounds));
-    }
-  }
-
-  private Optional<HistoryFormula> guide(
-      AbstractHistoryK history, Instance instance, Bounds bounds, Solver solver) {
-    HistoryFormula r = null;
+  private CegisAggregatedFeedback guide(
+      Instance instance, AbstractHistoryK encoding, Bounds bounds, Solver solver) {
+    List<Counterexample<?>> counterexamples = new ArrayList<>();
+    HistoryFormula formula = h -> Formula.TRUE;
     for (var verifier : this.checkingEncoders) {
-      Optional<HistoryFormula> f = verifier.guide(history, instance, bounds, solver);
-      if (f.isPresent()) {
-        r = r == null ? f.get() : r.and(f.get());
+      var maybeFeedback = verifier.verify(encoding, instance, bounds, solver);
+      if (maybeFeedback.isPresent()) {
+        var feedback = maybeFeedback.get();
+        counterexamples.add(feedback.counterexample());
+        formula = formula.and(feedback.guidingFormula());
       }
     }
-    return r == null ? Optional.empty() : Optional.of(r);
+    return new CegisAggregatedFeedback(counterexamples, formula);
   }
 
-  public Optional<History> synthesizeH() {
-    Solution r = synthesize().getFirst();
-    return r.unsat() ? Optional.empty() : Optional.of(new History(historyEncoding(), r.instance()));
-  }
-
-  public List<Solution> synthesize(Options synthOptions, Options checkOptions) {
-    List<Solution> candidates = new LinkedList<>();
+  public CegisResult synthesize(Options synthOptions, Options checkOptions) {
+    List<FailedCandidate> failedCandidates = new ArrayList<>();
     KodkodProblem searchProblem = this.synthesisEncoder.encode();
 
     IncrementalSolver synthesizer = IncrementalSolver.solver(synthOptions);
     Solver checker = new Solver(checkOptions);
 
+    Instant start = Instant.now();
+
     Solution candSol = synthesizer.solve(searchProblem.formula(), searchProblem.bounds());
-    candidates.addFirst(candSol);
 
     if (candSol.unsat()) {
-      return candidates;
+      return CegisResult.fail(
+          historyEncoding(), failedCandidates, Duration.between(start, Instant.now()).toMillis());
     }
 
-    Instant start = Instant.now();
-    int candCount = 1;
     Bounds newBounds = new Bounds(searchProblem.bounds().universe());
-    Optional<HistoryFormula> feedback =
-        guide(historyEncoding(), candSol.instance(), newBounds, checker);
-    while (feedback.isPresent()) {
-      candSol = synthesizer.solve(feedback.get().resolve(historyEncoding()), newBounds);
-      // System.out.println(
-      //    "cand "
-      //        + ++candCount
-      //        + " (after "
-      //        + Duration.between(start, Instant.now()).toSeconds()
-      //        + " s).");
-      candidates.addFirst(candSol); // Register new (potential) candidate
+    CegisAggregatedFeedback feedback =
+        guide(candSol.instance(), historyEncoding(), newBounds, checker);
+    while (!feedback.counterexamples().isEmpty()) {
+      failedCandidates.add(new FailedCandidate(candSol.instance(), feedback.counterexamples()));
+      candSol = synthesizer.solve(feedback.guidingFormula().resolve(historyEncoding()), newBounds);
+
       if (candSol.unsat()) {
         // Stop if problem is UNSAT
         break;
       }
       // Otherwise, verify the new candidate
       newBounds = new Bounds(searchProblem.bounds().universe());
-      feedback = guide(historyEncoding(), candSol.instance(), newBounds, checker);
+      feedback = guide(candSol.instance(), historyEncoding(), newBounds, checker);
     }
-    return candidates;
+
+    long time = Duration.between(start, Instant.now()).toMillis();
+    return feedback.counterexamples().isEmpty()
+        ? CegisResult.success(historyEncoding(), candSol.instance(), failedCandidates, time)
+        : CegisResult.fail(historyEncoding(), failedCandidates, time);
   }
 
-  public List<Solution> synthesize() {
+  public CegisResult synthesize() {
     return synthesize(new Options());
   }
 
-  public List<Solution> synthesize(SATFactory satSolver) {
+  public CegisResult synthesize(SATFactory satSolver) {
     Options opt = new Options();
     opt.setSolver(satSolver);
     return synthesize(opt);
   }
 
-  public List<Solution> synthesize(Options options) {
+  public CegisResult synthesize(Options options) {
     return synthesize(options, options);
   }
 

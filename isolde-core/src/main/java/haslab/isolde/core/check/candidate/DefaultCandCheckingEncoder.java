@@ -15,7 +15,7 @@ import static haslab.isolde.kodkod.Util.unaryTupleSetToAtoms;
 import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
-import haslab.isolde.core.general.simple.HistoryEncoderS;
+import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.kodkod.Util;
 import kodkod.ast.Formula;
 import kodkod.engine.Evaluator;
@@ -23,7 +23,7 @@ import kodkod.instance.Bounds;
 import kodkod.instance.Instance;
 import kodkod.instance.TupleFactory;
 
-public class DefaultCandCheckingEncoder implements HistoryEncoderS<ContextualizedInstance> {
+public class DefaultCandCheckingEncoder implements HistoryEncoder<ContextualizedInstance> {
 
   private DefaultCandCheckingEncoder() {}
 

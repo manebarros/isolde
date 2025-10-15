@@ -15,7 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import haslab.isolde.cerone.CeroneCandCheckingModuleEncoder;
 import haslab.isolde.cerone.CeroneHistCheckingModuleEncoder;
-import haslab.isolde.core.check.external.DefaultHistoryCheckingEncoder;
 import haslab.isolde.core.check.external.HistCheckEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
@@ -56,9 +55,7 @@ public class DirectCeroneCheckingEncoderTest
     Relation vis = Relation.binary("vis");
 
     Bounds b =
-        new HistCheckEncoder<>(
-                DefaultHistoryCheckingEncoder.instance(),
-                new CeroneHistCheckingModuleEncoder(vis, arAux))
+        new HistCheckEncoder<>(new CeroneHistCheckingModuleEncoder(vis, arAux))
             .encode(hist, e -> Formula.TRUE)
             .bounds();
 
@@ -112,9 +109,7 @@ public class DirectCeroneCheckingEncoderTest
     Relation arAux = Relation.binary("Ar's transitive reduction");
     Relation vis = Relation.binary("vis");
     Bounds b =
-        new HistCheckEncoder<>(
-                DefaultHistoryCheckingEncoder.instance(),
-                new CeroneHistCheckingModuleEncoder(vis, arAux))
+        new HistCheckEncoder<>(new CeroneHistCheckingModuleEncoder(vis, arAux))
             .encode(hist, e -> Formula.TRUE)
             .bounds();
 

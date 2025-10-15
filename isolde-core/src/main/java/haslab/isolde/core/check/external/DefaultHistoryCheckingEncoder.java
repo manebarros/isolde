@@ -13,7 +13,7 @@ import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
 
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
-import haslab.isolde.core.general.simple.HistoryEncoderS;
+import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.history.AbstractTransaction;
 import haslab.isolde.kodkod.Atom;
 import java.util.LinkedHashSet;
@@ -24,7 +24,7 @@ import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
 public class DefaultHistoryCheckingEncoder
-    implements HistoryEncoderS<CheckingIntermediateRepresentation> {
+    implements HistoryEncoder<CheckingIntermediateRepresentation> {
 
   private DefaultHistoryCheckingEncoder() {}
 

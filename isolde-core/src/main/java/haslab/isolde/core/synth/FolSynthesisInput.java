@@ -2,31 +2,41 @@ package haslab.isolde.core.synth;
 
 import haslab.isolde.core.HistoryDecls;
 import haslab.isolde.core.HistoryFormula;
-import haslab.isolde.core.general.Input;
+import haslab.isolde.core.general.AtomsContainer;
 import java.util.List;
-import java.util.Optional;
 import kodkod.ast.Formula;
 
 public record FolSynthesisInput(
     HistoryAtoms historyAtoms, HistoryFormula historyFormula, HistoryDecls historyDecls)
-    implements Input {
+    implements AtomsContainer {
 
-  public FolSynthesisInput(HistoryAtoms historyAtoms, HistoryFormula historyFormula) {
-    this(historyAtoms, historyFormula, null);
-  }
+  public static class Builder {
+    private final HistoryAtoms historyAtoms;
 
-  public FolSynthesisInput(HistoryAtoms historyAtoms) {
-    this(historyAtoms, h -> Formula.TRUE);
+    private HistoryFormula formula = h -> Formula.TRUE;
+    private HistoryDecls decls = null;
+
+    public Builder(Scope scope) {
+      this.historyAtoms = new HistoryAtoms(scope);
+    }
+
+    public Builder formula(HistoryFormula formula) {
+      this.formula = formula;
+      return this;
+    }
+
+    public Builder delcs(HistoryDecls decls) {
+      this.decls = decls;
+      return this;
+    }
+
+    public FolSynthesisInput build() {
+      return new FolSynthesisInput(this.historyAtoms, this.formula, this.decls);
+    }
   }
 
   @Override
   public List<Object> atoms() {
     return historyAtoms().atoms();
-  }
-
-  @Override
-  public Optional<HistoryDecls> decls() {
-    if (this.historyDecls == null) return Optional.empty();
-    return Optional.of(historyDecls());
   }
 }

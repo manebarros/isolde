@@ -6,6 +6,7 @@ import haslab.isolde.core.HistoryFormula;
 import kodkod.instance.Bounds;
 import kodkod.instance.Instance;
 
+@FunctionalInterface
 public interface CounterexampleEncoder<E extends Execution> {
   HistoryFormula guide(Instance instance, E execution, ExecutionFormula<E> formula, Bounds bounds);
 }

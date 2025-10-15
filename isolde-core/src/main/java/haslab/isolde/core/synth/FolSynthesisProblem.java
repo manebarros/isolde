@@ -1,14 +1,16 @@
 package haslab.isolde.core.synth;
 
+import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.HistoryDecls;
-import haslab.isolde.core.HistoryFormula;
+import haslab.isolde.core.general.ExecutionModuleInstance;
+import haslab.isolde.core.general.HelperStructureProducer;
 import haslab.isolde.core.general.HistoryConstraintProblem;
 import haslab.isolde.core.general.HistoryEncoder;
-import haslab.isolde.core.general.ProblemExtender;
 import haslab.isolde.core.general.ProblemExtendingStrategy;
-import haslab.isolde.core.synth.noSession.DefaultSimpleHistorySynthesisEncoder;
-import haslab.isolde.core.synth.noSession.SimpleScope;
+import haslab.isolde.core.synth.FolSynthesisProblem.InputWithTotalOrder;
 import java.util.List;
+import java.util.Optional;
 import kodkod.ast.Formula;
 import kodkod.instance.Bounds;
 import kodkod.instance.TupleFactory;
@@ -16,13 +18,19 @@ import kodkod.instance.TupleSet;
 import kodkod.instance.Universe;
 
 public class FolSynthesisProblem
-    extends HistoryConstraintProblem<FolSynthesisInput, TupleSet, TransactionTotalOrderInfo> {
+    extends HistoryConstraintProblem<FolSynthesisInput, InputWithTotalOrder, Optional<TupleSet>> {
+
+  public static record InputWithTotalOrder(FolSynthesisInput input, TupleSet totalOrder) {
+    public InputWithTotalOrder(FolSynthesisInput input, Universe u) {
+      this(input, extraForHistoryEncoding(input, u));
+    }
+  }
 
   public static TupleSet extraForHistoryEncoding(FolSynthesisInput input, Universe u) {
     TupleFactory f = u.factory();
     HistoryAtoms historyAtoms = input.historyAtoms();
     TupleSet txnTotalOrder = f.noneOf(2);
-    // Traverse the txn indexes from the initial txn (i=0) to the penultimate txn
+    // Traverse the transaction indexes from the initial transaction (i=0) to the penultimate one
     for (int i = 0; i < historyAtoms.getTxnAtoms().size() - 1; i++) {
       for (int j = i + 1; j < historyAtoms.getTxnAtoms().size(); j++) {
         txnTotalOrder.add(
@@ -32,172 +40,78 @@ public class FolSynthesisProblem
     return txnTotalOrder;
   }
 
-  public static Formula apply(
-      Bounds b, TupleSet extra, List<ProblemExtender<TransactionTotalOrderInfo>> extenders) {
-    Formula formula = Formula.TRUE;
-    if (!extenders.isEmpty()) {
-      formula = extenders.get(0).extend(new TransactionTotalOrderInfo(true, extra), b);
+  private static Formula applyExistentialQuantifier(
+      Formula formula, HistoryDecls decls, AbstractHistoryK encoding) {
+    return formula.forSome(decls.resolve(encoding));
+  }
 
+  public static Formula extend(
+      Formula formula,
+      Bounds b,
+      InputWithTotalOrder extra,
+      AbstractHistoryRel history,
+      List<? extends ExecutionModuleInstance<?, ?, Optional<TupleSet>, ?>> extenders) {
+    if (!extenders.isEmpty()) {
+      formula = extenders.get(0).encode(b, Optional.of(extra.totalOrder()), history);
       for (int i = 1; i < extenders.size(); i++) {
-        formula =
-            formula.and(extenders.get(i).extend(new TransactionTotalOrderInfo(false, extra), b));
+        formula = formula.and(extenders.get(i).encode(b, Optional.empty(), history));
       }
     }
+
+    HistoryDecls decls = extra.input().historyDecls();
+    if (decls != null) {
+      formula = applyExistentialQuantifier(formula, decls, history);
+    }
+
     return formula;
   }
 
-  public static Formula applyWithNoTotalOrder(
-      Bounds b, TupleSet extra, List<ProblemExtender<TransactionTotalOrderInfo>> extenders) {
-    Formula formula = Formula.TRUE;
+  public static Formula extendWithNoTotalOrder(
+      Formula formula,
+      Bounds b,
+      InputWithTotalOrder extra,
+      AbstractHistoryRel history,
+      List<? extends ExecutionModuleInstance<?, ?, Optional<TupleSet>, ?>> extenders) {
     for (var extender : extenders) {
-      formula = formula.and(extender.extend(new TransactionTotalOrderInfo(false, extra), b));
+      formula = formula.and(extender.encode(b, Optional.empty(), history));
+    }
+
+    HistoryDecls decls = extra.input().historyDecls();
+    if (decls != null) {
+      formula = applyExistentialQuantifier(formula, decls, history);
     }
     return formula;
-  }
-
-  public static FolSynthesisProblem withNoTotalOrder(
-      Scope scope, HistoryFormula hf, HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
-    return new FolSynthesisProblem(
-        scope, hf, histEncoder, FolSynthesisProblem::applyWithNoTotalOrder);
-  }
-
-  public static FolSynthesisProblem withNoTotalOrder(
-      Scope scope, HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
-    return new FolSynthesisProblem(
-        scope, h -> Formula.TRUE, histEncoder, FolSynthesisProblem::applyWithNoTotalOrder);
-  }
-
-  public static FolSynthesisProblem withNoTotalOrder(Scope scope) {
-    return new FolSynthesisProblem(
-        scope,
-        h -> Formula.TRUE,
-        new DefaultHistorySynthesisEncoder(),
-        FolSynthesisProblem::applyWithNoTotalOrder);
-  }
-
-  public FolSynthesisProblem(
-      Scope scope,
-      HistoryFormula historyFormula,
-      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
-    super(
-        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula),
-        histEncoder,
-        FolSynthesisProblem::extraForHistoryEncoding,
-        FolSynthesisProblem::apply);
-  }
-
-  public FolSynthesisProblem(
-      Scope scope,
-      HistoryFormula historyFormula,
-      HistoryDecls decls,
-      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
-    super(
-        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula, decls),
-        histEncoder,
-        FolSynthesisProblem::extraForHistoryEncoding,
-        FolSynthesisProblem::apply);
   }
 
   private FolSynthesisProblem(
-      Scope scope,
-      HistoryFormula historyFormula,
-      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder,
-      ProblemExtendingStrategy<TupleSet, TransactionTotalOrderInfo> problemExtendingStrategy) {
-    super(
-        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula),
-        histEncoder,
-        FolSynthesisProblem::extraForHistoryEncoding,
-        FolSynthesisProblem::apply);
+      FolSynthesisInput input,
+      HistoryEncoder<InputWithTotalOrder> historyEncoder,
+      HelperStructureProducer<FolSynthesisInput, InputWithTotalOrder> helperStructureProducer,
+      ProblemExtendingStrategy<InputWithTotalOrder, Optional<TupleSet>> problemExtendingStrategy) {
+    super(input, historyEncoder, helperStructureProducer, problemExtendingStrategy);
   }
 
-  public FolSynthesisProblem(Scope scope, HistoryFormula historyFormula) {
-    this(scope, historyFormula, new DefaultHistorySynthesisEncoder());
-  }
-
-  public FolSynthesisProblem(Scope scope, HistoryFormula historyFormula, HistoryDecls decls) {
-    this(scope, historyFormula, decls, new DefaultHistorySynthesisEncoder());
-  }
-
-  public FolSynthesisProblem(Scope scope, HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
-    this(scope, h -> Formula.TRUE, histEncoder);
-  }
-
-  public FolSynthesisProblem(Scope scope) {
-    this(scope, h -> Formula.TRUE);
-  }
-
-  // Simple Synthesis Problems (no sessions)
-  public static FolSynthesisProblem withNoTotalOrder(
-      SimpleScope scope,
-      HistoryFormula hf,
-      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
+  public static FolSynthesisProblem withNoTotalOrder(FolSynthesisInput input) {
     return new FolSynthesisProblem(
-        scope, hf, histEncoder, FolSynthesisProblem::applyWithNoTotalOrder);
-  }
-
-  public static FolSynthesisProblem withNoTotalOrder(
-      SimpleScope scope, HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
-    return new FolSynthesisProblem(
-        scope, h -> Formula.TRUE, histEncoder, FolSynthesisProblem::applyWithNoTotalOrder);
-  }
-
-  public static FolSynthesisProblem withNoTotalOrder(SimpleScope scope) {
-    return new FolSynthesisProblem(
-        scope,
-        h -> Formula.TRUE,
+        input,
         new DefaultHistorySynthesisEncoder(),
-        FolSynthesisProblem::applyWithNoTotalOrder);
+        InputWithTotalOrder::new,
+        FolSynthesisProblem::extend);
   }
 
-  public FolSynthesisProblem(
-      SimpleScope scope,
-      HistoryFormula historyFormula,
-      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
-    super(
-        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula),
-        histEncoder,
-        FolSynthesisProblem::extraForHistoryEncoding,
-        FolSynthesisProblem::apply);
+  public static FolSynthesisProblem withTotalOrder(FolSynthesisInput input) {
+    return new FolSynthesisProblem(
+        input,
+        new DefaultHistorySynthesisEncoder(),
+        InputWithTotalOrder::new,
+        FolSynthesisProblem::extendWithNoTotalOrder);
   }
 
-  public FolSynthesisProblem(
-      SimpleScope scope,
-      HistoryFormula historyFormula,
-      HistoryDecls decls,
-      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
-    super(
-        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula, decls),
-        histEncoder,
-        FolSynthesisProblem::extraForHistoryEncoding,
-        FolSynthesisProblem::apply);
+  public static FolSynthesisProblem withTotalOrder(Scope scope) {
+    return withTotalOrder(new FolSynthesisInput.Builder(scope).build());
   }
 
-  public FolSynthesisProblem(
-      SimpleScope scope,
-      HistoryFormula historyFormula,
-      HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder,
-      ProblemExtendingStrategy<TupleSet, TransactionTotalOrderInfo> problemExtendingStrategy) {
-    super(
-        new FolSynthesisInput(new HistoryAtoms(scope), historyFormula),
-        histEncoder,
-        FolSynthesisProblem::extraForHistoryEncoding,
-        problemExtendingStrategy);
-  }
-
-  public FolSynthesisProblem(SimpleScope scope, HistoryFormula historyFormula) {
-    this(scope, historyFormula, new DefaultSimpleHistorySynthesisEncoder());
-  }
-
-  public FolSynthesisProblem(SimpleScope scope, HistoryFormula historyFormula, HistoryDecls decls) {
-    this(scope, historyFormula, decls, new DefaultSimpleHistorySynthesisEncoder());
-  }
-
-  public FolSynthesisProblem(
-      SimpleScope scope, HistoryEncoder<FolSynthesisInput, TupleSet> histEncoder) {
-    this(scope, h -> Formula.TRUE, histEncoder);
-  }
-
-  public FolSynthesisProblem(SimpleScope scope) {
-    this(scope, h -> Formula.TRUE);
+  public static FolSynthesisProblem withNoTotalOrder(Scope scope) {
+    return withNoTotalOrder(new FolSynthesisInput.Builder(scope).build());
   }
 }
