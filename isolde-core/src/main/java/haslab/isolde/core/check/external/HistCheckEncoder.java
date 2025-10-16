@@ -3,6 +3,7 @@ package haslab.isolde.core.check.external;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.general.DirectExecutionModule;
+import haslab.isolde.core.general.DirectExecutionModuleConstructor;
 import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.kodkod.KodkodProblem;
@@ -12,10 +13,16 @@ public class HistCheckEncoder<E extends Execution> implements HistCheckerI<E> {
   private final HistoryEncoder<CheckingIntermediateRepresentation> historyEncoder;
   private final DirectExecutionModule<E, CheckingIntermediateRepresentation, ?> moduleEncoder;
 
-  public HistCheckEncoder(
-      DirectExecutionModule<E, CheckingIntermediateRepresentation, ?> moduleEncoder) {
+  public HistCheckEncoder(DirectExecutionModule<E, CheckingIntermediateRepresentation, ?> module) {
     this.historyEncoder = DefaultHistoryCheckingEncoder.instance();
-    this.moduleEncoder = moduleEncoder;
+    this.moduleEncoder = module;
+  }
+
+  public HistCheckEncoder(
+      DirectExecutionModuleConstructor<E, CheckingIntermediateRepresentation, ?>
+          moduleConstructor) {
+    this.historyEncoder = DefaultHistoryCheckingEncoder.instance();
+    this.moduleEncoder = moduleConstructor.build(1);
   }
 
   @Override

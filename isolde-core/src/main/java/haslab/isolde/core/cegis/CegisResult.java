@@ -7,6 +7,7 @@ import haslab.isolde.history.History;
 import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
+import kodkod.ast.Formula;
 import kodkod.instance.Instance;
 
 public class CegisResult {
@@ -19,7 +20,19 @@ public class CegisResult {
       Instance instance, List<? extends Counterexample<?>> counterexamples) {}
 
   public static record Counterexample<E extends Execution>(
-      Instance instance, E execution, ExecutionFormula<E> formula) {}
+      Instance instance, E execution, ExecutionFormula<E> formula) {
+    public Formula rawFormula() {
+      return formula.resolve(execution);
+    }
+
+    @Override
+    public String toString() {
+      StringBuilder sb = new StringBuilder();
+      sb.append(new History(execution.history(), instance));
+      sb.append(execution.showAdditionalStructures(instance)).append("\n");
+      return sb.toString();
+    }
+  }
 
   private CegisResult(
       AbstractHistoryK historyEncoding,
@@ -68,5 +81,9 @@ public class CegisResult {
 
   public boolean sat() {
     return this.solution.isPresent();
+  }
+
+  public int candidatesNr() {
+    return sat() ? failedCandidates.size() + 1 : failedCandidates.size();
   }
 }

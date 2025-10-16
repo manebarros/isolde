@@ -37,6 +37,14 @@ public class SynthesizedHistory {
     return cegisResult.history();
   }
 
+  public int candidates() {
+    return this.cegisResult.candidatesNr();
+  }
+
+  public CegisResult cegisResult() {
+    return this.cegisResult;
+  }
+
   @Override
   public String toString() {
     if (!sat()) return "No History";
@@ -45,13 +53,17 @@ public class SynthesizedHistory {
     sb.append(new History(cegisResult.getHistoryEncoding(), instance));
     sb.append("\n\n");
     var count = 1;
-    for (var exec : ceroneExecutions) {
-      sb.append(String.format("Execution #%d:\n", count++));
-      sb.append(exec.showAdditionalStructures(instance)).append("\n");
+    if (ceroneExecutions != null) {
+      for (var exec : ceroneExecutions) {
+        sb.append(String.format("Execution #%d:\n", count++));
+        sb.append(exec.showAdditionalStructures(instance)).append("\n");
+      }
     }
-    for (var exec : biswasExecutions) {
-      sb.append(String.format("Execution #%d:\n", count++));
-      sb.append(exec.showAdditionalStructures(instance)).append("\n");
+    if (biswasExecutions != null) {
+      for (var exec : biswasExecutions) {
+        sb.append(String.format("Execution #%d:\n", count++));
+        sb.append(exec.showAdditionalStructures(instance)).append("\n");
+      }
     }
     return sb.toString();
   }

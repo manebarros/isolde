@@ -3,6 +3,7 @@ package haslab.isolde.experiments.verification;
 import static haslab.isolde.history.Operation.readOf;
 import static haslab.isolde.history.Operation.writeOf;
 
+import haslab.isolde.Synthesizer;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.BiswasHistCheckingEncoder;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
@@ -12,20 +13,23 @@ import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
-import haslab.isolde.core.check.external.DefaultHistoryCheckingEncoder;
+import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.check.external.HistCheckEncoder;
+import haslab.isolde.core.general.DirectExecutionModuleConstructor;
+import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.Scope;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
 import haslab.isolde.history.Transaction;
+import haslab.isolde.kodkod.FormulaUtil;
 import haslab.isolde.kodkod.KodkodProblem;
 import java.util.Arrays;
-import javax.sound.midi.Synthesizer;
-import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
+import kodkod.engine.Evaluator;
 import kodkod.engine.Solution;
 import kodkod.engine.Solver;
+import kodkod.engine.satlab.SATFactory;
 
 public final class FeketeReadOnlyAnomaly {
   public static final HistoryExpression updateTransactions =
@@ -33,14 +37,12 @@ public final class FeketeReadOnlyAnomaly {
 
   public static final Formula updateSer(BiswasExecution e) {
     return AxiomaticDefinitions.Ser.resolve(
-        new BiswasExecution(
-            e.history().subHistory(updateTransactions.resolve(e.history())), e.co()));
+        new BiswasExecution(e.history().subHistory(updateTransactions), e.co()));
   }
 
   public static final Formula updateSer(CeroneExecution e) {
     return CeroneDefinitions.SER.resolve(
-        new CeroneExecution(
-            e.history().subHistory(updateTransactions.resolve(e.history())), e.vis(), e.ar()));
+        new CeroneExecution(e.history().subHistory(updateTransactions), e.vis(), e.ar()));
   }
 
   public static final Formula updateSerAlt(CeroneExecution e) {
@@ -54,44 +56,65 @@ public final class FeketeReadOnlyAnomaly {
         .and(CeroneDefinitions.EXT.resolve(e));
   }
 
-  public static final Expression updateTxnCo(BiswasExecution e) {
-    Variable t = Variable.unary("t");
-    Variable s = Variable.unary("s");
-    return t.product(s)
-        .in(e.co())
-        .and(t.join(e.history().finalWrites()).some())
-        .and(s.join(e.history().finalWrites()).some())
-        .comprehension(
-            t.oneOf(e.history().transactions()).and(s.oneOf(e.history().transactions())));
-  }
-
-  public static final void generateReadOnlyAnomaly() {
-    Scope scope = new Scope(3, 2, 3, 3);
+  // Generate anomaly using Biswas framework and print it.
+  public static final void generateAnomalyBiswas() {
+    Scope scope = new Scope(3, 2, 2, 3);
     SynthesisSpec<BiswasExecution> spec =
         new SynthesisSpec<>(
             Arrays.asList(AxiomaticDefinitions.Snapshot, FeketeReadOnlyAnomaly::updateSer),
             AxiomaticDefinitions.Ser.not());
     HistoryFormula oneTransactionPerSession =
         h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
+    HistoryFormula equivalentToAnomaly = FormulaUtil.equivalentToHistory(readOnlyAnomaly);
+
     Synthesizer synth = new Synthesizer(scope, oneTransactionPerSession);
+
     synth.registerBiswas(spec);
-    System.out.println(synth.synthesize().get());
+    var result = synth.synthesize(SATFactory.MiniSat);
+    System.out.printf("candidates: %d\n", result.candidates());
+    System.out.println(result);
+    System.out.println(
+        new Evaluator(result.cegisResult().getSolution().get())
+            .evaluate(synth.getCegisSynthesizer().historyEncoding().sessionOrder()));
+
+    System.out.println(
+        new Evaluator(result.cegisResult().getSolution().get())
+            .evaluate(
+                oneTransactionPerSession.resolve(synth.getCegisSynthesizer().historyEncoding())));
   }
 
-  public static final void generateReadOnlyAnomalyCeroneAlt() {
-    Scope scope = new Scope(3, 2, 2, 2);
+  // DEBUG
+  public static final void debug() {
+    Scope scope = new Scope(3, 2, 2, 3);
+    SynthesisSpec<BiswasExecution> spec =
+        new SynthesisSpec<>(
+            Arrays.asList(FeketeReadOnlyAnomaly::updateSer, AxiomaticDefinitions.Snapshot),
+            AxiomaticDefinitions.Ser.not());
+    HistoryFormula oneTransactionPerSession =
+        h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
+    HistoryFormula equivalentToAnomaly = FormulaUtil.equivalentToHistory(readOnlyAnomaly);
+
+    Synthesizer synth = new Synthesizer(scope, oneTransactionPerSession);
+
+    synth.registerBiswas(spec);
+    var result = synth.debug(SATFactory.MiniSat, readOnlyAnomaly);
+    System.out.println(result);
+  }
+
+  public static final void generateAnomalyCerone() {
+    Scope scope = new Scope(3, 2, 2, 3);
     SynthesisSpec<CeroneExecution> spec =
         new SynthesisSpec<>(
             Arrays.asList(CeroneDefinitions.SI, FeketeReadOnlyAnomaly::updateSer),
             CeroneDefinitions.SER.not());
-    //    HistoryFormula oneTransactionPerSession =
-    //        h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
-    //    Synthesizer synth = new Synthesizer(scope, oneTransactionPerSession);
-    Synthesizer synth = new Synthesizer(scope);
+    HistoryFormula oneTransactionPerSession =
+        h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
+    Synthesizer synth = new Synthesizer(scope, oneTransactionPerSession);
     synth.registerCerone(spec);
-    System.out.println(synth.synthesize().get());
+    System.out.println(synth.synthesize().history());
   }
 
+  // An example of the Fekete anomaly
   public static final History readOnlyAnomaly =
       new History(
           new Session(new Transaction(1, Arrays.asList(readOf(0, 0), readOf(1, 0), writeOf(0, 1)))),
@@ -99,28 +122,52 @@ public final class FeketeReadOnlyAnomaly {
           new Session(new Transaction(2, Arrays.asList(readOf(1, 0), writeOf(1, 1)))));
 
   public static final HistCheckEncoder<BiswasExecution> encoder() {
-    return new HistCheckEncoder<>(
-        DefaultHistoryCheckingEncoder.instance(), BiswasHistCheckingEncoder::new);
+    DirectExecutionModuleConstructor<
+            BiswasExecution,
+            CheckingIntermediateRepresentation,
+            SimpleContext<CheckingIntermediateRepresentation>>
+        constructor = BiswasHistCheckingEncoder::new;
+    return new HistCheckEncoder<>(constructor);
   }
 
   public static final HistCheckEncoder<CeroneExecution> ceroneEncoder() {
-    return new HistCheckEncoder<>(
-        DefaultHistoryCheckingEncoder.instance(), new CeroneHistCheckingModuleEncoder(1));
+    DirectExecutionModuleConstructor<
+            CeroneExecution,
+            CheckingIntermediateRepresentation,
+            SimpleContext<CheckingIntermediateRepresentation>>
+        constructor = CeroneHistCheckingModuleEncoder::new;
+    return new HistCheckEncoder<>(constructor);
   }
 
-  public static final void checkReadOnlyAnomally() {
+  public static final void checkReadOnlyAnomallyBiswas() {
     KodkodProblem p = encoder().encode(readOnlyAnomaly, AxiomaticDefinitions.Snapshot);
     Solution sol = new Solver().solve(p.formula(), p.bounds());
-    System.out.println("allowed under SI: " + sol.sat());
+    System.out.println("allowed under Biswas SI: " + sol.sat());
     System.out.println(sol.instance());
 
     p = encoder().encode(readOnlyAnomaly, FeketeReadOnlyAnomaly::updateSer);
     sol = new Solver().solve(p.formula(), p.bounds());
-    System.out.println("allowed under update ser: " + sol.sat());
+    System.out.println("allowed under Biswas UpdateSer: " + sol.sat());
     System.out.println(sol.instance());
 
     p = encoder().encode(readOnlyAnomaly, AxiomaticDefinitions.Ser);
     sol = new Solver().solve(p.formula(), p.bounds());
-    System.out.println("allowed under ser: " + sol.sat());
+    System.out.println("allowed under Biswas Ser: " + sol.sat());
+  }
+
+  public static final void checkReadOnlyAnomallyCerone() {
+    KodkodProblem p = ceroneEncoder().encode(readOnlyAnomaly, CeroneDefinitions.SI);
+    Solution sol = p.solve(new Solver());
+    System.out.println("allowed under Cerone's SI: " + sol.sat());
+    System.out.println(sol.instance());
+
+    p = ceroneEncoder().encode(readOnlyAnomaly, FeketeReadOnlyAnomaly::updateSer);
+    sol = p.solve(new Solver());
+    System.out.println("allowed under Cerone's UpdateSer: " + sol.sat());
+    System.out.println(sol.instance());
+
+    p = ceroneEncoder().encode(readOnlyAnomaly, CeroneDefinitions.SER);
+    sol = p.solve(new Solver());
+    System.out.println("allowed under Cerone's Ser: " + sol.sat());
   }
 }

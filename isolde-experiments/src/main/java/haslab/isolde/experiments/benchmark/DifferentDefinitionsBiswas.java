@@ -1,16 +1,14 @@
 package haslab.isolde.experiments.benchmark;
 
+import haslab.isolde.SynthesizedHistory;
 import haslab.isolde.Synthesizer;
-import haslab.isolde.Synthesizer.CegisHistory;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
-import haslab.isolde.core.synth.noSession.SimpleScope;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -48,14 +46,6 @@ public final class DifferentDefinitionsBiswas {
     for (Scope scope : scopes) {
       for (Edge edge : levels) {
 
-        Synthesizer synthOptimized = new Synthesizer(new SimpleScope(scope));
-        synthOptimized.registerBiswas(
-            new SynthesisSpec<>(edge.weakerDef(), edge.strongerDef().not()));
-
-        Synthesizer synthNoTotalOrder = Synthesizer.withNoTotalOrder(new SimpleScope(scope));
-        synthNoTotalOrder.registerBiswas(
-            new SynthesisSpec<>(edge.weakerDef(), edge.strongerDef().not()));
-
         Synthesizer synthNoFixedSessions = new Synthesizer(scope);
         synthNoFixedSessions.registerBiswas(
             new SynthesisSpec<>(edge.weakerDef(), edge.strongerDef().not()));
@@ -67,10 +57,8 @@ public final class DifferentDefinitionsBiswas {
           Synthesizer synth = implementations.get(implementation);
           for (String solver : solvers) {
             for (int sample = 0; sample < samples; sample++) {
-              Instant before = Instant.now();
-              CegisHistory hist = synth.synthesizeWithInfo(Util.solvers.get(solver));
-              Instant after = Instant.now();
-              long time = Duration.between(before, after).toMillis();
+              SynthesizedHistory hist = synth.synthesize(Util.solvers.get(solver));
+              long time = hist.time();
 
               System.out.printf(
                   "[%3d/%d] (%s, [%s], %s, %s and not %s) : %d\n",
@@ -83,7 +71,7 @@ public final class DifferentDefinitionsBiswas {
                   edge.strongerName(),
                   time);
 
-              if (hist.history().isPresent()) {
+              if (hist.sat()) {
                 success++;
               } else {
                 failed++;

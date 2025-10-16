@@ -12,7 +12,9 @@ import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 import kodkod.ast.Expression;
+import kodkod.ast.Relation;
 import kodkod.engine.Evaluator;
+import kodkod.instance.Bounds;
 import kodkod.instance.Tuple;
 import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
@@ -96,11 +98,7 @@ public final class Util {
   }
 
   public static <E extends Execution> TupleSet convert(
-          Evaluator ev,
-          E execution,
-          ExecutionExpression<E> expression,
-          TupleFactory tf,
-          int arity) {
+      Evaluator ev, E execution, ExecutionExpression<E> expression, TupleFactory tf, int arity) {
     assert arity > 0;
     TupleSet ts = tf.noneOf(arity);
     for (var tuple : ev.evaluate(expression.resolve(execution))) {
@@ -112,5 +110,11 @@ public final class Util {
     }
 
     return ts;
+  }
+
+  public static void extend(Bounds dest, Bounds src) {
+    for (Relation rel : src.relations()) {
+      dest.bound(rel, src.lowerBound(rel), src.upperBound(rel));
+    }
   }
 }

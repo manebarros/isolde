@@ -1,7 +1,7 @@
 package haslab.isolde.experiments.benchmark;
 
+import haslab.isolde.SynthesizedHistory;
 import haslab.isolde.Synthesizer;
-import haslab.isolde.Synthesizer.CegisHistory;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.cerone.CeroneExecution;
@@ -10,7 +10,6 @@ import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -87,11 +86,9 @@ public final class DifferentDefinitionsAcrossFrameworks {
               implementations_cerone_not_biswas.get(implementation);
           for (String solver : solvers) {
             for (int sample = 0; sample < samples; sample++) {
-              Instant before = Instant.now();
-              CegisHistory hist =
-                  synth_biswas_not_cerone.synthesizeWithInfo(Util.solvers.get(solver));
-              Instant after = Instant.now();
-              long time = Duration.between(before, after).toMillis();
+              SynthesizedHistory hist =
+                  synth_biswas_not_cerone.synthesize(Util.solvers.get(solver));
+              long time = hist.time();
 
               System.out.printf(
                   "[%3d/%d] (%s, [%s], %s, Biswas' %s and not Cerone's %s) : %d\n",
@@ -104,7 +101,7 @@ public final class DifferentDefinitionsAcrossFrameworks {
                   edge.stronger(),
                   time); // TODO : use different implementations
 
-              if (hist.history().isPresent()) {
+              if (hist.sat()) {
                 success++;
               } else {
                 failed++;
@@ -126,10 +123,8 @@ public final class DifferentDefinitionsAcrossFrameworks {
                       run,
                       Date.from(Instant.now())));
 
-              before = Instant.now();
-              hist = synth_cerone_not_biswas.synthesizeWithInfo(Util.solvers.get(solver));
-              after = Instant.now();
-              time = Duration.between(before, after).toMillis();
+              hist = synth_cerone_not_biswas.synthesize(Util.solvers.get(solver));
+              time = hist.time();
 
               System.out.printf(
                   "[%3d/%d] (%s, [%s], %s, Cerone's %s and not Biswas' %s) : %d\n",
@@ -142,7 +137,7 @@ public final class DifferentDefinitionsAcrossFrameworks {
                   edge.stronger(),
                   time); // TODO : use different implementations
 
-              if (hist.history().isPresent()) {
+              if (hist.sat()) {
                 success++;
               } else {
                 failed++;

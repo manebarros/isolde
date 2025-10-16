@@ -9,7 +9,6 @@ import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.synth.Scope;
-import haslab.isolde.core.synth.noSession.SimpleScope;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -99,19 +98,6 @@ public final class Util {
     List<Scope> scopes = new ArrayList<>();
     for (int txn_num = from; txn_num <= to; txn_num += step) {
       scopes.add(new Scope(txn_num, keys, val, txn_num));
-    }
-    return scopes;
-  }
-
-  public static List<SimpleScope> simpleScopesFromRange(int keys, int val, int from, int to) {
-    return simpleScopesFromRange(keys, val, from, to, 1);
-  }
-
-  public static List<SimpleScope> simpleScopesFromRange(
-      int keys, int val, int from, int to, int step) {
-    List<SimpleScope> scopes = new ArrayList<>();
-    for (int txn_num = from; txn_num <= to; txn_num += step) {
-      scopes.add(new SimpleScope(txn_num, keys, val));
     }
     return scopes;
   }

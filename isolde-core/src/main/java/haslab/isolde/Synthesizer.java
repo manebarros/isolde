@@ -20,8 +20,10 @@ import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.FolSynthesisProblem;
 import haslab.isolde.core.synth.HistoryAtoms;
 import haslab.isolde.core.synth.Scope;
+import haslab.isolde.history.History;
 import java.util.List;
 import java.util.Optional;
+import kodkod.engine.config.Options;
 import kodkod.engine.satlab.SATFactory;
 import kodkod.instance.TupleSet;
 
@@ -41,27 +43,27 @@ public class Synthesizer {
           cegisSynthesizer) {
     this.cegisSynthesizer = cegisSynthesizer;
     this.ceroneExecutions = null;
-    this.ceroneExecutions = null;
+    this.biswasExecutions = null;
   }
 
   public Synthesizer(Scope scope) {
     this.cegisSynthesizer = new CegisSynthesizer<>(FolSynthesisProblem.withTotalOrder(scope));
     this.ceroneExecutions = null;
-    this.ceroneExecutions = null;
+    this.biswasExecutions = null;
   }
 
   public Synthesizer(Scope scope, HistoryFormula hf) {
     FolSynthesisInput input = new FolSynthesisInput.Builder(scope).formula(hf).build();
     this.cegisSynthesizer = new CegisSynthesizer<>(FolSynthesisProblem.withTotalOrder(input));
     this.ceroneExecutions = null;
-    this.ceroneExecutions = null;
+    this.biswasExecutions = null;
   }
 
   public Synthesizer(Scope scope, HistoryFormula hf, HistoryDecls decls) {
     FolSynthesisInput input = new FolSynthesisInput.Builder(scope).formula(hf).delcs(decls).build();
     this.cegisSynthesizer = new CegisSynthesizer<>(FolSynthesisProblem.withTotalOrder(input));
     this.ceroneExecutions = null;
-    this.ceroneExecutions = null;
+    this.biswasExecutions = null;
   }
 
   public void registerCerone(SynthesisSpec<CeroneExecution> spec) {
@@ -93,6 +95,12 @@ public class Synthesizer {
   public SynthesizedHistory synthesize(SATFactory solver) {
     CegisResult sol = this.cegisSynthesizer.synthesize(solver);
     return new SynthesizedHistory(sol, ceroneExecutions, biswasExecutions);
+  }
+
+  public Optional<CegisSynthesizer.Status<?>> debug(SATFactory solver, History history) {
+    Options options = new Options();
+    options.setSolver(solver);
+    return this.cegisSynthesizer.identify(options, options, history);
   }
 
   public SynthesizedHistory synthesize() {

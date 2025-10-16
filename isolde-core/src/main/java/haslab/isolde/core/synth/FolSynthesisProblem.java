@@ -52,7 +52,7 @@ public class FolSynthesisProblem
       AbstractHistoryRel history,
       List<? extends ExecutionModuleInstance<?, ?, Optional<TupleSet>, ?>> extenders) {
     if (!extenders.isEmpty()) {
-      formula = extenders.get(0).encode(b, Optional.of(extra.totalOrder()), history);
+      formula = formula.and(extenders.get(0).encode(b, Optional.of(extra.totalOrder()), history));
       for (int i = 1; i < extenders.size(); i++) {
         formula = formula.and(extenders.get(i).encode(b, Optional.empty(), history));
       }
@@ -96,7 +96,7 @@ public class FolSynthesisProblem
         input,
         new DefaultHistorySynthesisEncoder(),
         InputWithTotalOrder::new,
-        FolSynthesisProblem::extend);
+        FolSynthesisProblem::extendWithNoTotalOrder);
   }
 
   public static FolSynthesisProblem withTotalOrder(FolSynthesisInput input) {
@@ -104,7 +104,7 @@ public class FolSynthesisProblem
         input,
         new DefaultHistorySynthesisEncoder(),
         InputWithTotalOrder::new,
-        FolSynthesisProblem::extendWithNoTotalOrder);
+        FolSynthesisProblem::extend);
   }
 
   public static FolSynthesisProblem withTotalOrder(Scope scope) {

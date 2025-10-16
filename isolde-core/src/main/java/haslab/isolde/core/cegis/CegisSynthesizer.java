@@ -10,7 +10,10 @@ import haslab.isolde.core.check.candidate.CandCheckerI;
 import haslab.isolde.core.general.ExecutionModuleConstructor;
 import haslab.isolde.core.general.HistoryConstraintProblem;
 import haslab.isolde.core.synth.FolSynthesisInput;
+import haslab.isolde.history.History;
+import haslab.isolde.kodkod.FormulaUtil;
 import haslab.isolde.kodkod.KodkodProblem;
+import haslab.isolde.kodkod.Util;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
@@ -165,5 +168,107 @@ public class CegisSynthesizer<T, S> {
 
   public AbstractHistoryK historyEncoding() {
     return this.synthesisEncoder.historyEncoding();
+  }
+
+  public static record Status<E extends Execution>(
+      int cand,
+      Instance candidate,
+      Instance counterexample,
+      Formula buggyFormula,
+      Bounds bounds,
+      AbstractHistoryK historyEncoding) {
+
+    @Override
+    public final String toString() {
+      StringBuilder sb = new StringBuilder();
+      sb.append("Failed with candidate ").append(cand);
+      sb.append("Candidate instance:\n")
+          .append(new History(historyEncoding, candidate))
+          .append("\n\n");
+      sb.append("Cex instance:\n")
+          .append(new History(historyEncoding, counterexample))
+          .append("\n\n\n\n");
+      sb.append("Raw cand instance:\n").append(candidate).append("\n\n");
+      sb.append("Raw cex instance:\n").append(counterexample).append("\n\n");
+      sb.append("Formula:\n").append(buggyFormula).append("\n\n");
+      sb.append("Failing bounds:\n").append(bounds).append("\n\n");
+      return sb.toString();
+    }
+  }
+
+  public Optional<Status<?>> identify(Options synthOptions, Options checkOptions, History history) {
+    HistoryFormula historyFormula = FormulaUtil.equivalentToHistory(history);
+    List<FailedCandidate> failedCandidates = new ArrayList<>();
+
+    KodkodProblem searchProblem = this.synthesisEncoder.encode();
+    IncrementalSolver synthesizer = IncrementalSolver.solver(synthOptions);
+
+    KodkodProblem debugProblem = searchProblem.clone();
+    Solver debugSynth = new Solver(synthOptions);
+
+    Solver checker = new Solver(checkOptions);
+
+    Instant start = Instant.now();
+
+    Solution candSol = searchProblem.solve(synthesizer);
+    int candCount = 0;
+
+    if (candSol.unsat()) {
+      return null; // the problem itself is UNSAT
+    }
+
+    Solution debugSol =
+        debugProblem.and(historyFormula.resolve(historyEncoding())).solve(debugSynth);
+    if (debugSol.unsat()) {
+      return Optional.of(
+          new Status<>(
+              candCount, null, null, null, null, historyEncoding())); // fails before any candidate
+    }
+
+    Bounds newBounds = new Bounds(searchProblem.bounds().universe());
+    CegisAggregatedFeedback feedback =
+        guide(candSol.instance(), historyEncoding(), newBounds, checker);
+    while (!feedback.counterexamples().isEmpty()) {
+      failedCandidates.add(new FailedCandidate(candSol.instance(), feedback.counterexamples()));
+
+      // got some counterexamples. let's analyze them
+      // assume a single universal formula
+      candCount++;
+      Util.extend(debugProblem.bounds(), newBounds);
+      assert debugProblem.and(historyFormula.resolve(historyEncoding())).solve(debugSynth).sat();
+      Solution wrongSol =
+          debugProblem
+              .and(historyFormula.resolve(historyEncoding()))
+              .and(feedback.guidingFormula().resolve(historyEncoding()).not())
+              .solve(debugSynth);
+      assert wrongSol.sat();
+      debugProblem = debugProblem.and(feedback.guidingFormula().resolve(historyEncoding()));
+      debugSol = debugProblem.and(historyFormula.resolve(historyEncoding())).solve(debugSynth);
+
+      if (debugSol.unsat()) {
+        Optional<Status<?>> r =
+            Optional.of(
+                new Status<>(
+                    candCount,
+                    candSol.instance(),
+                    feedback.counterexamples().get(0).instance(),
+                    feedback.guidingFormula().resolve(historyEncoding()),
+                    debugProblem.bounds(),
+                    historyEncoding()));
+        return r;
+      }
+      candSol = synthesizer.solve(feedback.guidingFormula().resolve(historyEncoding()), newBounds);
+
+      if (candSol.unsat()) {
+        // Stop if problem is UNSAT
+        break;
+      }
+      // Otherwise, verify the new candidate
+      newBounds = new Bounds(searchProblem.bounds().universe());
+      feedback = guide(candSol.instance(), historyEncoding(), newBounds, checker);
+    }
+
+    long time = Duration.between(start, Instant.now()).toMillis();
+    return Optional.empty();
   }
 }

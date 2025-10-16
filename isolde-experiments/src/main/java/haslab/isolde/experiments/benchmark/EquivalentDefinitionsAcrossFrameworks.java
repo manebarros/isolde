@@ -1,7 +1,7 @@
 package haslab.isolde.experiments.benchmark;
 
+import haslab.isolde.SynthesizedHistory;
 import haslab.isolde.Synthesizer;
-import haslab.isolde.Synthesizer.CegisHistory;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.cerone.CeroneExecution;
@@ -10,7 +10,6 @@ import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
 import java.io.IOException;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -58,13 +57,11 @@ public final class EquivalentDefinitionsAcrossFrameworks {
 
         for (String solver : solvers) {
           for (int sample = 0; sample < samples; sample++) {
-            Instant before = Instant.now();
-            CegisHistory hist = synth.synthesizeWithInfo(Util.solvers.get(solver));
-            Instant after = Instant.now();
-            long time = Duration.between(before, after).toMillis();
+            SynthesizedHistory hist = synth.synthesize(Util.solvers.get(solver));
+            long time = hist.time();
             int candidates = hist.candidates();
 
-            if (hist.history().isPresent()) {
+            if (hist.sat()) {
               success++;
             } else {
               failed++;
@@ -93,13 +90,11 @@ public final class EquivalentDefinitionsAcrossFrameworks {
                     Date.from(run),
                     Date.from(Instant.now())));
 
-            before = Instant.now();
-            hist = synth2.synthesizeWithInfo(Util.solvers.get(solver));
-            after = Instant.now();
-            time = Duration.between(before, after).toMillis();
+            hist = synth2.synthesize(Util.solvers.get(solver));
+            time = hist.time();
             candidates = hist.candidates();
 
-            if (hist.history().isPresent()) {
+            if (hist.sat()) {
               success++;
             } else {
               failed++;

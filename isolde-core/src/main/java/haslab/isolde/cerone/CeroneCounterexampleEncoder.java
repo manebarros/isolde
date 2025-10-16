@@ -17,7 +17,7 @@ public class CeroneCounterexampleEncoder implements CounterexampleEncoder<Cerone
   private CeroneCounterexampleEncoder() {}
 
   public static CeroneCounterexampleEncoder instance() {
-    if (instance != null) {
+    if (instance == null) {
       instance = new CeroneCounterexampleEncoder();
     }
     return instance;

@@ -40,8 +40,8 @@ public class DirectCeroneCheckingEncoderTest
   }
 
   @Override
-  public CeroneHistCheckingModuleEncoder histCheckModuleEncoder() {
-    return new CeroneHistCheckingModuleEncoder(1);
+  public CeroneHistCheckingModuleEncoder histCheckModuleEncoder(int executions) {
+    return new CeroneHistCheckingModuleEncoder(executions);
   }
 
   @Test

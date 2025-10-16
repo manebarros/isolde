@@ -7,7 +7,10 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.CeroneHistCheckingModuleEncoder;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
+import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.check.external.HistCheckEncoder;
+import haslab.isolde.core.general.DirectExecutionModuleConstructor;
+import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
 import haslab.isolde.history.Transaction;
@@ -33,10 +36,15 @@ import org.junit.jupiter.api.Test;
  */
 public interface CeroneCheckingEncoderTest {
 
-  CeroneHistCheckingModuleEncoder histCheckModuleEncoder();
+  CeroneHistCheckingModuleEncoder histCheckModuleEncoder(int executions);
 
   default HistCheckEncoder<CeroneExecution> histCheckEncoder() {
-    return new HistCheckEncoder<>(histCheckModuleEncoder());
+    DirectExecutionModuleConstructor<
+            CeroneExecution,
+            CheckingIntermediateRepresentation,
+            SimpleContext<CheckingIntermediateRepresentation>>
+        constructor = this::histCheckModuleEncoder;
+    return new HistCheckEncoder<CeroneExecution>(constructor);
   }
 
   @Test

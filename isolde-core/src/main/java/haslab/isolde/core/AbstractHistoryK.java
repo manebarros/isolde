@@ -278,4 +278,8 @@ public interface AbstractHistoryK {
       }
     };
   }
+
+  default AbstractHistoryK subHistory(HistoryExpression txnSubset) {
+    return subHistory(txnSubset.resolve(this));
+  }
 }

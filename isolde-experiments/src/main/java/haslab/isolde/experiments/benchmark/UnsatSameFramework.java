@@ -1,7 +1,7 @@
 package haslab.isolde.experiments.benchmark;
 
+import haslab.isolde.SynthesizedHistory;
 import haslab.isolde.Synthesizer;
-import haslab.isolde.Synthesizer.CegisHistory;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.biswas.definitions.TransactionalAnomalousPatterns;
@@ -10,7 +10,6 @@ import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
 import java.io.IOException;
 import java.nio.file.Path;
-import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -57,13 +56,10 @@ public final class UnsatSameFramework {
 
         for (String solver : solvers) {
           for (int sample = 0; sample < samples; sample++) {
-            Instant before = Instant.now();
-            CegisHistory hist = synth.synthesizeWithInfo(Util.solvers.get(solver));
-            Instant after = Instant.now();
-            long time = Duration.between(before, after).toMillis();
+            SynthesizedHistory hist = synth.synthesize(Util.solvers.get(solver));
             int candidates = hist.candidates();
 
-            if (hist.history().isPresent()) {
+            if (hist.sat()) {
               success++;
             } else {
               failed++;
@@ -78,7 +74,7 @@ public final class UnsatSameFramework {
                 solver,
                 edge.a_name(),
                 edge.b_name(),
-                time,
+                hist.time(),
                 candidates); // TODO : use different implementations
 
             rows.add(
@@ -88,7 +84,7 @@ public final class UnsatSameFramework {
                     edge.a_name() + "_Biswas",
                     edge.b_name() + "_Biswas",
                     scope,
-                    time,
+                    hist.time(),
                     candidates,
                     run,
                     Date.from(Instant.now())));
