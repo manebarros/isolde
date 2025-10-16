@@ -29,12 +29,45 @@ import kodkod.instance.Bounds;
 import kodkod.instance.Instance;
 
 public class CegisSynthesizer<T, S> {
+
+  @FunctionalInterface
+  private static interface CandidateSearchFormulaConstructor {
+
+    <E extends Execution> List<ExecutionFormula<E>> construct(
+        List<ExecutionFormula<E>> exist, ExecutionFormula<E> univ);
+
+    default <E extends Execution> List<ExecutionFormula<E>> construct(SynthesisSpec<E> spec) {
+      return construct(spec.existentialFormulas(), spec.universalFormula());
+    }
+  }
+
   private final HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder;
   private final List<CegisVerifier<?>> checkingEncoders;
+  private final CandidateSearchFormulaConstructor candidateSearchFormulaConstructor;
+  private final boolean useIncrementalSolving;
 
-  public CegisSynthesizer(HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder) {
+  private CegisSynthesizer(
+      HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder,
+      CandidateSearchFormulaConstructor searchFormulaConstructor,
+      boolean useIncrementalSolving) {
     this.synthesisEncoder = synthesisEncoder;
     this.checkingEncoders = new ArrayList<>();
+    this.candidateSearchFormulaConstructor = searchFormulaConstructor;
+    this.useIncrementalSolving = useIncrementalSolving;
+  }
+
+  public CegisSynthesizer(HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder) {
+    this(synthesisEncoder, CegisSynthesizer::smartSearchFormula, true);
+  }
+
+  public static <T, S> CegisSynthesizer<T, S> withNaiveSearchFormula(
+      HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder) {
+    return new CegisSynthesizer<>(synthesisEncoder, CegisSynthesizer::naiveSearchFormula, true);
+  }
+
+  public static <T, S> CegisSynthesizer<T, S> withoutIncrementalSolving(
+      HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder) {
+    return new CegisSynthesizer<>(synthesisEncoder, CegisSynthesizer::smartSearchFormula, false);
   }
 
   private record CegisFeedback<E extends Execution>(
@@ -71,22 +104,29 @@ public class CegisSynthesizer<T, S> {
     }
   }
 
-  private <E extends Execution> List<ExecutionFormula<E>> calculateSearchFormula(
-      SynthesisSpec<E> spec) {
-    return calculateSearchFormula(spec.existentialFormulas(), spec.universalFormula());
+  private static <E extends Execution> List<ExecutionFormula<E>> naiveSearchFormula(
+      List<ExecutionFormula<E>> exist, ExecutionFormula<E> univ) {
+    List<ExecutionFormula<E>> formulas = new ArrayList<>(exist);
+    formulas.add(univ);
+    return formulas;
   }
 
-  private <E extends Execution> List<ExecutionFormula<E>> calculateSearchFormula(
-      List<ExecutionFormula<E>> existentialFormulas, ExecutionFormula<E> universalFormula) {
+  private static <E extends Execution> List<ExecutionFormula<E>> smartSearchFormula(
+      List<ExecutionFormula<E>> exist, ExecutionFormula<E> univ) {
     List<ExecutionFormula<E>> formulas = new ArrayList<>();
-    if (existentialFormulas.isEmpty()) {
-      formulas.add(universalFormula);
+    if (exist.isEmpty()) {
+      formulas.add(univ);
     } else {
-      for (var formula : existentialFormulas) {
-        formulas.add(formula.and(universalFormula));
+      for (var formula : exist) {
+        formulas.add(formula.and(univ));
       }
     }
     return formulas;
+  }
+
+  private <E extends Execution> List<ExecutionFormula<E>> calculateCandidateSearchFormula(
+      SynthesisSpec<E> spec) {
+    return this.candidateSearchFormulaConstructor.construct(spec);
   }
 
   public <E extends Execution> List<E> register(
@@ -96,7 +136,8 @@ public class CegisSynthesizer<T, S> {
       CounterexampleEncoder<E> counterexampleEncoder) {
     this.checkingEncoders.add(
         new CegisVerifier<>(checkingEncoder, counterexampleEncoder, spec.universalFormula()));
-    return this.synthesisEncoder.register(encoderConstructor, calculateSearchFormula(spec));
+    return this.synthesisEncoder.register(
+        encoderConstructor, calculateCandidateSearchFormula(spec));
   }
 
   private CegisAggregatedFeedback guide(
@@ -115,6 +156,12 @@ public class CegisSynthesizer<T, S> {
   }
 
   public CegisResult synthesize(Options synthOptions, Options checkOptions) {
+    return useIncrementalSolving
+        ? synthesizeWithIncremental(synthOptions, checkOptions)
+        : synthesizeWithoutIncremental(synthOptions, checkOptions);
+  }
+
+  public CegisResult synthesizeWithIncremental(Options synthOptions, Options checkOptions) {
     List<FailedCandidate> failedCandidates = new ArrayList<>();
     KodkodProblem searchProblem = this.synthesisEncoder.encode();
 
@@ -144,6 +191,43 @@ public class CegisSynthesizer<T, S> {
       // Otherwise, verify the new candidate
       newBounds = new Bounds(searchProblem.bounds().universe());
       feedback = guide(candSol.instance(), historyEncoding(), newBounds, checker);
+    }
+
+    long time = Duration.between(start, Instant.now()).toMillis();
+    return feedback.counterexamples().isEmpty()
+        ? CegisResult.success(historyEncoding(), candSol.instance(), failedCandidates, time)
+        : CegisResult.fail(historyEncoding(), failedCandidates, time);
+  }
+
+  public CegisResult synthesizeWithoutIncremental(Options synthOptions, Options checkOptions) {
+    List<FailedCandidate> failedCandidates = new ArrayList<>();
+    KodkodProblem searchProblem = this.synthesisEncoder.encode();
+
+    Solver synthesizer = new Solver(synthOptions);
+    Solver checker = new Solver(checkOptions);
+
+    Instant start = Instant.now();
+
+    Solution candSol = synthesizer.solve(searchProblem.formula(), searchProblem.bounds());
+
+    if (candSol.unsat()) {
+      return CegisResult.fail(
+          historyEncoding(), failedCandidates, Duration.between(start, Instant.now()).toMillis());
+    }
+
+    CegisAggregatedFeedback feedback =
+        guide(candSol.instance(), historyEncoding(), searchProblem.bounds(), checker);
+    while (!feedback.counterexamples().isEmpty()) {
+      failedCandidates.add(new FailedCandidate(candSol.instance(), feedback.counterexamples()));
+      searchProblem = searchProblem.and(feedback.guidingFormula().resolve(historyEncoding()));
+      candSol = searchProblem.solve(synthesizer);
+
+      if (candSol.unsat()) {
+        // Stop if problem is UNSAT
+        break;
+      }
+      // Otherwise, verify the new candidate
+      feedback = guide(candSol.instance(), historyEncoding(), searchProblem.bounds(), checker);
     }
 
     long time = Duration.between(start, Instant.now()).toMillis();
