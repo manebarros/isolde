@@ -3,80 +3,167 @@ from helper import *
 
 edges = [("RA", "CC"), ("CC", "PC"), ("PC", "SI"), ("SI", "Ser")]
 
+
 def sat_problems_same_framework():
-    df_biswas = clean(pd.read_csv("/home/mane/Desktop/vldb-experiments/updated/3_sessions/sat_biswas.csv"))
-    df_cerone = clean(pd.read_csv("/home/mane/Desktop/vldb-experiments/updated/3_sessions/sat_cerone.csv"))
+    df_biswas = clean(
+        pd.read_csv(
+            "/home/mane/Desktop/vldb-experiments/updated/3_sessions/sat_biswas.csv"
+        )
+    )
+    df_cerone = clean(
+        pd.read_csv(
+            "/home/mane/Desktop/vldb-experiments/updated/3_sessions/sat_cerone.csv"
+        )
+    )
     height = 1.2
     width = 2
 
-    edges_cerone = [ (weaker + "_Cerone", stronger + "_Cerone") for (weaker, stronger) in edges ]
-    #logScaling = [ (f"{weaker}_Cerone", f"{stronger}_Cerone") for (weaker, stronger) in [("RA", "CC"), ("SI", "Ser")] ]
-    plot_specs(df_cerone, edges_cerone, 
-               base_dir="/home/mane/isolde/papers/icse/plots",
-               paths=["edges_cerone.pgf", "edges_cerone.pdf"],
-               logScaling=False, 
-               implementations=["no_fixed_sessions"],
-               display_level_fun=level_name_as_latex,
-               plotHeight=height, plotWidth=width)
+    edges_cerone = [
+        (weaker + "_Cerone", stronger + "_Cerone") for (weaker, stronger) in edges
+    ]
+    # logScaling = [ (f"{weaker}_Cerone", f"{stronger}_Cerone") for (weaker, stronger) in [("RA", "CC"), ("SI", "Ser")] ]
+    plot_specs(
+        df_cerone,
+        edges_cerone,
+        base_dir="/home/mane/isolde/papers/icse/plots",
+        paths=["edges_cerone.pgf", "edges_cerone.pdf"],
+        logScaling=False,
+        implementations=["no_fixed_sessions"],
+        display_level_fun=level_name_as_latex,
+        plotHeight=height,
+        plotWidth=width,
+    )
 
-    edges_biswas = [ (weaker + "_Biswas", stronger + "_Biswas") for (weaker, stronger) in edges ]
-    plot_specs(df_biswas, edges_biswas, 
-               base_dir="/home/mane/isolde/papers/icse/plots",
-               paths=["edges_biswas.pgf", "edges_biswas.pdf"],
-               logScaling=False, 
-               implementations=["no_fixed_sessions"],
-               display_level_fun=level_name_as_latex, 
-               plotHeight=height, plotWidth=width)
+    edges_biswas = [
+        (weaker + "_Biswas", stronger + "_Biswas") for (weaker, stronger) in edges
+    ]
+    plot_specs(
+        df_biswas,
+        edges_biswas,
+        base_dir="/home/mane/isolde/papers/icse/plots",
+        paths=["edges_biswas.pgf", "edges_biswas.pdf"],
+        logScaling=False,
+        implementations=["no_fixed_sessions"],
+        display_level_fun=level_name_as_latex,
+        plotHeight=height,
+        plotWidth=width,
+    )
+
 
 def sat_problems_diff_framework():
-    df = clean(pd.read_csv("/home/mane/Desktop/vldb-experiments/updated/3_sessions/sat_across_frameworks.csv"))
+    df = clean(
+        pd.read_csv(
+            "/home/mane/Desktop/vldb-experiments/updated/3_sessions/sat_across_frameworks.csv"
+        )
+    )
     height = 1.2
     width = 2
 
-    edges_cerone_biswas = [ (weaker + "_Cerone", stronger + "_Biswas") for (weaker, stronger) in edges ]
-    plot_specs(df, edges_cerone_biswas, 
-               implementations=["no_fixed_sessions"],
-               base_dir="/home/mane/isolde/papers/icse/plots", 
-               paths=["edges_cerone_biswas.pgf"], 
-               logScaling=False, 
-               display_level_fun=level_name_as_latex,
-               plotHeight=height, plotWidth=width)
+    edges_cerone_biswas = [
+        (weaker + "_Cerone", stronger + "_Biswas") for (weaker, stronger) in edges
+    ]
+    plot_specs(
+        df,
+        edges_cerone_biswas,
+        implementations=["no_fixed_sessions"],
+        base_dir="/home/mane/isolde/papers/icse/plots",
+        paths=["edges_cerone_biswas.pgf"],
+        logScaling=False,
+        display_level_fun=level_name_as_latex,
+        plotHeight=height,
+        plotWidth=width,
+    )
 
-    edges_biswas_cerone = [ (weaker + "_Biswas", stronger + "_Cerone") for (weaker, stronger) in edges ]
-    #logScaling = [ (f"{weaker}_Biswas", f"{stronger}_Cerone") for (weaker, stronger) in [("RA", "CC"), ("SI", "Ser")] ]
-    plot_specs(df, edges_biswas_cerone, 
-               implementations=["no_fixed_sessions"],
-               base_dir="/home/mane/isolde/papers/icse/plots", 
-               paths=["edges_biswas_cerone.pgf"], 
-               logScaling=False,
-               display_level_fun=level_name_as_latex,
-               plotHeight=height, plotWidth=width)
+    edges_biswas_cerone = [
+        (weaker + "_Biswas", stronger + "_Cerone") for (weaker, stronger) in edges
+    ]
+    # logScaling = [ (f"{weaker}_Biswas", f"{stronger}_Cerone") for (weaker, stronger) in [("RA", "CC"), ("SI", "Ser")] ]
+    plot_specs(
+        df,
+        edges_biswas_cerone,
+        implementations=["no_fixed_sessions"],
+        base_dir="/home/mane/isolde/papers/icse/plots",
+        paths=["edges_biswas_cerone.pgf"],
+        logScaling=False,
+        display_level_fun=level_name_as_latex,
+        plotHeight=height,
+        plotWidth=width,
+    )
+
 
 def unsat_problems_diff_frameworks():
-    df = clean(pd.read_csv("/home/mane/Desktop/vldb-experiments/equiv_diff_frameworks.csv"))
+    df = clean(
+        pd.read_csv("/home/mane/Desktop/vldb-experiments/equiv_diff_frameworks.csv")
+    )
     height = 1.2
     width = 2
-    
+
     levels = ["RA", "CC", "PC", "SI", "Ser"]
 
-    equiv_cerone_biswas = [ (level + "_Cerone", level + "_Biswas") for level in levels ]
-    equiv_biswas_cerone = [ (level + "_Biswas", level + "_Cerone") for level in levels ]
+    equiv_cerone_biswas = [(level + "_Cerone", level + "_Biswas") for level in levels]
+    equiv_biswas_cerone = [(level + "_Biswas", level + "_Cerone") for level in levels]
 
-    plot_specs(df, equiv_cerone_biswas,
-               base_dir="/home/mane/isolde/papers/vldb/plots", 
-               paths=["unsat_cerone_biswas.pgf"], 
-               logScaling=False, 
-               display_level_fun=level_name_as_latex,
-               plotHeight=height, plotWidth=width)
+    plot_specs(
+        df,
+        equiv_cerone_biswas,
+        base_dir="/home/mane/isolde/papers/vldb/plots",
+        paths=["unsat_cerone_biswas.pgf"],
+        logScaling=False,
+        display_level_fun=level_name_as_latex,
+        plotHeight=height,
+        plotWidth=width,
+    )
 
-    plot_specs(df, equiv_biswas_cerone, 
-               base_dir="/home/mane/isolde/papers/vldb/plots", 
-               paths=["unsat_biswas_cerone.pgf"], 
-               logScaling=False,
-               display_level_fun=level_name_as_latex,
-               plotHeight=height, plotWidth=width)
+    plot_specs(
+        df,
+        equiv_biswas_cerone,
+        base_dir="/home/mane/isolde/papers/vldb/plots",
+        paths=["unsat_biswas_cerone.pgf"],
+        logScaling=False,
+        display_level_fun=level_name_as_latex,
+        plotHeight=height,
+        plotWidth=width,
+    )
 
-if __name__ == '__main__':
-    sat_problems_same_framework()
-    sat_problems_diff_framework()
-    #unsat_problems_diff_frameworks()
+
+def vldb_plots():
+    df = clean(pd.read_csv("/home/mane/vldb_measurements/data.csv"))
+    df2 = clean(pd.read_csv("/home/mane/vldb_measurements/newdata.csv"), txn_max_lim=10)
+    base = "/home/mane/isolde_vldb/plots/vldb"
+    height = 3
+    width = 4
+
+    plot_problems(
+        df,
+        ["fekete"],
+        base_dir=base,
+        paths=["fekete.pgf"],
+        logScaling=False,
+        plotHeight=height,
+        plotWidth=width,
+    )
+
+    plot_problems(
+        df,
+        ["siEquivalence"],
+        base_dir=base,
+        paths=["si.pgf"],
+        logScaling=False,
+        plotHeight=height,
+        plotWidth=width,
+    )
+
+    plot_problems(
+        df2,
+        ["satDifFrameworks"],
+        base_dir=base,
+        paths=["sat.pgf"],
+        logScaling=False,
+        plotHeight=height,
+        plotWidth=width,
+        legend=True,
+    )
+
+
+if __name__ == "__main__":
+    vldb_plots()
