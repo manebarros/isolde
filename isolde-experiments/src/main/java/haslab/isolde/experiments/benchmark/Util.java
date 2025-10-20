@@ -18,6 +18,10 @@ import java.util.Map;
 import kodkod.engine.satlab.SATFactory;
 
 public final class Util {
+  public static SATFactory getSolver(String name) {
+    return solvers.get(name);
+  }
+
   public static final Map<String, SATFactory> solvers =
       Map.of(
           "minisat", SATFactory.MiniSat,
@@ -55,6 +59,20 @@ public final class Util {
 
   public static void writeMeasurements(List<Measurement> measurements, Path p) throws IOException {
     writeString(Measurement.asCsv(measurements), p);
+  }
+
+  public static void writeSimpleMeasurements(List<SimpleMeasurement> measurements, Path p)
+      throws IOException {
+    writeString(SimpleMeasurement.asCsv(measurements), p);
+  }
+
+  public static void appendSimpleMeasurements(List<SimpleMeasurement> measurements, Path p)
+      throws IOException {
+    if (Files.exists(p)) {
+      appendString(SimpleMeasurement.asCsvWithoutHeader(measurements), p);
+    } else {
+      writeSimpleMeasurements(measurements, p);
+    }
   }
 
   public static void appendMeasurements(List<Measurement> measurements, String p)
