@@ -26,22 +26,30 @@ public class IsoldeSynthesizer {
   private final Options synthOptions;
   private final Options checkOptions;
   private final boolean useTxnTotalOrder;
+  private final boolean useIncrementalSolving;
+  private final boolean useSmartCandidateSearch;
 
   private IsoldeSynthesizer(Builder builder) {
     this.synthOptions = builder.synthOptions;
     this.checkOptions = builder.checkOptions;
     this.useTxnTotalOrder = builder.useTxnTotalOrder;
+    this.useIncrementalSolving = builder.useIncrementalSolving;
+    this.useSmartCandidateSearch = builder.useSmartCandidateSearch;
   }
 
   public static class Builder {
     private Options synthOptions;
     private Options checkOptions;
     private boolean useTxnTotalOrder;
+    private boolean useIncrementalSolving;
+    private boolean useSmartCandidateSearch;
 
     public Builder() {
       this.synthOptions = new Options();
       this.checkOptions = new Options();
       this.useTxnTotalOrder = true;
+      this.useIncrementalSolving = true;
+      this.useSmartCandidateSearch = true;
     }
 
     public Builder synthOptions(Options options) {
@@ -59,6 +67,16 @@ public class IsoldeSynthesizer {
       return this;
     }
 
+    public Builder incrementalSolving(boolean val) {
+      this.useIncrementalSolving = val;
+      return this;
+    }
+
+    public Builder smartCandidateSearch(boolean val) {
+      this.useSmartCandidateSearch = val;
+      return this;
+    }
+
     public Builder synthSolver(SATFactory solver) {
       this.synthOptions.setSolver(solver);
       return this;
@@ -67,6 +85,10 @@ public class IsoldeSynthesizer {
     public Builder checkSolver(SATFactory solver) {
       this.checkOptions.setSolver(solver);
       return this;
+    }
+
+    public Builder solver(SATFactory solver) {
+      return synthSolver(solver).checkSolver(solver);
     }
 
     public IsoldeSynthesizer build() {
@@ -87,8 +109,16 @@ public class IsoldeSynthesizer {
             ? FolSynthesisProblem.withTotalOrder(folSynthInput)
             : FolSynthesisProblem.withNoTotalOrder(folSynthInput);
 
-    var synthesizer = new CegisSynthesizer<>(synthesisProblem);
-
+    CegisSynthesizer<FolSynthesisProblem.InputWithTotalOrder, Optional<TupleSet>> synthesizer;
+    if (useIncrementalSolving && !useSmartCandidateSearch) {
+      synthesizer = CegisSynthesizer.withNaiveSearchFormula(synthesisProblem);
+    } else if (useSmartCandidateSearch && !useIncrementalSolving) {
+      synthesizer = CegisSynthesizer.withoutIncrementalSolving(synthesisProblem);
+    } else if (useSmartCandidateSearch && useIncrementalSolving) {
+      synthesizer = new CegisSynthesizer<>(synthesisProblem);
+    } else {
+      throw new RuntimeException("invalid options");
+    }
     // register Cerone module
     ExecutionModuleConstructor<
             CeroneExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>>

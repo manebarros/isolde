@@ -50,11 +50,11 @@ public class IsoldeSpec {
           return this;
 
         case IsoldeConstraint.CeroneConstraint(ExecutionFormula<CeroneExecution> formula):
-          this.ceroneUniversal.and(formula.not());
+          this.ceroneUniversal = this.ceroneUniversal.and(formula.not());
           return this;
 
         case IsoldeConstraint.BiswasConstraint(ExecutionFormula<BiswasExecution> formula):
-          this.biswasUniversal.and(formula.not());
+          this.biswasUniversal = this.biswasUniversal.and(formula.not());
           return this;
       }
     }
