@@ -14,10 +14,64 @@ public final class TransactionalAnomalousPatterns {
   public static final ExecutionFormula<BiswasExecution> l = TransactionalAnomalousPatterns::l;
   public static final ExecutionFormula<BiswasExecution> m = TransactionalAnomalousPatterns::m;
   public static final ExecutionFormula<BiswasExecution> n = TransactionalAnomalousPatterns::n;
+  public static final ExecutionFormula<BiswasExecution> k_fixed =
+      TransactionalAnomalousPatterns::k_prime;
+  public static final ExecutionFormula<BiswasExecution> l_fixed =
+      TransactionalAnomalousPatterns::l_fixed;
+  public static final ExecutionFormula<BiswasExecution> fails_to_see_predecessor =
+      TransactionalAnomalousPatterns::fails_to_see_so_predecessor;
+
+  public static final ExecutionFormula<BiswasExecution> inconsistentCommitOrder =
+      TransactionalAnomalousPatterns::inconsistentCommitOrder;
 
   public static final ExecutionFormula<BiswasExecution> ReadAtomic = k.not().and(l.not());
+  public static final ExecutionFormula<BiswasExecution> ReadAtomicV3 =
+      k.not().and(l.not()).and(fails_to_see_predecessor.not()).and(inconsistentCommitOrder.not());
+  public static final ExecutionFormula<BiswasExecution> ReadAtomicV1 = k_fixed.not().and(l.not());
+  public static final ExecutionFormula<BiswasExecution> ReadAtomicV2 =
+      k_fixed.not().and(l_fixed.not());
   public static final ExecutionFormula<BiswasExecution> Causal =
       k.not().and(l.not()).and(m.not()).and(n.not());
+
+  public static Formula fails_to_see_so_predecessor(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return Formula.and(
+            t1.eq(t2).not(),
+            e.history().sessionOrdered(t2, t3),
+            e.history().wr(t1, x, t3),
+            e.history().causallyOrdered(t1, t2))
+        .forSome(
+            x.oneOf(e.history().keys())
+                .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));
+  }
+
+  public static Formula inconsistentCommitOrder(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable t4 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return Formula.and(
+            e.history().sessionOrdered(t1, t4).not(),
+            e.history().sessionOrdered(t3, t2).not(),
+            e.history().sessionOrdered(t1, t2),
+            e.history().sessionOrdered(t3, t4),
+            e.history().wr(t1, x, t4),
+            e.history().wr(t3, x, t2))
+        .forSome(
+            x.oneOf(e.history().keys())
+                .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t2.oneOf(e.history().txnThatReadAnyOf(x)))
+                .and(t3.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t4.oneOf(e.history().txnThatReadAnyOf(x))));
+  }
 
   public static Formula k(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
@@ -56,6 +110,35 @@ public final class TransactionalAnomalousPatterns {
         .forSome(
             x.oneOf(e.history().keys())
                 .and(y.oneOf(e.history().keys()))
+                .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));
+  }
+
+  public static Formula k_prime(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return Formula.and(
+            t1.eq(t2).not(), e.history().wr(t1, x, t3), e.history().causallyOrdered(t1, t2))
+        .forSome(
+            x.oneOf(e.history().keys())
+                .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
+                .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));
+  }
+
+  public static Formula l_fixed(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return Formula.and(t1.eq(t2).not(), e.history().wr(t1, x, t3), t1.product(t2).in(e.co()))
+        .forSome(
+            x.oneOf(e.history().keys())
                 .and(t1.oneOf(e.history().txnThatWriteToAnyOf(x)))
                 .and(t2.oneOf(e.history().txnThatWriteToAnyOf(x)))
                 .and(t3.oneOf(e.history().txnThatReadAnyOf(x))));

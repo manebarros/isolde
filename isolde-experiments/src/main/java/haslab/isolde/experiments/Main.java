@@ -12,13 +12,19 @@ import haslab.isolde.experiments.benchmark.IsoldeConfiguration;
 import haslab.isolde.experiments.benchmark.IsoldeConfiguration.NamedProblem;
 import haslab.isolde.experiments.benchmark.Util;
 import haslab.isolde.experiments.verification.FeketeReadOnlyAnomaly;
+import haslab.isolde.experiments.verification.VerifyPlumeDefinitions;
 import java.io.IOException;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
 
 public class Main {
-  public static void main(String[] args) throws IOException {
+  private static void plume() {
+    Scope s = new Scope(4, 2, 3, 2);
+    VerifyPlumeDefinitions.verify(s);
+  }
+
+  private static void benchmark() throws IOException {
 
     IsoldeConfiguration full = new IsoldeConfiguration("default", new IsoldeSynthesizer.Builder());
     IsoldeConfiguration withoutIncremental =
@@ -67,5 +73,9 @@ public class Main {
           3,
           "/home/mane/vldb_measurements/data.csv");
     }
+  }
+
+  public static void main(String[] args) throws IOException {
+    FeketeReadOnlyAnomaly.generateAnomalyBiswas();
   }
 }

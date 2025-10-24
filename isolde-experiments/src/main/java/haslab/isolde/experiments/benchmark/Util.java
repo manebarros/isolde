@@ -52,15 +52,6 @@ public final class Util {
     Files.writeString(p, s, APPEND, WRITE);
   }
 
-  public static void writeMeasurements(List<Measurement> measurements, String p)
-      throws IOException {
-    writeMeasurements(measurements, Path.of(p));
-  }
-
-  public static void writeMeasurements(List<Measurement> measurements, Path p) throws IOException {
-    writeString(Measurement.asCsv(measurements), p);
-  }
-
   public static void writeSimpleMeasurements(List<SimpleMeasurement> measurements, Path p)
       throws IOException {
     writeString(SimpleMeasurement.asCsv(measurements), p);
@@ -72,19 +63,6 @@ public final class Util {
       appendString(SimpleMeasurement.asCsvWithoutHeader(measurements), p);
     } else {
       writeSimpleMeasurements(measurements, p);
-    }
-  }
-
-  public static void appendMeasurements(List<Measurement> measurements, String p)
-      throws IOException {
-    appendMeasurements(measurements, Path.of(p));
-  }
-
-  public static void appendMeasurements(List<Measurement> measurements, Path p) throws IOException {
-    if (Files.exists(p)) {
-      appendString(Measurement.asCsvWithoutHeader(measurements), p);
-    } else {
-      writeMeasurements(measurements, p);
     }
   }
 

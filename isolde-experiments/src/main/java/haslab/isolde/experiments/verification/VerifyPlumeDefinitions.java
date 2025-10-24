@@ -19,19 +19,29 @@ public final class VerifyPlumeDefinitions {
       ExecutionFormula<BiswasExecution> axiomaticDefinition,
       ExecutionFormula<BiswasExecution> anomalyDefinition) {}
 
+  // private static final List<Level> levels =
+  //    Arrays.asList(
+  //        new Level(
+  //            "Read Atomic",
+  //            AxiomaticDefinitions.ReadAtomic,
+  //            TransactionalAnomalousPatterns.ReadAtomic),
+  //        new Level(
+  //            "Causal Consistency",
+  //            AxiomaticDefinitions.Causal,
+  //            TransactionalAnomalousPatterns.Causal));
+
   private static final List<Level> levels =
       Arrays.asList(
           new Level(
               "Read Atomic",
               AxiomaticDefinitions.ReadAtomic,
-              TransactionalAnomalousPatterns.ReadAtomic),
-          new Level(
-              "Causal Consistency",
-              AxiomaticDefinitions.Causal,
-              TransactionalAnomalousPatterns.Causal));
+              TransactionalAnomalousPatterns.ReadAtomicV3));
 
   public static void verify(int scope) {
-    Scope s = new Scope(scope);
+    verify(new Scope(scope));
+  }
+
+  public static void verify(Scope s) {
     for (var level : levels) {
       var name = level.name();
       ComparisonResult result =
@@ -46,10 +56,10 @@ public final class VerifyPlumeDefinitions {
   }
 
   public static History historyAllowedByPlumeRaButNotByBiswasRa() {
-    Synthesizer synth = new Synthesizer(new Scope(2, 1, 2, 1));
+    Synthesizer synth = new Synthesizer(new Scope(3, 1, 2, 2));
     synth.registerBiswas(
         new SynthesisSpec<>(
-            TransactionalAnomalousPatterns.ReadAtomic, AxiomaticDefinitions.ReadAtomic.not()));
+            TransactionalAnomalousPatterns.ReadAtomicV1, AxiomaticDefinitions.ReadAtomic.not()));
     return synth.synthesize().history();
   }
 }

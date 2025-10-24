@@ -45,6 +45,9 @@ public final class FeketeReadOnlyAnomaly {
         new CeroneExecution(e.history().subHistory(updateTransactions), e.vis(), e.ar()));
   }
 
+  public static final HistoryFormula oneTransactionPerSession =
+      h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
+
   public static final Formula updateSerAlt(CeroneExecution e) {
     Variable t, s;
     t = Variable.unary("t");
@@ -63,11 +66,8 @@ public final class FeketeReadOnlyAnomaly {
         new SynthesisSpec<>(
             Arrays.asList(AxiomaticDefinitions.Snapshot, FeketeReadOnlyAnomaly::updateSer),
             AxiomaticDefinitions.Ser.not());
-    HistoryFormula oneTransactionPerSession =
-        h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
-    HistoryFormula equivalentToAnomaly = FormulaUtil.equivalentToHistory(readOnlyAnomaly);
 
-    Synthesizer synth = new Synthesizer(scope, oneTransactionPerSession);
+    Synthesizer synth = new Synthesizer(scope);
 
     synth.registerBiswas(spec);
     var result = synth.synthesize(SATFactory.MiniSat);

@@ -32,13 +32,13 @@ public record ComparisonResult(
           String.format(
               "%s is STRONGER than %s.\n" + "History allowed by %s but not by %s:\n" + "%s\n",
               b, a, a, b, a_not_b.history());
-    } else if (a_not_b.sat() && b_not_a.sat()) {
+    } else if (a_not_b.unsat() && b_not_a.unsat()) {
       // equivalent
       str = String.format("%s and %s are EQUIVALENT.\n", a, b);
     } else {
       str = String.format("what");
     }
-    return str;
+    return str + timeInfoString();
   }
 
   public String timeInfoString() {
