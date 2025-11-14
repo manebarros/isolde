@@ -36,32 +36,46 @@ public final class FeketeReadOnlyAnomaly {
       h -> h.finalWrites().join(h.values()).join(h.keys());
 
   public static final Formula updateSer(BiswasExecution e) {
-    return AxiomaticDefinitions.Ser.resolve(
+    return AxiomaticDefinitions.Serializability(
         new BiswasExecution(e.history().subHistory(updateTransactions), e.co()));
   }
 
+  public static final Formula updateSerExplicit(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return Formula.and(t1.eq(t2).not(), e.history().wr(t1, x, t3), t2.product(t3).in(e.co()))
+        .implies(t1.in(t2.join(e.co())))
+        .forAll(
+            x.oneOf(e.history().keys())
+                .and(
+                    t1.oneOf(e.history().txnThatWriteToAnyOf(x))
+                        .and(
+                            t2.oneOf(e.history().txnThatWriteToAnyOf(x))
+                                .and(t3.oneOf(e.history().updateTransactions())))));
+  }
+
   public static final Formula updateSer(CeroneExecution e) {
-    return CeroneDefinitions.SER.resolve(
+    return CeroneDefinitions.EXT
+        .resolve(e)
+        .and(
+            CeroneDefinitions.TOTAL_VIS.resolve(
+                new CeroneExecution(e.history().subHistory(updateTransactions), e.vis(), e.ar())));
+  }
+
+  public static final Formula updateSerCeroneWrong(CeroneExecution e) {
+    return CeroneDefinitions.Ser.resolve(
         new CeroneExecution(e.history().subHistory(updateTransactions), e.vis(), e.ar()));
   }
 
   public static final HistoryFormula oneTransactionPerSession =
       h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
 
-  public static final Formula updateSerAlt(CeroneExecution e) {
-    Variable t, s;
-    t = Variable.unary("t");
-    s = Variable.unary("s");
-    return Formula.and(
-            t.eq(s).not(), e.history().isUpdateTransaction(t), e.history().isUpdateTransaction(s))
-        .implies(t.product(s).in(e.vis()).or(s.product(t).in(e.vis())))
-        .forAll(t.oneOf(e.history().transactions()).and(s.oneOf(e.history().transactions())))
-        .and(CeroneDefinitions.EXT.resolve(e));
-  }
-
   // Generate anomaly using Biswas framework and print it.
   public static final void generateAnomalyBiswas() {
-    Scope scope = new Scope(3, 2, 2, 3);
+    Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<BiswasExecution> spec =
         new SynthesisSpec<>(
             Arrays.asList(AxiomaticDefinitions.Snapshot, FeketeReadOnlyAnomaly::updateSer),
@@ -85,7 +99,7 @@ public final class FeketeReadOnlyAnomaly {
 
   // DEBUG
   public static final void debug() {
-    Scope scope = new Scope(3, 2, 2, 3);
+    Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<BiswasExecution> spec =
         new SynthesisSpec<>(
             Arrays.asList(FeketeReadOnlyAnomaly::updateSer, AxiomaticDefinitions.Snapshot),
@@ -102,11 +116,11 @@ public final class FeketeReadOnlyAnomaly {
   }
 
   public static final void generateAnomalyCerone() {
-    Scope scope = new Scope(3, 2, 2, 3);
+    Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<CeroneExecution> spec =
         new SynthesisSpec<>(
             Arrays.asList(CeroneDefinitions.SI, FeketeReadOnlyAnomaly::updateSer),
-            CeroneDefinitions.SER.not());
+            CeroneDefinitions.Ser.not());
     HistoryFormula oneTransactionPerSession =
         h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
     Synthesizer synth = new Synthesizer(scope, oneTransactionPerSession);
@@ -166,7 +180,7 @@ public final class FeketeReadOnlyAnomaly {
     System.out.println("allowed under Cerone's UpdateSer: " + sol.sat());
     System.out.println(sol.instance());
 
-    p = ceroneEncoder().encode(readOnlyAnomaly, CeroneDefinitions.SER);
+    p = ceroneEncoder().encode(readOnlyAnomaly, CeroneDefinitions.Ser);
     sol = p.solve(new Solver());
     System.out.println("allowed under Cerone's Ser: " + sol.sat());
   }

@@ -24,7 +24,7 @@ public final class VerifyBiswasAndCeroneEquivalence {
           new Definition("CC", CeroneDefinitions.CC, AxiomaticDefinitions.Causal),
           new Definition("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
           new Definition("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot),
-          new Definition("SER", CeroneDefinitions.SER, AxiomaticDefinitions.Ser),
+          new Definition("SER", CeroneDefinitions.Ser, AxiomaticDefinitions.Ser),
           new Definition(
               "UPDATE_SER", FeketeReadOnlyAnomaly::updateSer, FeketeReadOnlyAnomaly::updateSer));
 

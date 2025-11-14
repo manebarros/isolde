@@ -19,17 +19,6 @@ public final class VerifyPlumeDefinitions {
       ExecutionFormula<BiswasExecution> axiomaticDefinition,
       ExecutionFormula<BiswasExecution> anomalyDefinition) {}
 
-  // private static final List<Level> levels =
-  //    Arrays.asList(
-  //        new Level(
-  //            "Read Atomic",
-  //            AxiomaticDefinitions.ReadAtomic,
-  //            TransactionalAnomalousPatterns.ReadAtomic),
-  //        new Level(
-  //            "Causal Consistency",
-  //            AxiomaticDefinitions.Causal,
-  //            TransactionalAnomalousPatterns.Causal));
-
   private static final List<Level> levels =
       Arrays.asList(
           new Level(
@@ -56,7 +45,7 @@ public final class VerifyPlumeDefinitions {
   }
 
   public static History historyAllowedByPlumeRaButNotByBiswasRa() {
-    Synthesizer synth = new Synthesizer(new Scope(3, 1, 2, 2));
+    Synthesizer synth = new Synthesizer(new Scope.Builder(2).txn(3).obj(1).build());
     synth.registerBiswas(
         new SynthesisSpec<>(
             TransactionalAnomalousPatterns.ReadAtomicV1, AxiomaticDefinitions.ReadAtomic.not()));

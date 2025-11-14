@@ -127,43 +127,109 @@ def unsat_problems_diff_frameworks():
 
 
 def vldb_plots():
-    df = clean(pd.read_csv("/home/mane/vldb_measurements/data.csv"))
-    df2 = clean(pd.read_csv("/home/mane/vldb_measurements/newdata.csv"), txn_max_lim=10)
+    df = clean(
+        pd.read_csv("/home/mane/vldb_measurements/data.csv"),
+        check_num_measurements=False,
+    )
     base = "/home/mane/isolde_vldb/plots/vldb"
     height = 3
     width = 4
 
     plot_problems(
         df,
-        ["fekete"],
+        ["SI_c UpdateSer_c\tSer_c"],
         base_dir=base,
-        paths=["fekete.pgf"],
+        implementations=["default"],
+        paths=["sat_single.pgf"],
         logScaling=False,
         plotHeight=height,
         plotWidth=width,
+        unit="s",
     )
 
     plot_problems(
         df,
-        ["siEquivalence"],
+        ["SI_c UpdateSer_b\tSer_c"],
         base_dir=base,
-        paths=["si.pgf"],
+        implementations=["default"],
+        paths=["sat_multi.pgf"],
         logScaling=False,
         plotHeight=height,
         plotWidth=width,
+        unit="s",
     )
 
     plot_problems(
-        df2,
-        ["satDifFrameworks"],
+        df,
+        ["Ser_b\tSI_b"],
         base_dir=base,
-        paths=["sat.pgf"],
+        implementations=["default"],
+        paths=["unsat_single.pgf"],
         logScaling=False,
         plotHeight=height,
         plotWidth=width,
+        unit="s",
+    )
+
+    plot_problems(
+        df,
+        ["SI_c\tSI_b"],
+        base_dir=base,
+        implementations=["default"],
+        paths=["unsat_multi.pgf"],
+        logScaling=False,
+        plotHeight=height,
+        plotWidth=width,
+        unit="s",
+    )
+
+
+def vldb_plot2():
+    df = clean(
+        pd.read_csv("/home/mane/vldb_measurements/data.csv"),
+        check_num_measurements=False,
+        remove_timeouts=True,
+    )
+    base = "/home/mane/isolde_vldb/plots/vldb"
+    height = 3.5
+    width = 5
+
+    plot_problems(
+        df,
+        ["Ser_b\tSI_b"],
+        base_dir=base,
+        implementations=[
+            "default",
+            "without fixed order",
+            "without smart search",
+        ],
+        paths=["ablation.pgf"],
+        logScaling=True,
+        plotHeight=height,
+        plotWidth=width,
+        unit="s",
         legend=True,
     )
 
 
+def vldb_plot1():
+    df = clean(
+        pd.read_csv("/home/mane/vldb_measurements/data.csv"),
+        check_num_measurements=False,
+    )
+    base = "/home/mane/isolde_vldb/plots/vldb"
+    height = 3.5
+    width = 5
+    plot_rq1(
+        df,
+        logScaling=True,
+        plotHeight=height,
+        plotWidth=width,
+        paths=["rq1.pgf", "rq1.pdf"],
+        base_dir=base,
+        unit="ms",
+    )
+
+
 if __name__ == "__main__":
-    vldb_plots()
+    vldb_plot2()

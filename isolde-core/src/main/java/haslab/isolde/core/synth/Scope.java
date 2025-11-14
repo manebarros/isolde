@@ -6,15 +6,59 @@ public class Scope {
   private int values;
   private int sessions;
 
-  public Scope(int scope) {
-    this(scope, scope, scope, scope);
+  private static final int DEFAULT_SCOPE = 3;
+
+  public static class Builder {
+    private int transactions;
+    private int objects;
+    private int values;
+    private int sessions;
+
+    public Builder(int scope) {
+      this.transactions = scope;
+      this.objects = scope;
+      this.values = scope;
+      this.sessions = scope;
+    }
+
+    public Builder() {
+      this(DEFAULT_SCOPE);
+    }
+
+    public Builder txn(int scope) {
+      transactions = scope;
+      return this;
+    }
+
+    public Builder obj(int scope) {
+      objects = scope;
+      return this;
+    }
+
+    public Builder val(int scope) {
+      values = scope;
+      return this;
+    }
+
+    public Builder sess(int scope) {
+      values = scope;
+      return this;
+    }
+
+    public Scope build() {
+      return new Scope(this);
+    }
   }
 
-  public Scope(int transactions, int objects, int values, int sessions) {
-    this.transactions = transactions;
-    this.objects = objects;
-    this.values = values;
-    this.sessions = sessions;
+  public Scope(int scope) {
+    this(new Builder(scope));
+  }
+
+  private Scope(Builder builder) {
+    this.transactions = builder.transactions;
+    this.objects = builder.objects;
+    this.values = builder.values;
+    this.sessions = builder.sessions;
   }
 
   public int getTransactions() {

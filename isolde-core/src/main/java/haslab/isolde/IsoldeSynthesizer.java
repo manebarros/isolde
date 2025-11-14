@@ -29,14 +29,6 @@ public class IsoldeSynthesizer {
   private final boolean useIncrementalSolving;
   private final boolean useSmartCandidateSearch;
 
-  private IsoldeSynthesizer(Builder builder) {
-    this.synthOptions = builder.synthOptions;
-    this.checkOptions = builder.checkOptions;
-    this.useTxnTotalOrder = builder.useTxnTotalOrder;
-    this.useIncrementalSolving = builder.useIncrementalSolving;
-    this.useSmartCandidateSearch = builder.useSmartCandidateSearch;
-  }
-
   public static class Builder {
     private Options synthOptions;
     private Options checkOptions;
@@ -96,18 +88,31 @@ public class IsoldeSynthesizer {
     }
   }
 
-  public SynthesizedHistory synthesize(Scope scope, IsoldeConstraint spec) {
-    return synthesize(scope, new IsoldeSpec.Builder(spec).build());
+  private IsoldeSynthesizer(Builder builder) {
+    this.synthOptions = builder.synthOptions;
+    this.checkOptions = builder.checkOptions;
+    this.useTxnTotalOrder = builder.useTxnTotalOrder;
+    this.useIncrementalSolving = builder.useIncrementalSolving;
+    this.useSmartCandidateSearch = builder.useSmartCandidateSearch;
   }
 
   public SynthesizedHistory synthesize(Scope scope, IsoldeSpec spec) {
+    return synthesize(scope, spec, this.synthOptions, this.checkOptions);
+  }
+
+  public SynthesizedHistory synthesize(Scope scope, IsoldeSpec spec, Options options) {
+    return synthesize(scope, spec, options, options);
+  }
+
+  public SynthesizedHistory synthesize(
+      Scope scope, IsoldeSpec spec, Options synthOptions, Options checkOptions) {
     FolSynthesisInput folSynthInput =
         new FolSynthesisInput.Builder(scope).formula(spec.getHistoryFormula()).build();
 
     FolSynthesisProblem synthesisProblem =
         useTxnTotalOrder
             ? FolSynthesisProblem.withTotalOrder(folSynthInput)
-            : FolSynthesisProblem.withNoTotalOrder(folSynthInput);
+            : FolSynthesisProblem.withoutTotalOrder(folSynthInput);
 
     CegisSynthesizer<FolSynthesisProblem.InputWithTotalOrder, Optional<TupleSet>> synthesizer;
     if (useIncrementalSolving && !useSmartCandidateSearch) {
@@ -119,35 +124,43 @@ public class IsoldeSynthesizer {
     } else {
       throw new RuntimeException("invalid options");
     }
+
+    List<CeroneExecution> ceroneExecutions = null;
+    List<BiswasExecution> biswasExecutions = null;
+
     // register Cerone module
-    ExecutionModuleConstructor<
-            CeroneExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>>
-        ceroneSynthModuleConstructor = CeroneSynthesisModule::new;
+    if (spec.usesCerone()) {
+      ExecutionModuleConstructor<
+              CeroneExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>>
+          ceroneSynthModuleConstructor = CeroneSynthesisModule::new;
 
-    CandChecker<CeroneExecution> ceroneChecker =
-        new CandChecker<>(new CeroneCandCheckingModuleEncoder(1));
+      CandChecker<CeroneExecution> ceroneChecker =
+          new CandChecker<>(new CeroneCandCheckingModuleEncoder(1));
 
-    List<CeroneExecution> ceroneExecutions =
-        synthesizer.register(
-            spec.getCeroneSpec(),
-            ceroneSynthModuleConstructor,
-            ceroneChecker,
-            CeroneCounterexampleEncoder.instance());
+      ceroneExecutions =
+          synthesizer.register(
+              spec.getCeroneSpec().get(),
+              ceroneSynthModuleConstructor,
+              ceroneChecker,
+              CeroneCounterexampleEncoder.instance());
+    }
 
     // register Biswas module
-    ExecutionModuleConstructor<
-            BiswasExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>>
-        biswasSynthModuleConstructor = BiswasSynthesisModule::new;
+    if (spec.usesBiswas()) {
+      ExecutionModuleConstructor<
+              BiswasExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>>
+          biswasSynthModuleConstructor = BiswasSynthesisModule::new;
 
-    CandChecker<BiswasExecution> biswasChecker =
-        new CandChecker<>(new BiswasCandCheckingEncoder(1));
+      CandChecker<BiswasExecution> biswasChecker =
+          new CandChecker<>(new BiswasCandCheckingEncoder(1));
 
-    List<BiswasExecution> biswasExecutions =
-        synthesizer.register(
-            spec.getBiswasSpec(),
-            biswasSynthModuleConstructor,
-            biswasChecker,
-            BiswasCounterexampleEncoder.instance());
+      biswasExecutions =
+          synthesizer.register(
+              spec.getBiswasSpec().get(),
+              biswasSynthModuleConstructor,
+              biswasChecker,
+              BiswasCounterexampleEncoder.instance());
+    }
 
     return new SynthesizedHistory(
         synthesizer.synthesize(synthOptions, checkOptions), ceroneExecutions, biswasExecutions);

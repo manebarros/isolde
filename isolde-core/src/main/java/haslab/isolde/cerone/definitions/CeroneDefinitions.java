@@ -79,5 +79,5 @@ public final class CeroneDefinitions {
   public static final ExecutionFormula<CeroneExecution> PC = and(asList(EXT, SESSION, PREFIX));
   public static final ExecutionFormula<CeroneExecution> SI =
       and(asList(EXT, SESSION, PREFIX, NO_CONF));
-  public static final ExecutionFormula<CeroneExecution> SER = EXT.and(TOTAL_VIS);
+  public static final ExecutionFormula<CeroneExecution> Ser = EXT.and(TOTAL_VIS);
 }

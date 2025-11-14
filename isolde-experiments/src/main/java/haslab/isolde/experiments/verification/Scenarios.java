@@ -1,6 +1,6 @@
 package haslab.isolde.experiments.verification;
 
-import static haslab.isolde.cerone.definitions.CeroneDefinitions.SER;
+import static haslab.isolde.cerone.definitions.CeroneDefinitions.Ser;
 
 import haslab.isolde.SynthesizedHistory;
 import haslab.isolde.Synthesizer;
@@ -53,7 +53,7 @@ public class Scenarios {
 
   public static final Scenario simpleCausalityViolationCeroneBiswas =
       new Scenario(
-          new Scope(3, 2, 2, 2),
+          new Scope.Builder(2).txn(3).build(),
           new SynthesisSpec<>(CeroneDefinitions.RA),
           SynthesisSpec.not(AxiomaticDefinitions.Causal));
 
@@ -63,21 +63,21 @@ public class Scenarios {
 
     ExecutionFormula<CeroneExecution> serAtGreen =
         e ->
-            SER.resolve(
+            Ser.resolve(
                 new CeroneExecution(e.history().projectionOverKeys(greenKeys), e.vis(), e.ar()));
     ExecutionFormula<CeroneExecution> serAtRed =
         e ->
-            SER.resolve(
+            Ser.resolve(
                 new CeroneExecution(e.history().projectionOverKeys(redKeys), e.vis(), e.ar()));
     HistoryFormula hf =
         h -> greenKeys.intersection(redKeys).no().and(h.keys().eq(greenKeys.union(redKeys)));
     HistoryDecls decls = h -> greenKeys.someOf(h.keys()).and(redKeys.someOf(h.keys()));
 
     return Scenario.justCerone(
-        new Scope(2, 2, 2, 2),
+        new Scope(2),
         hf,
         decls,
-        new SynthesisSpec<>(Arrays.asList(serAtRed, serAtGreen), CeroneDefinitions.SER.not()));
+        new SynthesisSpec<>(Arrays.asList(serAtRed, serAtGreen), CeroneDefinitions.Ser.not()));
   }
 
   public static SynthesizedHistory runScenario(Scenario scenario) {

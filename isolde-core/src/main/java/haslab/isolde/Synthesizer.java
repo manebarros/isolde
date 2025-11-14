@@ -34,7 +34,7 @@ public class Synthesizer {
   private List<BiswasExecution> biswasExecutions;
 
   public static Synthesizer withNoTotalOrder(Scope scope) {
-    var cegisSynthesizer = new CegisSynthesizer<>(FolSynthesisProblem.withNoTotalOrder(scope));
+    var cegisSynthesizer = new CegisSynthesizer<>(FolSynthesisProblem.withoutTotalOrder(scope));
     return new Synthesizer(cegisSynthesizer);
   }
 

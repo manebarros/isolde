@@ -66,7 +66,7 @@ public class FolSynthesisProblem
     return formula;
   }
 
-  public static Formula extendWithNoTotalOrder(
+  public static Formula extendWithoutTotalOrder(
       Formula formula,
       Bounds b,
       InputWithTotalOrder extra,
@@ -91,12 +91,12 @@ public class FolSynthesisProblem
     super(input, historyEncoder, helperStructureProducer, problemExtendingStrategy);
   }
 
-  public static FolSynthesisProblem withNoTotalOrder(FolSynthesisInput input) {
+  public static FolSynthesisProblem withoutTotalOrder(FolSynthesisInput input) {
     return new FolSynthesisProblem(
         input,
         new DefaultHistorySynthesisEncoder(),
         InputWithTotalOrder::new,
-        FolSynthesisProblem::extendWithNoTotalOrder);
+        FolSynthesisProblem::extendWithoutTotalOrder);
   }
 
   public static FolSynthesisProblem withTotalOrder(FolSynthesisInput input) {
@@ -111,7 +111,7 @@ public class FolSynthesisProblem
     return withTotalOrder(new FolSynthesisInput.Builder(scope).build());
   }
 
-  public static FolSynthesisProblem withNoTotalOrder(Scope scope) {
-    return withNoTotalOrder(new FolSynthesisInput.Builder(scope).build());
+  public static FolSynthesisProblem withoutTotalOrder(Scope scope) {
+    return withoutTotalOrder(new FolSynthesisInput.Builder(scope).build());
   }
 }

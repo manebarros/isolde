@@ -29,10 +29,10 @@ public final class ComparisonMethods {
 
     IsoldeSynthesizer synthesizer = new IsoldeSynthesizer.Builder().build();
 
-    IsoldeSpec spec = cerone(a_def).andNot(biswas(b_def));
+    IsoldeSpec spec = cerone(a_def).andNot(biswas(b_def)).build();
     SynthesizedHistory a_not_b = synthesizer.synthesize(scope, spec);
 
-    spec = biswas(b_def).andNot(cerone(a_def));
+    spec = biswas(b_def).andNot(cerone(a_def)).build();
     SynthesizedHistory b_not_a = synthesizer.synthesize(scope, spec);
 
     return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);
@@ -47,10 +47,10 @@ public final class ComparisonMethods {
 
     IsoldeSynthesizer synthesizer = synthesizer();
 
-    var spec = biswas(a_def).andNot(biswas(b_def));
+    var spec = biswas(a_def).andNot(biswas(b_def)).build();
     SynthesizedHistory a_not_b = synthesizer.synthesize(scope, spec);
 
-    spec = biswas(b_def).andNot(biswas(a_def));
+    spec = biswas(b_def).andNot(biswas(a_def)).build();
     SynthesizedHistory b_not_a = synthesizer.synthesize(scope, spec);
 
     return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);
@@ -65,10 +65,10 @@ public final class ComparisonMethods {
 
     var synthesizer = synthesizer();
 
-    var spec = biswas(a_def.and(b_def.not()));
+    var spec = biswas(a_def.and(b_def.not())).asSpec();
     var a_not_b = synthesizer.synthesize(scope, spec);
 
-    spec = biswas(b_def.and(a_def.not()));
+    spec = biswas(b_def.and(a_def.not())).asSpec();
     var b_not_a = synthesizer.synthesize(scope, spec);
 
     return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);
@@ -83,10 +83,10 @@ public final class ComparisonMethods {
 
     var synthesizer = synthesizer();
 
-    var spec = biswas(a_def).andNot(history(b_def));
+    var spec = biswas(a_def).andNot(history(b_def)).build();
     var a_not_b = synthesizer.synthesize(scope, spec);
 
-    spec = history(b_def).andNot(biswas(a_def));
+    spec = history(b_def).andNot(biswas(a_def)).build();
     var b_not_a = synthesizer.synthesize(scope, spec);
 
     return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);
@@ -100,10 +100,10 @@ public final class ComparisonMethods {
       ExecutionFormula<CeroneExecution> b_def) {
     IsoldeSynthesizer synthesizer = synthesizer();
 
-    var spec = cerone(a_def).andNot(cerone(b_def));
+    var spec = cerone(a_def).andNot(cerone(b_def)).build();
     SynthesizedHistory a_not_b = synthesizer.synthesize(scope, spec);
 
-    spec = cerone(b_def).andNot(cerone(a_def));
+    spec = cerone(b_def).andNot(cerone(a_def)).build();
     SynthesizedHistory b_not_a = synthesizer.synthesize(scope, spec);
 
     return new ComparisonResult(a_name, b_name, scope, a_not_b, b_not_a);

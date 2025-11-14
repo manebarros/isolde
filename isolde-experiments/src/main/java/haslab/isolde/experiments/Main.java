@@ -1,81 +1,62 @@
 package haslab.isolde.experiments;
 
 import static haslab.isolde.IsoldeConstraint.biswas;
-import static haslab.isolde.IsoldeConstraint.cerone;
 
 import haslab.isolde.IsoldeSpec;
 import haslab.isolde.IsoldeSynthesizer;
+import haslab.isolde.SynthesizedHistory;
+import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
-import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.synth.Scope;
-import haslab.isolde.experiments.benchmark.IsoldeConfiguration;
-import haslab.isolde.experiments.benchmark.IsoldeConfiguration.NamedProblem;
-import haslab.isolde.experiments.benchmark.Util;
+import haslab.isolde.experiments.benchmark.Benchmark;
 import haslab.isolde.experiments.verification.FeketeReadOnlyAnomaly;
 import haslab.isolde.experiments.verification.VerifyPlumeDefinitions;
-import java.io.IOException;
-import java.util.Arrays;
-import java.util.Collections;
-import java.util.List;
+import kodkod.ast.Formula;
+import kodkod.ast.Variable;
+import kodkod.engine.satlab.SATFactory;
 
 public class Main {
   private static void plume() {
-    Scope s = new Scope(4, 2, 3, 2);
+    Scope s = new Scope.Builder().txn(4).obj(2).val(3).sess(2).build();
     VerifyPlumeDefinitions.verify(s);
   }
 
-  private static void benchmark() throws IOException {
+  public static final Formula updateSerExplicit(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
 
-    IsoldeConfiguration full = new IsoldeConfiguration("default", new IsoldeSynthesizer.Builder());
-    IsoldeConfiguration withoutIncremental =
-        new IsoldeConfiguration(
-            "without incremental", new IsoldeSynthesizer.Builder().incrementalSolving(false));
-    IsoldeConfiguration withoutFixedTotalOrder =
-        new IsoldeConfiguration(
-            "without fixed order", new IsoldeSynthesizer.Builder().useTxnTotalOrder(false));
-    IsoldeConfiguration withNaiveSearch =
-        new IsoldeConfiguration(
-            "without smart search", new IsoldeSynthesizer.Builder().smartCandidateSearch(false));
+    return Formula.and(
+            t1.eq(t2).not(),
+            e.history().wr(t1, x, t3),
+            t2.product(t3).in(e.co()),
+            t2.union(t3).in(e.history().updateTransactions()))
+        .implies(t1.in(t2.join(e.co())))
+        .forAll(
+            x.oneOf(e.history().keys())
+                .and(t1.oneOf(e.history().transactions()))
+                .and(t2.oneOf(e.history().transactions()))
+                .and(t3.oneOf(e.history().transactions())));
+  }
 
-    List<IsoldeConfiguration> configs =
-        // Arrays.asList(full, withoutIncremental, withoutFixedTotalOrder, withNaiveSearch);
-        Arrays.asList(withoutFixedTotalOrder, withNaiveSearch);
-
-    List<Scope> scopes = Util.scopesFromRange(5, 5, 5, 6, 7);
-
-    IsoldeSpec fekete =
-        new IsoldeSpec.Builder(cerone(CeroneDefinitions.SI))
-            .and(cerone(FeketeReadOnlyAnomaly::updateSer))
-            .andNot(cerone(CeroneDefinitions.SER))
-            .build();
-
-    IsoldeSpec siEquivalence =
-        new IsoldeSpec.Builder(cerone(CeroneDefinitions.SI))
-            .andNot(biswas(AxiomaticDefinitions.Snapshot))
-            .build();
-
-    IsoldeSpec satDifFrameworks =
-        new IsoldeSpec.Builder(cerone(CeroneDefinitions.SI))
+  public static void main(String[] args) throws Exception {
+    IsoldeSpec spec =
+        biswas(FeketeReadOnlyAnomaly::updateSer)
+            .and(biswas(AxiomaticDefinitions.Snapshot))
             .andNot(biswas(AxiomaticDefinitions.Ser))
             .build();
 
-    List<NamedProblem> problems =
-        Arrays.asList(
-            // new NamedProblem(fekete, "fekete"),
-            // new NamedProblem(satDifFrameworks, "satDifFrameworks"),
-            new NamedProblem(siEquivalence, "siEquivalence"));
+    IsoldeSynthesizer synthesizer =
+        new IsoldeSynthesizer.Builder()
+            .solver(SATFactory.MiniSat)
+            .incrementalSolving(true)
+            .useTxnTotalOrder(true)
+            .build();
 
-    for (var config : configs) {
-      config.measureAndAppend(
-          scopes,
-          problems,
-          Collections.singletonList("glucose"),
-          3,
-          "/home/mane/vldb_measurements/data.csv");
-    }
-  }
-
-  public static void main(String[] args) throws IOException {
-    FeketeReadOnlyAnomaly.generateAnomalyBiswas();
+    Scope scope = new Scope.Builder(3).obj(2).val(2).build();
+    SynthesizedHistory synthesisResult = synthesizer.synthesize(scope, spec);
+    System.out.println(synthesisResult);
+    Benchmark.runAllExperiments();
   }
 }

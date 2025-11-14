@@ -23,7 +23,7 @@ public interface SynthesisModuleEncoderTest<E extends Execution> {
       constructor();
 
   default Scope scope() {
-    return new Scope(6, 6, 6, 6);
+    return new Scope(6);
   }
 
   // Test with total order
@@ -57,21 +57,21 @@ public interface SynthesisModuleEncoderTest<E extends Execution> {
 
   // Tests without total order
   default void assertSatWoTotalOrder(ExecutionFormula<E> formula) {
-    FolSynthesisProblem problem = FolSynthesisProblem.withNoTotalOrder(scope());
+    FolSynthesisProblem problem = FolSynthesisProblem.withoutTotalOrder(scope());
     problem.register(constructor(), formula);
     Solution sol = problem.encode().solve(new Solver());
     assertTrue(sol.sat());
   }
 
   default void assertUnsatWoTotalOrder(ExecutionFormula<E> formula) {
-    FolSynthesisProblem problem = FolSynthesisProblem.withNoTotalOrder(scope());
+    FolSynthesisProblem problem = FolSynthesisProblem.withoutTotalOrder(scope());
     problem.register(constructor(), formula);
     Solution sol = problem.encode().solve(new Solver());
     assertTrue(sol.unsat());
   }
 
   default void assertFactWoTotalOrder(ExecutionFormula<E> formula) {
-    FolSynthesisProblem problem = FolSynthesisProblem.withNoTotalOrder(scope());
+    FolSynthesisProblem problem = FolSynthesisProblem.withoutTotalOrder(scope());
     problem.register(constructor(), formula.not());
     Solution sol = problem.encode().solve(new Solver());
     assertTrue(sol.unsat());

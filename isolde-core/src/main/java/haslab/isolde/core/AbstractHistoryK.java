@@ -127,6 +127,10 @@ public interface AbstractHistoryK {
     return t.join(finalWrites()).some();
   }
 
+  default Expression updateTransactions() {
+    return finalWrites().join(values()).join(keys());
+  }
+
   default Expression readSet(Expression t) {
     return t.join(externalReads()).join(values());
   }

@@ -28,11 +28,15 @@ public sealed interface IsoldeConstraint
     return new BiswasConstraint(f);
   }
 
-  default IsoldeSpec and(IsoldeConstraint f) {
-    return new IsoldeSpec.Builder(this).and(f).build();
+  default IsoldeSpec.Builder and(IsoldeConstraint f) {
+    return new IsoldeSpec.Builder(this).and(f);
   }
 
-  default IsoldeSpec andNot(IsoldeConstraint f) {
-    return new IsoldeSpec.Builder(this).andNot(f).build();
+  default IsoldeSpec.Builder andNot(IsoldeConstraint f) {
+    return new IsoldeSpec.Builder(this).andNot(f);
+  }
+
+  default IsoldeSpec asSpec() {
+    return new IsoldeSpec.Builder(this).build();
   }
 }

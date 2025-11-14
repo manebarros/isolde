@@ -352,7 +352,6 @@ public class CegisSynthesizer<T, S> {
       feedback = guide(candSol.instance(), historyEncoding(), newBounds, checker);
     }
 
-    long time = Duration.between(start, Instant.now()).toMillis();
     return Optional.empty();
   }
 }

@@ -18,7 +18,7 @@ public interface HistorySynthesisEncoderTest {
   HistoryEncoder<FolSynthesisProblem.InputWithTotalOrder> encoder();
 
   default Scope scope() {
-    return new Scope(6, 6, 6, 6);
+    return new Scope(6);
   }
 
   default void assertSat(HistoryFormula formula) {
