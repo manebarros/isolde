@@ -1,19 +1,12 @@
 package haslab.isolde.experiments;
 
-import static haslab.isolde.IsoldeConstraint.biswas;
 
-import haslab.isolde.IsoldeSpec;
-import haslab.isolde.IsoldeSynthesizer;
-import haslab.isolde.SynthesizedHistory;
 import haslab.isolde.biswas.BiswasExecution;
-import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.core.synth.Scope;
 import haslab.isolde.experiments.benchmark.Benchmark;
-import haslab.isolde.experiments.verification.FeketeReadOnlyAnomaly;
 import haslab.isolde.experiments.verification.VerifyPlumeDefinitions;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
-import kodkod.engine.satlab.SATFactory;
 
 public class Main {
   private static void plume() {
@@ -41,22 +34,6 @@ public class Main {
   }
 
   public static void main(String[] args) throws Exception {
-    IsoldeSpec spec =
-        biswas(FeketeReadOnlyAnomaly::updateSer)
-            .and(biswas(AxiomaticDefinitions.Snapshot))
-            .andNot(biswas(AxiomaticDefinitions.Ser))
-            .build();
-
-    IsoldeSynthesizer synthesizer =
-        new IsoldeSynthesizer.Builder()
-            .solver(SATFactory.MiniSat)
-            .incrementalSolving(true)
-            .useTxnTotalOrder(true)
-            .build();
-
-    Scope scope = new Scope.Builder(3).obj(2).val(2).build();
-    SynthesizedHistory synthesisResult = synthesizer.synthesize(scope, spec);
-    System.out.println(synthesisResult);
     Benchmark.runAllExperiments();
   }
 }
