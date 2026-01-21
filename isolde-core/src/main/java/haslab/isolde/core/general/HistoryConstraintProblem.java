@@ -17,8 +17,8 @@ public class HistoryConstraintProblem<I extends AtomsContainer, T, S> {
   private final I input;
   private final List<ExecutionModuleInstance<?, I, S, ?>> extenders;
 
-  private HistoryEncoder<T> histEncoder;
   private SharedContextProducer<I, T> helperStructureProducer;
+  private HistoryEncoder<T> histEncoder;
   private ProblemExtendingStrategy<T, S> problemExtendingStrategy;
 
   public HistoryConstraintProblem(
