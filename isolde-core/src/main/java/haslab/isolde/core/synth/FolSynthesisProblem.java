@@ -4,10 +4,10 @@ import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.HistoryDecls;
 import haslab.isolde.core.general.ExecutionModuleInstance;
-import haslab.isolde.core.general.HelperStructureProducer;
 import haslab.isolde.core.general.HistoryConstraintProblem;
 import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.core.general.ProblemExtendingStrategy;
+import haslab.isolde.core.general.SharedContextProducer;
 import haslab.isolde.core.synth.FolSynthesisProblem.InputWithTotalOrder;
 import java.util.List;
 import java.util.Optional;
@@ -86,7 +86,7 @@ public class FolSynthesisProblem
   private FolSynthesisProblem(
       FolSynthesisInput input,
       HistoryEncoder<InputWithTotalOrder> historyEncoder,
-      HelperStructureProducer<FolSynthesisInput, InputWithTotalOrder> helperStructureProducer,
+      SharedContextProducer<FolSynthesisInput, InputWithTotalOrder> helperStructureProducer,
       ProblemExtendingStrategy<InputWithTotalOrder, Optional<TupleSet>> problemExtendingStrategy) {
     super(input, historyEncoder, helperStructureProducer, problemExtendingStrategy);
   }

@@ -18,13 +18,13 @@ public class HistoryConstraintProblem<I extends AtomsContainer, T, S> {
   private final List<ExecutionModuleInstance<?, I, S, ?>> extenders;
 
   private HistoryEncoder<T> histEncoder;
-  private HelperStructureProducer<I, T> helperStructureProducer;
+  private SharedContextProducer<I, T> helperStructureProducer;
   private ProblemExtendingStrategy<T, S> problemExtendingStrategy;
 
   public HistoryConstraintProblem(
       I input,
       HistoryEncoder<T> historyEncoder,
-      HelperStructureProducer<I, T> helperStructureProducer,
+      SharedContextProducer<I, T> helperStructureProducer,
       ProblemExtendingStrategy<T, S> problemExtendingStrategy) {
     this.input = input;
     this.histEncoder = historyEncoder;
@@ -83,7 +83,7 @@ public class HistoryConstraintProblem<I extends AtomsContainer, T, S> {
   }
 
   public HistoryConstraintProblem<I, T, S> helperStructureProducer(
-      HelperStructureProducer<I, T> val) {
+      SharedContextProducer<I, T> val) {
     this.helperStructureProducer = val;
     return this;
   }
