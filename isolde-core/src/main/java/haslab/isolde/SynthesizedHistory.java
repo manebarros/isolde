@@ -67,14 +67,4 @@ public class SynthesizedHistory {
     }
     return sb.toString();
   }
-
-  public String showWithFirstCerone() {
-    if (!sat()) return "No History";
-    Instance instance = cegisResult.getSolution().get();
-    StringBuilder sb = new StringBuilder();
-    sb.append(new History(cegisResult.getHistoryEncoding(), instance));
-    sb.append("\n\n");
-    sb.append(ceroneExecutions.get(0).showAdditionalStructures(instance));
-    return sb.toString();
-  }
 }

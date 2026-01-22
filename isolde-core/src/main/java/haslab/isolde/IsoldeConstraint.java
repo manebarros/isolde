@@ -5,10 +5,7 @@ import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
 
-public sealed interface IsoldeConstraint
-    permits IsoldeConstraint.HistoryConstraint,
-        IsoldeConstraint.CeroneConstraint,
-        IsoldeConstraint.BiswasConstraint {
+public sealed interface IsoldeConstraint {
 
   record HistoryConstraint(HistoryFormula formula) implements IsoldeConstraint {}
 

@@ -22,7 +22,7 @@ import kodkod.engine.config.Options;
 import kodkod.engine.satlab.SATFactory;
 import kodkod.instance.TupleSet;
 
-public class IsoldeSynthesizer {
+public class IsoldeSynthesizer implements SynthesizerI {
   private final Options synthOptions;
   private final Options checkOptions;
   private final boolean useTxnTotalOrder;
@@ -98,10 +98,6 @@ public class IsoldeSynthesizer {
 
   public SynthesizedHistory synthesize(Scope scope, IsoldeSpec spec) {
     return synthesize(scope, spec, this.synthOptions, this.checkOptions);
-  }
-
-  public SynthesizedHistory synthesize(Scope scope, IsoldeSpec spec, Options options) {
-    return synthesize(scope, spec, options, options);
   }
 
   public SynthesizedHistory synthesize(
