@@ -1,14 +1,13 @@
-from typing import List
+from typing import List, Tuple
 
 from helper import *
-from helper import framework, parse
 
 levels = ["RA", "CC", "PC", "SI", "Ser"]
 
 edges = [("RA", "CC"), ("CC", "PC"), ("PC", "SI"), ("SI", "Ser")]
 
 
-def satSameFramework():
+def satSameFramework() -> List[str]:
     problems = []
     for pos, neg in edges:
         problems.append(f"{pos}_b\t{neg}_b")
@@ -73,7 +72,7 @@ all_disjoint = all(
     set(x).isdisjoint(y) for x, y in itertools.combinations(all_problems, 2)
 )
 
-print(all_disjoint)
+print(f"all problems are disjoint: {all_disjoint}")
 
 
 def sat(problem):

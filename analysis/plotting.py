@@ -1,200 +1,19 @@
 import os
-from enum import Enum
+from dataclasses import dataclass
+from enum import Enum, StrEnum
 from typing import List
 
 import matplotlib.pyplot as plt
 import numpy as np
 from matplotlib.ticker import FormatStrFormatter
 
-BLUE = "#1f77b4"
-ORANGE = "#ff7f0e"
-GREEN = "#2ca02c"
-PURPLE = "#800080"
 
-
+@dataclass
 class Style:
-    def __init__(self, name, color, marker, linestyle):
-        self.name = name
-        self.color = color
-        self.marker = marker
-        self.linestyle = linestyle
-
-
-solver_display_names = {"minisat": "MiniSat", "glucose": "Glucose", "sat4j": "Sat4j"}
-
-implementation_styles = {
-    "default": Style("Optimized", "#E69F00", "D", "-."),  # orange-yellow
-    "no optimizations": Style("No optimization", "#56B4E9", "v", "--"),  # sky blue
-    "without fixed order": Style("No fixed txn order", "#009E73", "P", "-"),
-    "without smart search": Style("No smart search", "#CC79A7", "X", ":"),
-}
-
-# These columns identify a particular configuration for an Isolde run
-setup = [
-    "implementation",
-    "solver",
-    "problem",
-    "num_txn",
-    "num_keys",
-    "num_values",
-    "num_sessions",
-]
-
-
-class Framework(Enum):
-    B = "b"
-    C = "c"
-
-
-class Definition:
-    def __init__(self, name: str, fw: str) -> None:
-        self.name = name
-        self.fw = Framework(fw)
-
-
-class Problem:
-    def __init__(self, pos: List[Definition], neg: Definition) -> None:
-        self.pos = pos
-        self.neg = neg
-
-
-# Validates a df. Tests if:
-# - all different setups (i.e., implementation + solver + input problem + scope) have the same number of measurements
-# - each setup always results in the same number of candidates
-def validate(df, setup, check_num_measurements=True):
-    # Assert unique values for the number of keys, values, and sessions
-    params = ["num_keys", "num_values", "num_sessions"]
-    for param in params:
-        values = df[param].unique()
-        if len(values) > 1:
-            return (
-                False,
-                f"Not all measurements use the same '{param}' value. Values present: {values}",
-            )
-
-    grouped = df.groupby(setup)
-
-    # Assert that all setups have the same number of measurements
-    if check_num_measurements and grouped.size().nunique() != 1:
-        number_of_measurements = grouped.size().unique()
-        return (
-            False,
-            f"Not all setups have the same number of measurements. Numbers of measurements: {number_of_measurements}",
-        )
-
-    # Assert that among a group we have a single number of candidates
-    if not (grouped["candidates"].nunique() == 1).all():
-        return (False, f"Not all groups have a consistent 'candidates' value")
-    return (True, None)
-
-
-# Cleans a dataframe by grouping together rows corresponding to the same setup,
-# creating three new columns "avg_time_ms", "max_time_ms", and "min_time_ms".
-# We keep the number of candidates of each group.
-def clean(
-    df,
-    setup=setup,
-    txn_max_lim=None,
-    check_num_measurements=True,
-    remove_timeouts=False,
-):
-    validation_result = validate(df, setup, check_num_measurements)
-    assert validation_result[0], validation_result[1]
-    if txn_max_lim:
-        df = df[df["num_txn"] <= txn_max_lim]
-    if remove_timeouts:
-        df = df[df["timed_out"] == False]
-    return (
-        df.groupby(setup)
-        .agg(
-            candidates=("candidates", "first"),
-            avg_time_ms=("time_ms", "mean"),
-            min_time_ms=("time_ms", "min"),
-            max_time_ms=("time_ms", "max"),
-        )
-        .reset_index()
-    )
-
-
-def level_name_as_latex_without_framework(level_name):
-    (level, _) = level_name.split("_")
-    return level
-
-
-def framework(level):
-    return parse_level(level)[1]
-
-
-def parse_level(level):
-    (level, fw) = level.split("_")
-    return (level, fw)
-
-
-def parse(problem):
-    (pos, neg) = problem.split("\t")
-    pos_lst = pos.split(" ")
-    return list(map(parse_level, pos_lst)), parse_level(neg)
-
-
-def parse_and_show(problem: str) -> str:
-    return problem
-
-
-def problem_as_latex(problem_str, use_dollar_sign=True, simple=False):
-    (pos_lst, neg) = parse(problem_str)
-    pos_str = intersperse([level_as_latex(l, simple=simple) for l in pos_lst])
-    neg_str = level_as_latex(neg, simple=simple)
-    if use_dollar_sign:
-        return rf"$\{{{pos_str}, \, \overline{{{neg_str}}}\}}$"
-    else:
-        return rf"\(\{{{pos_str}, \, \overline{{{neg_str}}}\}}\)"
-
-
-def frameworks(problem: str) -> List[str]:
-    (pos, neg) = parse(problem)
-    frameworks = {fw for (_, fw) in pos}
-    frameworks.add(neg[1])
-    frameworks = list(frameworks)
-    frameworks.sort()
-    return frameworks
-
-
-def showframeworks(frameworks: List[str]) -> str:
-    s = showFramework(frameworks[0])
-    for fw in frameworks[1:]:
-        s = s + r",\ " + showFramework(fw)
-    return s
-
-
-def intersperse(l: List[str]) -> str:
-    s = l[0]
-    for fw in l[1:]:
-        s = s + r",\ " + fw
-    return s
-
-
-def showFramework(fw):
-    return r"\mathcal{B}" if fw == "b" else r"\mathcal{C}"
-
-
-def level_name_as_latex(level_name):
-    (level, fw) = level_name.split("_")
-    fw = r"\mathcal{B}" if fw == "b" else r"\mathcal{C}"
-    return level + r"_{" + fw + r"}"
-
-
-def level_as_latex(level: tuple[str, str], simple=False) -> str:
-    (level_name, fw) = level
-    if level_name == "UpdateSer":
-        level_name = "US"
-    if level_name == "PlumeRA":
-        level_name = "TapRA"
-    if level_name == "PlumeCC":
-        level_name = "TapCC"
-    fw = r"\mathcal{B}" if fw == "b" else r"\mathcal{C}"
-    if simple:
-        return rf"{level_name}" + r"_{" + fw + r"}"
-    return rf"\textsc{{{level_name}}}" + r"_{" + fw + r"}"
+    name: str
+    color: str
+    marker: str
+    linestyle: str
 
 
 def determine_unit(max_val):
@@ -205,7 +24,6 @@ def determine_unit(max_val):
 
 
 def get_formatter(scale_factor):
-    # return lambda v, _: f"{v / scale_factor:.1f}"
     return lambda v, _: f"{int(v / scale_factor)}"
 
 
@@ -474,25 +292,6 @@ def plot_problems(
             plt.savefig(path)
 
 
-problem_styles = {
-    "SI_c UpdateSer_c\tSer_c": Style(
-        problem_as_latex("SI_c UpdateSer_c\tSer_c", simple=True), BLUE, "s", "--"
-    ),
-    "SI_c UpdateSer_b\tSer_c": Style(
-        problem_as_latex("SI_c UpdateSer_b\tSer_c", simple=True), ORANGE, "^", ":"
-    ),
-    "Ser_b\tSI_b": Style(problem_as_latex("Ser_b\tSI_b", simple=True), GREEN, "o", "-"),
-    "SI_c\tSI_b": Style(problem_as_latex("SI_c\tSI_b", simple=True), PURPLE, "^", "--"),
-}
-
-problems_rq1 = [
-    "SI_c UpdateSer_c\tSer_c",
-    "SI_c UpdateSer_b\tSer_c",
-    "Ser_b\tSI_b",
-    "SI_c\tSI_b",
-]
-
-
 # Given a cleaned dataframe, draw a matrix of plots for the given `specs`.
 # Specs is a list of pairs (satisfied, violated)
 def plot_rq1(
@@ -582,11 +381,3 @@ def plot_rq1(
             plt.savefig(os.path.join(base_dir, path))
         else:
             plt.savefig(path)
-
-
-problems_new_table1 = [
-    "SI_b UpdateSer_b\tSer_b",
-    "SI_b UpdateSer_c\tSer_c",
-    "CC_b\tPlumeCC_b",
-    "RA_b\tRA_c",
-]

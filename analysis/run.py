@@ -232,4 +232,27 @@ def vldb_plot1():
 
 
 if __name__ == "__main__":
-    vldb_plot2()
+    df = clean(
+        pd.read_csv("/home/mane/vldb_measurements/revision/test.csv"),
+        check_num_measurements=False,
+        remove_timeouts=True,
+    )
+
+    plot_problems(
+        df,
+        ["Ser_b\tSI_b"],
+        base_dir="/home/mane/isolde_vldb/plots/revision/",
+        implementations=[
+            "default",
+            "without fixed order",
+            "without smart search",
+            "without incremental search",
+            "without incremental search",
+        ],
+        paths=["test.pdf"],
+        logScaling=True,
+        plotHeight=3.5,
+        plotWidth=5,
+        unit="s",
+        legend=True,
+    )
