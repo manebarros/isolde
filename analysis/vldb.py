@@ -1,13 +1,55 @@
+import itertools
 from typing import List, Tuple
 
-from helper import *
+from domain import Definition, Problem
+from plotting import Style
+from preprocessing import clean, validate
+
+BLUE = "#1f77b4"
+ORANGE = "#ff7f0e"
+GREEN = "#2ca02c"
+PURPLE = "#800080"
+
+implementation_styles = {
+    "default": Style("Optimized", "#E69F00", "D", "-."),  # orange-yellow
+    "no optimizations": Style("No optimization", "#56B4E9", "v", "--"),  # sky blue
+    "without fixed order": Style("No fixed txn order", "#009E73", "P", "-"),
+    "without smart search": Style("No smart search", "#CC79A7", "X", ":"),
+}
+
+
+problems_new_table1 = [
+    "SI_b UpdateSer_b\tSer_b",
+    "SI_b UpdateSer_c\tSer_c",
+    "CC_b\tPlumeCC_b",
+    "RA_b\tRA_c",
+]
+
+problems_rq1 = [
+    Problem.from_str("SI_c UpdateSer_c\tSer_c"),
+    Problem.from_str("SI_c UpdateSer_b\tSer_c"),
+    Problem.from_str("Ser_b\tSI_b"),
+    Problem.from_str("SI_c\tSI_b"),
+]
+
+problems_rq1_colors = [
+    (BLUE, "s", "--"),
+    (ORANGE, "^", ":"),
+    (GREEN, "o", "-"),
+    (PURPLE, "^", "--"),
+]
+
+problems_rq1_styles = {
+    p: Style(p.as_latex(), *colors)
+    for p, colors in zip(problems_rq1, problems_rq1_colors)
+}
 
 levels = ["RA", "CC", "PC", "SI", "Ser"]
 
 edges = [("RA", "CC"), ("CC", "PC"), ("PC", "SI"), ("SI", "Ser")]
 
 
-def satSameFramework() -> List[str]:
+def satSameFramework() -> List[Problem]:
     problems = []
     for pos, neg in edges:
         problems.append(f"{pos}_b\t{neg}_b")
@@ -15,10 +57,10 @@ def satSameFramework() -> List[str]:
     problems.append("SI_b UpdateSer_b\tSer_b")
     problems.append("SI_c UpdateSer_c\tSer_c")
     problems.append("PlumeRA_b\tRA_b")
-    return problems
+    return [Problem.from_str(s) for s in problems]
 
 
-def satDiffFramework():
+def satDiffFramework() -> List[Problem]:
     problems = []
     for pos, neg in edges:
         problems.append(f"{pos}_b\t{neg}_c")
@@ -27,21 +69,23 @@ def satDiffFramework():
     for si in ["SI_c", "SI_b"]:
         for updateSer in ["UpdateSer_c", "UpdateSer_b"]:
             for ser in ["Ser_c", "Ser_b"]:
-                fws = {framework(spec) for spec in [si, updateSer, ser]}
+                fws = {
+                    Definition.from_str(spec).framework for spec in [si, updateSer, ser]
+                }
                 if len(fws) > 1:
                     problems.append(f"{si} {updateSer}\t{ser}")
-    return problems
+    return [Problem.from_str(s) for s in problems]
 
 
-def unsatDiffFramework():
+def unsatDiffFramework() -> List[Problem]:
     problems = []
     for level in levels:
         problems.append(f"{level}_b\t{level}_c")
         problems.append(f"{level}_c\t{level}_b")
-    return problems
+    return [Problem.from_str(s) for s in problems]
 
 
-def unsatSameFramework():
+def unsatSameFramework() -> List[Problem]:
     problems = []
     for pos, neg in edges:
         problems.append(f"{neg}_b\t{pos}_b")
@@ -49,30 +93,24 @@ def unsatSameFramework():
     problems.append("RA_b\tPlumeRA_b")
     problems.append("CC_b\tPlumeCC_b")
     problems.append("PlumeCC_b\tCC_b")
-    return problems
+    return [Problem.from_str(s) for s in problems]
 
 
-print(len(satSameFramework()))
-print(len(satDiffFramework()))
-print(len(unsatSameFramework()))
-print(len(unsatDiffFramework()))
-
-import itertools
-
-all_problems = [
+problem_sets = [
     satSameFramework(),
     satDiffFramework(),
     unsatSameFramework(),
     unsatDiffFramework(),
 ]
 
-all_problems_flatten = [item for sublist in all_problems for item in sublist]
+all_problems = [problem for problem_set in problem_sets for problem in problem_set]
+
 
 all_disjoint = all(
-    set(x).isdisjoint(y) for x, y in itertools.combinations(all_problems, 2)
+    set(x).isdisjoint(y) for x, y in itertools.combinations(problem_sets, 2)
 )
 
-print(f"all problems are disjoint: {all_disjoint}")
+print(f"all problem sets are disjoint: {all_disjoint}")
 
 
 def sat(problem):
@@ -83,25 +121,15 @@ def unsat(problem):
     return not sat(problem)
 
 
-def clean_rq1(df, setup=setup, txn_max_lim=None):
-    validation_result = validate(df, setup, check_num_measurements=False)
-    assert validation_result[0], validation_result[1]
-    if txn_max_lim:
-        df = df[df["num_txn"] <= txn_max_lim]
-    df = df[df["implementation"] == "default"]
-    df = (
-        df.groupby(setup)
-        .agg(
-            candidates=("candidates", "first"),
-            avg_time_ms=("time_ms", "mean"),
-            min_time_ms=("time_ms", "min"),
-            max_time_ms=("time_ms", "max"),
-        )
-        .reset_index()
+def clean_rq1(df, setup, txn_max_lim=None):
+    df = clean(
+        df,
+        setup=setup,
+        txn_max_lim=txn_max_lim,
+        check_num_measurements=False,
+        implementations=["default"],
     )
-    df["avg_time_ms"] = df["avg_time_ms"].round().astype(int)
     df["sat"] = df["problem"].apply(lambda p: "SAT" if sat(p) else "UNSAT")
-    df["frameworks"] = df["problem"].apply(lambda p: showframeworks(frameworks(p)))
     return df
 
 
@@ -117,28 +145,8 @@ def optimizations(implementation: str):
             return r"\(\emptyset\)"
 
 
-def clean_rq2(df, setup=setup, txn_max_lim=None):
-    validation_result = validate(df, setup, check_num_measurements=False)
-    assert validation_result[0], validation_result[1]
-    if txn_max_lim:
-        df = df[df["num_txn"] <= txn_max_lim]
-    df = (
-        df.groupby(setup)
-        .agg(
-            candidates=("candidates", "first"),
-            avg_time_ms=("time_ms", "mean"),
-            min_time_ms=("time_ms", "min"),
-            max_time_ms=("time_ms", "max"),
-        )
-        .reset_index()
-    )
-    df["avg_time_ms"] = df["avg_time_ms"].round().astype(int)
-    df["sat"] = df["problem"].apply(lambda p: "SAT" if sat(p) else "UNSAT")
-    df["frameworks"] = df["problem"].apply(frameworks)
-    df["frameworks_str"] = df["frameworks"].apply(showframeworks)
+def clean_rq2(df, setup, txn_max_lim=None):
+    df = clean_rq1(df, setup=setup, txn_max_lim=txn_max_lim)
     df["optimizations"] = df["implementation"].apply(optimizations)
-    # filter only the problems that are unsat and use more than one framework
-    # df = df[df["problem"].apply(unsat)]
-    # df = df[df["frameworks"].apply(lambda fws: len(fws) > 1)]
     df = df[df["problem"].isin(problems_rq1[2:])]
     return df

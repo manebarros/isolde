@@ -1,7 +1,21 @@
-# Validates a df. Tests if:
+from domain import Problem, Solver
+
+# These columns identify a particular configuration for an Isolde run
+setup = [
+    "implementation",
+    "solver",
+    "problem",
+    "num_txn",
+    "num_keys",
+    "num_values",
+    "num_sessions",
+]
+
+
+# Validates a dataframe. A dataframe is valid iff:
 # - all different setups (i.e., implementation + solver + input problem + scope) have the same number of measurements
 # - each setup always results in the same number of candidates
-def validate(df, setup, check_num_measurements=True):
+def validate(df, setup=setup, check_num_measurements=True):
     # Assert unique values for the number of keys, values, and sessions
     params = ["num_keys", "num_values", "num_sessions"]
     for param in params:
@@ -37,6 +51,9 @@ def clean(
     txn_max_lim=None,
     check_num_measurements=True,
     remove_timeouts=False,
+    solvers=None,
+    problems=None,
+    implementations=None,
 ):
     validation_result = validate(df, setup, check_num_measurements)
     assert validation_result[0], validation_result[1]
@@ -44,7 +61,13 @@ def clean(
         df = df[df["num_txn"] <= txn_max_lim]
     if remove_timeouts:
         df = df[df["timed_out"] == False]
-    return (
+    if solvers:
+        df = df[df["solver"].isin(solvers)]
+    if problems:
+        df = df[df["problem"].isin(problems)]
+    if implementations:
+        df = df[df["implementation"].isin(implementations)]
+    df = (
         df.groupby(setup)
         .agg(
             candidates=("candidates", "first"),
@@ -54,3 +77,7 @@ def clean(
         )
         .reset_index()
     )
+    df["avg_time_ms"] = df["avg_time_ms"].round().astype(int)
+    df["problem"] = df["problem"].apply(lambda p: Problem.from_str(p))
+    df["solver"] = df["solver"].apply(lambda s: Solver(s))
+    return df

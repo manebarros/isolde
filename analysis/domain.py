@@ -11,7 +11,22 @@ class Framework(StrEnum):
         return rf"\mathcal{{{self.upper()}}}"
 
 
-@dataclass
+class Solver(StrEnum):
+    MINISAT = "minisat"
+    GLUCOSE = "glucose"
+    SAT4J = "sat4j"
+
+    def display_str(self) -> str:
+        match self:
+            case Solver.MINISAT:
+                return "MiniSat"
+            case Solver.GLUCOSE:
+                return "Glucose"
+            case Solver.SAT4J:
+                return "Sat4j"
+
+
+@dataclass(frozen=True)
 class Definition:
     name: str
     framework: Framework
@@ -39,7 +54,7 @@ class Definition:
         )
 
 
-@dataclass
+@dataclass(frozen=True)
 class Problem:
     pos: List[Definition]
     neg: Definition
@@ -50,7 +65,7 @@ class Problem:
         pos_lst = pos.split(" ")
         return cls([Definition.from_str(d) for d in pos_lst], Definition.from_str(neg))
 
-    def problem_as_latex(self, use_dollar_sign=True, use_sc=False) -> str:
+    def as_latex(self, use_dollar_sign=True, use_sc=False) -> str:
         pos_str = ", ".join([l.as_latex(use_sc=use_sc) for l in self.pos])
         neg_str = self.neg.as_latex(use_sc=use_sc)
         if use_dollar_sign:
