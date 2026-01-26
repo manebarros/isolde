@@ -5,19 +5,15 @@ import static haslab.isolde.IsoldeConstraint.cerone;
 
 import haslab.isolde.IsoldeConstraint;
 import haslab.isolde.IsoldeSpec;
-import haslab.isolde.IsoldeSynthesizer;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.biswas.definitions.TransactionalAnomalousPatterns;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.ExecutionFormula;
-import haslab.isolde.core.synth.Scope;
 import haslab.isolde.experiments.verification.FeketeReadOnlyAnomaly;
-import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 
@@ -175,37 +171,48 @@ public class Benchmark {
     return problems;
   }
 
-  public static void runAllExperiments() throws Exception {
-    IsoldeSynthesizer full = new IsoldeSynthesizer.Builder().build();
-    IsoldeSynthesizer withoutFixedTotalOrder =
-        new IsoldeSynthesizer.Builder().useTxnTotalOrder(false).build();
-    IsoldeSynthesizer withoutSmartSearch =
-        new IsoldeSynthesizer.Builder().smartCandidateSearch(false).build();
-    IsoldeSynthesizer noOptimizations =
-        new IsoldeSynthesizer.Builder().smartCandidateSearch(false).useTxnTotalOrder(false).build();
+  enum SpecClass {
+    SAT_SAME_FW,
+    SAT_DIFF_FW,
+    UNSAT_SAME_FW,
+    UNSAT_DIFF_FW
+  }
 
-    List<Named<IsoldeSynthesizer>> all_configs =
-        Arrays.asList(
-            new Named<>("default", full),
-            new Named<>("without fixed order", withoutFixedTotalOrder),
-            new Named<>("without smart search", withoutSmartSearch),
-            new Named<>("no optimizations", noOptimizations));
+  public static List<Named<IsoldeSpec>> getProblemSet(SpecClass specClass) {
+    return switch (specClass) {
+      case SAT_SAME_FW -> satSameFramework();
+      case SAT_DIFF_FW -> satDiffFramework();
+      case UNSAT_SAME_FW -> unsatSameFramework();
+      case UNSAT_DIFF_FW -> unsatDiffFramework();
+    };
+  }
 
-    List<Scope> scopes = Util.scopesFromRange(5, 5, 3, 3, 10);
-
-    List<List<Named<IsoldeSpec>>> problems =
-        Arrays.asList(
-            satSameFramework(), satDiffFramework(), unsatSameFramework(), unsatDiffFramework());
-
-    for (var problemList : problems) {
-      Util.measureAndAppend(
-          scopes,
-          problemList,
-          Collections.singletonList("glucose"),
-          all_configs,
-          3,
-          300,
-          Path.of("/home/mane/vldb_measurements/data.csv"));
-    }
+  public static Named<IsoldeSpec> getRepresentativeProblem(SpecClass specClass) {
+    return switch (specClass) {
+      case SAT_SAME_FW ->
+          new Named<>(
+              "SI_b UpdateSer_b\tSer_b",
+              biswas(AxiomaticDefinitions.Snapshot)
+                  .and(biswas(FeketeReadOnlyAnomaly::updateSer))
+                  .andNot(biswas(AxiomaticDefinitions.Ser))
+                  .build());
+      case SAT_DIFF_FW ->
+          new Named<>(
+              "SI_b UpdateSer_c\tSer_c",
+              biswas(AxiomaticDefinitions.Snapshot)
+                  .and(cerone(FeketeReadOnlyAnomaly::updateSer))
+                  .andNot(cerone(CeroneDefinitions.Ser))
+                  .build());
+      case UNSAT_SAME_FW ->
+          new Named<>(
+              "CC_b\tPlumeCC_b",
+              biswas(AxiomaticDefinitions.Causal)
+                  .andNot(biswas(TransactionalAnomalousPatterns.Causal))
+                  .build());
+      case UNSAT_DIFF_FW ->
+          new Named<>(
+              "RA_b\tRA_c",
+              biswas(AxiomaticDefinitions.ReadAtomic).andNot(cerone(CeroneDefinitions.RA)).build());
+    };
   }
 }

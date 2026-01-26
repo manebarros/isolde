@@ -4,8 +4,8 @@ import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.WRITE;
 
 import haslab.isolde.IsoldeSpec;
-import haslab.isolde.IsoldeSynthesizer;
 import haslab.isolde.SynthesizedHistory;
+import haslab.isolde.SynthesizerI;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.cerone.CeroneExecution;
@@ -27,18 +27,8 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import kodkod.engine.config.Options;
-import kodkod.engine.satlab.SATFactory;
 
 public final class Util {
-  public static SATFactory getSolver(String name) {
-    return solvers.get(name);
-  }
-
-  public static final Map<String, SATFactory> solvers =
-      Map.of(
-          "minisat", SATFactory.MiniSat,
-          "glucose", SATFactory.Glucose,
-          "sat4j", SATFactory.DefaultSAT4J);
 
   public static record LevelDefinitions(
       String name,
@@ -118,8 +108,8 @@ public final class Util {
   public static List<Measurement> measure(
       List<Scope> scopes,
       List<Named<IsoldeSpec>> problems,
-      List<String> solvers,
-      List<Named<IsoldeSynthesizer>> implementations,
+      List<Solver> solvers,
+      List<Named<SynthesizerI>> implementations,
       int samples,
       long timeout_s)
       throws InterruptedException, ExecutionException {
@@ -132,14 +122,14 @@ public final class Util {
     Date run = Date.from(Instant.now());
     List<Measurement> rows = new ArrayList<>(uniqueRuns);
     for (var implementation : implementations) {
-      for (String solver : solvers) {
+      for (Solver solver : solvers) {
         for (var problem : problems) {
           boolean timedOut = false;
           for (int scope_idx = 0; !timedOut && scope_idx < scopes.size(); scope_idx++) {
             Scope scope = scopes.get(scope_idx);
             IsoldeInput input = new IsoldeInput(scope, problem, implementation, solver);
             Options options = new Options();
-            options.setSolver(Util.getSolver(solver));
+            options.setSolver(solver.getSolver());
             for (int sample = 0; !timedOut && sample < samples; sample++) {
 
               CompletableFuture<SynthesizedHistory> future =
@@ -154,7 +144,7 @@ public final class Util {
                     uniqueRuns,
                     implementation.name(),
                     scope,
-                    solver,
+                    solver.getId(),
                     problem.name(),
                     hist.time(),
                     hist.candidates(),
@@ -167,7 +157,7 @@ public final class Util {
                 }
 
                 rows.add(new Measurement(input, hist.cegisResult(), run, Date.from(Instant.now())));
-              } catch (TimeoutException | ExecutionException e) {
+              } catch (TimeoutException e) {
                 future.cancel(true);
                 timedOut = true;
                 timeouts++;
@@ -196,8 +186,8 @@ public final class Util {
   public static void measureAndWrite(
       List<Scope> scopes,
       List<Named<IsoldeSpec>> problems,
-      List<String> solvers,
-      List<Named<IsoldeSynthesizer>> implementations,
+      List<Solver> solvers,
+      List<Named<SynthesizerI>> implementations,
       int samples,
       long timeout_s,
       Path file)
@@ -209,8 +199,8 @@ public final class Util {
   public static void measureAndAppend(
       List<Scope> scopes,
       List<Named<IsoldeSpec>> problems,
-      List<String> solvers,
-      List<Named<IsoldeSynthesizer>> implementations,
+      List<Solver> solvers,
+      List<Named<SynthesizerI>> implementations,
       int samples,
       long timeout_s,
       Path file)
