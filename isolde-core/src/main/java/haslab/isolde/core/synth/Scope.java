@@ -1,10 +1,10 @@
 package haslab.isolde.core.synth;
 
 public class Scope {
-  private int transactions;
-  private int objects;
-  private int values;
-  private int sessions;
+  private final int transactions;
+  private final int objects;
+  private final int values;
+  private final int sessions;
 
   private static final int DEFAULT_SCOPE = 3;
 
@@ -41,7 +41,7 @@ public class Scope {
     }
 
     public Builder sess(int scope) {
-      values = scope;
+      sessions = scope;
       return this;
     }
 
@@ -65,32 +65,16 @@ public class Scope {
     return transactions;
   }
 
-  public void setTransactions(int transactions) {
-    this.transactions = transactions;
-  }
-
   public int getObjects() {
     return objects;
-  }
-
-  public void setObjects(int objects) {
-    this.objects = objects;
   }
 
   public int getValues() {
     return values;
   }
 
-  public void setValues(int values) {
-    this.values = values;
-  }
-
   public int getSessions() {
     return sessions;
-  }
-
-  public void setSessions(int sessions) {
-    this.sessions = sessions;
   }
 
   @Override

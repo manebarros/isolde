@@ -23,11 +23,15 @@ public class NaiveIsoldeSynthesizer implements SynthesizerI {
   private final Options synthOptions;
   private final Options checkOptions;
 
-  private NaiveIsoldeSynthesizer(Options options) {
+  public NaiveIsoldeSynthesizer() {
+    this(new Options());
+  }
+
+  public NaiveIsoldeSynthesizer(Options options) {
     this(options, options);
   }
 
-  private NaiveIsoldeSynthesizer(Options synthOptions, Options checkOptions) {
+  public NaiveIsoldeSynthesizer(Options synthOptions, Options checkOptions) {
     this.synthOptions = synthOptions;
     this.checkOptions = checkOptions;
   }
