@@ -3,7 +3,7 @@ package haslab.isolde.experiments.benchmark;
 import haslab.isolde.IsoldeSpec;
 import haslab.isolde.SynthesizerI;
 import haslab.isolde.core.synth.Scope;
-import haslab.isolde.experiments.benchmark.Benchmark.SpecClass;
+import haslab.isolde.experiments.benchmark.Problems.SpecClass;
 import haslab.isolde.util.Pair;
 import java.nio.file.Path;
 import java.util.ArrayList;
@@ -75,9 +75,9 @@ public class Cli implements Runnable {
     List<List<Named<IsoldeSpec>>> problems = new ArrayList<>();
     for (var specClass : specClasses) {
       if (this.single) {
-        problems.add(Collections.singletonList(Benchmark.getRepresentativeProblem(specClass)));
+        problems.add(Collections.singletonList(Problems.getRepresentativeProblem(specClass)));
       } else {
-        problems.add(Benchmark.getProblemSet(specClass));
+        problems.add(Problems.getProblemSet(specClass));
       }
     }
 

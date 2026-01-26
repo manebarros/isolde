@@ -17,7 +17,7 @@ import java.util.Arrays;
 import java.util.List;
 import java.util.Map;
 
-public class Benchmark {
+public class Problems {
 
   private static Map<String, IsoldeConstraint> constraintsForReadAnomaly =
       Map.of(
