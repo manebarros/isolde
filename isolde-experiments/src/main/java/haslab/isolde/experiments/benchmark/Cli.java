@@ -107,7 +107,7 @@ public class Cli implements Runnable {
         return new Pair<>(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
       } else {
         int val = Integer.parseInt(value);
-        return new Pair<>(val, val + 1);
+        return new Pair<>(val, val);
       }
     }
   }

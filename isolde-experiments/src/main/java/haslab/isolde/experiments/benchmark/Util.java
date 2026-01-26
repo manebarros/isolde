@@ -119,6 +119,7 @@ public final class Util {
     int success = 0;
     int failed = 0;
     int timeouts = 0;
+    int crashes = 0;
     Date run = Date.from(Instant.now());
     List<Measurement> rows = new ArrayList<>(uniqueRuns);
     for (var implementation : implementations) {
@@ -167,9 +168,24 @@ public final class Util {
                     uniqueRuns,
                     implementation.name(),
                     scope,
-                    solver,
+                    solver.getId(),
                     problem.name(),
                     timeout_s);
+
+                rows.add(
+                    Measurement.timeout(input, timeout_s * 1000, run, Date.from(Instant.now())));
+              } catch (OutOfMemoryError e) {
+                future.cancel(true);
+                timedOut = true;
+                crashes++;
+                System.out.printf(
+                    "[%3d/%d] (%s, [%s], %s, %s) : OOM CRASH\n",
+                    ++count,
+                    uniqueRuns,
+                    implementation.name(),
+                    scope,
+                    solver.getId(),
+                    problem.name());
 
                 rows.add(
                     Measurement.timeout(input, timeout_s * 1000, run, Date.from(Instant.now())));
@@ -179,7 +195,8 @@ public final class Util {
         }
       }
     }
-    System.out.printf("SAT: %d\nUNSAT: %d\nTIMEOUT: %d\n", success, failed, timeouts);
+    System.out.printf(
+        "SAT: %d\nUNSAT: %d\nTIMEOUT: %d\nOOM CRASHES: %d", success, failed, timeouts, crashes);
     return rows;
   }
 

@@ -172,44 +172,44 @@ public class Problems {
   }
 
   enum SpecClass {
-    SAT_SAME_FW,
-    SAT_DIFF_FW,
-    UNSAT_SAME_FW,
-    UNSAT_DIFF_FW
+    SAT_SAME,
+    SAT_DIFF,
+    UNSAT_SAME,
+    UNSAT_DIFF
   }
 
   public static List<Named<IsoldeSpec>> getProblemSet(SpecClass specClass) {
     return switch (specClass) {
-      case SAT_SAME_FW -> satSameFramework();
-      case SAT_DIFF_FW -> satDiffFramework();
-      case UNSAT_SAME_FW -> unsatSameFramework();
-      case UNSAT_DIFF_FW -> unsatDiffFramework();
+      case SAT_SAME -> satSameFramework();
+      case SAT_DIFF -> satDiffFramework();
+      case UNSAT_SAME -> unsatSameFramework();
+      case UNSAT_DIFF -> unsatDiffFramework();
     };
   }
 
   public static Named<IsoldeSpec> getRepresentativeProblem(SpecClass specClass) {
     return switch (specClass) {
-      case SAT_SAME_FW ->
+      case SAT_SAME ->
           new Named<>(
               "SI_b UpdateSer_b\tSer_b",
               biswas(AxiomaticDefinitions.Snapshot)
                   .and(biswas(FeketeReadOnlyAnomaly::updateSer))
                   .andNot(biswas(AxiomaticDefinitions.Ser))
                   .build());
-      case SAT_DIFF_FW ->
+      case SAT_DIFF ->
           new Named<>(
               "SI_b UpdateSer_c\tSer_c",
               biswas(AxiomaticDefinitions.Snapshot)
                   .and(cerone(FeketeReadOnlyAnomaly::updateSer))
                   .andNot(cerone(CeroneDefinitions.Ser))
                   .build());
-      case UNSAT_SAME_FW ->
+      case UNSAT_SAME ->
           new Named<>(
               "CC_b\tPlumeCC_b",
               biswas(AxiomaticDefinitions.Causal)
                   .andNot(biswas(TransactionalAnomalousPatterns.Causal))
                   .build());
-      case UNSAT_DIFF_FW ->
+      case UNSAT_DIFF ->
           new Named<>(
               "RA_b\tRA_c",
               biswas(AxiomaticDefinitions.ReadAtomic).andNot(cerone(CeroneDefinitions.RA)).build());
