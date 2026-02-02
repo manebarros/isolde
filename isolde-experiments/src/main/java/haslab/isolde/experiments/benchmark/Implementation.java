@@ -16,13 +16,13 @@ public enum Implementation {
   CEGIS_NO_INC_SOLVING(
       "no_incremental", new IsoldeSynthesizer.Builder().incrementalSolving(false).build()),
 
-  CEGIS_NONE(
-      "none",
-      new IsoldeSynthesizer.Builder()
-          .smartCandidateSearch(false)
-          .useTxnTotalOrder(false)
-          .incrementalSolving(false)
-          .build()),
+  // CEGIS_NONE(
+  //    "none",
+  //    new IsoldeSynthesizer.Builder()
+  //        .smartCandidateSearch(false)
+  //        .useTxnTotalOrder(false)
+  //        .incrementalSolving(false)
+  //        .build()),
 
   NO_LEARNING("no_learning", new NaiveIsoldeSynthesizer());
 
