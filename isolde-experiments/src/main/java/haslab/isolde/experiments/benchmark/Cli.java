@@ -8,8 +8,8 @@ import haslab.isolde.util.Pair;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
-import java.util.Collections;
 import java.util.List;
+import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
 import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.Option;
@@ -48,11 +48,21 @@ public class Cli implements Runnable {
       description = "Test on a single problem per class")
   boolean single;
 
-  @Option(
-      names = "--classes",
-      split = ",",
-      description = "Comma-separated list of modes: ${COMPLETION-CANDIDATES}")
-  List<SpecClass> specClasses = Arrays.asList(SpecClass.values());
+  @ArgGroup(exclusive = true, multiplicity = "0..1")
+  ProblemsToSolve problems;
+
+  static class ProblemsToSolve {
+    @Option(
+        names = "--classes",
+        split = ",",
+        description = "Comma-separated list of problem classes: ${COMPLETION-CANDIDATES}")
+    List<SpecClass> specClasses = Arrays.asList(SpecClass.values());
+
+    @Option(
+        names = {"-p", "--problem"},
+        description = "Problem")
+    String problem_id;
+  }
 
   @Option(
       names = "--solvers",
@@ -72,26 +82,28 @@ public class Cli implements Runnable {
     List<Scope> scopes =
         Util.scopesFromRange(obj_num, val_num, sess_num, txn_num.fst(), txn_num.snd());
 
-    List<List<Named<IsoldeSpec>>> problems = new ArrayList<>();
-    for (var specClass : specClasses) {
+    List<Named<IsoldeSpec>> problems = new ArrayList<>();
+    if (this.problems.problem_id != null) {
+      System.out.println("not implemented yet");
+      return;
+    }
+    for (var specClass : this.problems.specClasses) {
       if (this.single) {
-        problems.add(Collections.singletonList(Problems.getRepresentativeProblem(specClass)));
+        problems.add(Problems.getRepresentativeProblem(specClass));
       } else {
-        problems.add(Problems.getProblemSet(specClass));
+        for (var problem : Problems.getProblemSet(specClass)) {
+          problems.add(problem);
+        }
       }
     }
 
     List<Named<SynthesizerI>> implementations =
         this.implementations.stream().map(s -> new Named<>(s.getId(), s.getSynthesizer())).toList();
 
-    for (var problemList : problems) {
-      try {
-        Util.measureAndAppend(
-            scopes, problemList, solvers, implementations, 3, this.timeout, destFile);
-      } catch (Exception e) {
-        e.printStackTrace();
-        return;
-      }
+    try {
+      Util.measureAndAppend(scopes, problems, solvers, implementations, 3, this.timeout, destFile);
+    } catch (Exception e) {
+      e.printStackTrace();
     }
   }
 
