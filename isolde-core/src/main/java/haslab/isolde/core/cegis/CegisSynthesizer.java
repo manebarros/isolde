@@ -56,18 +56,18 @@ public class CegisSynthesizer<T, S> {
     this.useIncrementalSolving = useIncrementalSolving;
   }
 
-  public CegisSynthesizer(HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder) {
-    this(synthesisEncoder, CegisSynthesizer::smartSearchFormula, true);
+  public static <T, S> CegisSynthesizer<T, S> withSmartSearchFormula(
+      HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder,
+      boolean incrementalSolving) {
+    return new CegisSynthesizer<>(
+        synthesisEncoder, CegisSynthesizer::smartSearchFormula, incrementalSolving);
   }
 
   public static <T, S> CegisSynthesizer<T, S> withNaiveSearchFormula(
-      HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder) {
-    return new CegisSynthesizer<>(synthesisEncoder, CegisSynthesizer::naiveSearchFormula, true);
-  }
-
-  public static <T, S> CegisSynthesizer<T, S> withoutIncrementalSolving(
-      HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder) {
-    return new CegisSynthesizer<>(synthesisEncoder, CegisSynthesizer::smartSearchFormula, false);
+      HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder,
+      boolean useIncrementalSolving) {
+    return new CegisSynthesizer<>(
+        synthesisEncoder, CegisSynthesizer::naiveSearchFormula, useIncrementalSolving);
   }
 
   private record CegisFeedback<E extends Execution>(

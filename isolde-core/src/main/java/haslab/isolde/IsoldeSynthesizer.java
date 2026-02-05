@@ -110,16 +110,10 @@ public class IsoldeSynthesizer implements SynthesizerI {
             ? FolSynthesisProblem.withTotalOrder(folSynthInput)
             : FolSynthesisProblem.withoutTotalOrder(folSynthInput);
 
-    CegisSynthesizer<FolSynthesisProblem.InputWithTotalOrder, Optional<TupleSet>> synthesizer;
-    if (useIncrementalSolving && !useSmartCandidateSearch) {
-      synthesizer = CegisSynthesizer.withNaiveSearchFormula(synthesisProblem);
-    } else if (useSmartCandidateSearch && !useIncrementalSolving) {
-      synthesizer = CegisSynthesizer.withoutIncrementalSolving(synthesisProblem);
-    } else if (useSmartCandidateSearch && useIncrementalSolving) {
-      synthesizer = new CegisSynthesizer<>(synthesisProblem);
-    } else {
-      throw new RuntimeException("invalid options");
-    }
+    CegisSynthesizer<FolSynthesisProblem.InputWithTotalOrder, Optional<TupleSet>> synthesizer =
+        useSmartCandidateSearch
+            ? CegisSynthesizer.withSmartSearchFormula(synthesisProblem, useIncrementalSolving)
+            : CegisSynthesizer.withNaiveSearchFormula(synthesisProblem, useIncrementalSolving);
 
     List<CeroneExecution> ceroneExecutions = null;
     List<BiswasExecution> biswasExecutions = null;

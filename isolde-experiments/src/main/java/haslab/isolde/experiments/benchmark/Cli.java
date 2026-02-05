@@ -130,6 +130,7 @@ public class Cli implements Runnable {
     public Implementation convert(String value) throws Exception {
       return switch (value.toLowerCase()) {
         case "all" -> Implementation.CEGIS_ALL;
+        case "none" -> Implementation.CEGIS_NONE;
         case "no_smart_search" -> Implementation.CEGIS_NO_SMART_SEARCH;
         case "no_fixed_co" -> Implementation.CEGIS_NO_FIXED_COMMIT_ORDER;
         case "no_incremental" -> Implementation.CEGIS_NO_INC_SOLVING;
