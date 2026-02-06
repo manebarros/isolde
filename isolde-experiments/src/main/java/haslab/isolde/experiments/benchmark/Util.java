@@ -134,7 +134,8 @@ public final class Util {
 
                 rows.add(
                     Measurement.timeout(input, timeout_s * 1000, run, Date.from(Instant.now())));
-              } catch (OutOfMemoryError e) {
+              } catch (ExecutionException e) {
+                assert e.getCause() instanceof OutOfMemoryError;
                 future.cancel(true);
                 timedOut = true;
                 crashes++;

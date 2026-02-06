@@ -7,7 +7,7 @@ COMMIT_HASH=$(git rev-parse --short=14 main)
 CSV_PATH="isolde-experiments/data/${COMMIT_HASH}.csv"
 
 mvn clean package && \
-java -Xms1g -Xmx4g \
+java -Xms2g -Xmx8g \
   -jar isolde-experiments/target/isolde-experiments-1.0-SNAPSHOT.jar \
   "$CSV_PATH" \
   --txn 3:10 \
