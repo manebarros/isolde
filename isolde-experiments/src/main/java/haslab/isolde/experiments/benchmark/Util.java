@@ -116,7 +116,8 @@ public final class Util {
                   failed++;
                 }
 
-                rows.add(new Measurement(input, hist.cegisResult(), run, Date.from(Instant.now())));
+                rows.add(
+                    Measurement.finished(input, hist.cegisResult(), run, Date.from(Instant.now())));
               } catch (TimeoutException e) {
                 future.cancel(true);
                 timedOut = true;

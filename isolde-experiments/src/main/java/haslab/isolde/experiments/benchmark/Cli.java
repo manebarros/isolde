@@ -49,7 +49,7 @@ public class Cli implements Runnable {
   boolean single;
 
   @ArgGroup(exclusive = true, multiplicity = "0..1")
-  ProblemsToSolve problems;
+  ProblemsToSolve problems = new ProblemsToSolve();
 
   static class ProblemsToSolve {
     @Option(
@@ -59,8 +59,8 @@ public class Cli implements Runnable {
     List<SpecClass> specClasses = Arrays.asList(SpecClass.values());
 
     @Option(
-        names = {"-p", "--problem"},
-        description = "Problem")
+        names = {"-p", "--problems"},
+        description = "Problems")
     String problem_id;
   }
 

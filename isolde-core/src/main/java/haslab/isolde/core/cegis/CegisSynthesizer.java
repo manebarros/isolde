@@ -170,19 +170,36 @@ public class CegisSynthesizer<T, S> {
 
     Instant start = Instant.now();
 
+    Instant synthStart = Instant.now();
     Solution candSol = synthesizer.solve(searchProblem.formula(), searchProblem.bounds());
+    long synthTime = Duration.between(synthStart, Instant.now()).toMillis();
+
+    int firstSynthClauses = candSol.stats().clauses();
 
     if (candSol.unsat()) {
       return CegisResult.fail(
-          historyEncoding(), failedCandidates, Duration.between(start, Instant.now()).toMillis());
+          historyEncoding(),
+          failedCandidates,
+          firstSynthClauses,
+          firstSynthClauses,
+          synthTime,
+          0,
+          Duration.between(start, Instant.now()).toMillis());
     }
 
+    // check candidate
     Bounds newBounds = new Bounds(searchProblem.bounds().universe());
+    Instant checkStart = Instant.now();
     CegisAggregatedFeedback feedback =
         guide(candSol.instance(), historyEncoding(), newBounds, checker);
+    long checkTime = Duration.between(checkStart, Instant.now()).toMillis();
+
     while (!feedback.counterexamples().isEmpty()) {
       failedCandidates.add(new FailedCandidate(candSol.instance(), feedback.counterexamples()));
+
+      synthStart = Instant.now();
       candSol = synthesizer.solve(feedback.guidingFormula().resolve(historyEncoding()), newBounds);
+      synthTime += Duration.between(synthStart, Instant.now()).toMillis();
 
       if (candSol.unsat()) {
         // Stop if problem is UNSAT
@@ -190,13 +207,31 @@ public class CegisSynthesizer<T, S> {
       }
       // Otherwise, verify the new candidate
       newBounds = new Bounds(searchProblem.bounds().universe());
+      checkStart = Instant.now();
       feedback = guide(candSol.instance(), historyEncoding(), newBounds, checker);
+      checkTime += Duration.between(checkStart, Instant.now()).toMillis();
     }
 
+    int totalSynthClauses = candSol.stats().clauses();
     long time = Duration.between(start, Instant.now()).toMillis();
     return feedback.counterexamples().isEmpty()
-        ? CegisResult.success(historyEncoding(), candSol.instance(), failedCandidates, time)
-        : CegisResult.fail(historyEncoding(), failedCandidates, time);
+        ? CegisResult.success(
+            historyEncoding(),
+            candSol.instance(),
+            failedCandidates,
+            firstSynthClauses,
+            totalSynthClauses,
+            synthTime,
+            checkTime,
+            time)
+        : CegisResult.fail(
+            historyEncoding(),
+            failedCandidates,
+            firstSynthClauses,
+            totalSynthClauses,
+            synthTime,
+            checkTime,
+            time);
   }
 
   public CegisResult synthesizeWithoutIncremental(Options synthOptions, Options checkOptions) {
@@ -208,32 +243,67 @@ public class CegisSynthesizer<T, S> {
 
     Instant start = Instant.now();
 
+    Instant synthStart = Instant.now();
     Solution candSol = synthesizer.solve(searchProblem.formula(), searchProblem.bounds());
+    long synthTime = Duration.between(synthStart, Instant.now()).toMillis();
+
+    int firstSynthClauses = candSol.stats().clauses();
 
     if (candSol.unsat()) {
       return CegisResult.fail(
-          historyEncoding(), failedCandidates, Duration.between(start, Instant.now()).toMillis());
+          historyEncoding(),
+          failedCandidates,
+          firstSynthClauses,
+          firstSynthClauses,
+          synthTime,
+          0,
+          Duration.between(start, Instant.now()).toMillis());
     }
 
+    Instant checkStart = Instant.now();
     CegisAggregatedFeedback feedback =
         guide(candSol.instance(), historyEncoding(), searchProblem.bounds(), checker);
+    long checkTime = Duration.between(checkStart, Instant.now()).toMillis();
+
     while (!feedback.counterexamples().isEmpty()) {
       failedCandidates.add(new FailedCandidate(candSol.instance(), feedback.counterexamples()));
+
       searchProblem = searchProblem.and(feedback.guidingFormula().resolve(historyEncoding()));
+
+      synthStart = Instant.now();
       candSol = searchProblem.solve(synthesizer);
+      synthTime += Duration.between(synthStart, Instant.now()).toMillis();
 
       if (candSol.unsat()) {
         // Stop if problem is UNSAT
         break;
       }
       // Otherwise, verify the new candidate
+      checkStart = Instant.now();
       feedback = guide(candSol.instance(), historyEncoding(), searchProblem.bounds(), checker);
+      checkTime += Duration.between(checkStart, Instant.now()).toMillis();
     }
 
+    int totalSynthClauses = candSol.stats().clauses();
     long time = Duration.between(start, Instant.now()).toMillis();
     return feedback.counterexamples().isEmpty()
-        ? CegisResult.success(historyEncoding(), candSol.instance(), failedCandidates, time)
-        : CegisResult.fail(historyEncoding(), failedCandidates, time);
+        ? CegisResult.success(
+            historyEncoding(),
+            candSol.instance(),
+            failedCandidates,
+            firstSynthClauses,
+            totalSynthClauses,
+            synthTime,
+            checkTime,
+            time)
+        : CegisResult.fail(
+            historyEncoding(),
+            failedCandidates,
+            firstSynthClauses,
+            totalSynthClauses,
+            synthTime,
+            checkTime,
+            time);
   }
 
   public CegisResult synthesize() {

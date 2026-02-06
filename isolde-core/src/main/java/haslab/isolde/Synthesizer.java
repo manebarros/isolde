@@ -34,7 +34,8 @@ public class Synthesizer {
   private List<BiswasExecution> biswasExecutions;
 
   public static Synthesizer withNoTotalOrder(Scope scope) {
-    var cegisSynthesizer = new CegisSynthesizer<>(FolSynthesisProblem.withoutTotalOrder(scope));
+    var cegisSynthesizer =
+        CegisSynthesizer.withSmartSearchFormula(FolSynthesisProblem.withoutTotalOrder(scope), true);
     return new Synthesizer(cegisSynthesizer);
   }
 
@@ -47,21 +48,24 @@ public class Synthesizer {
   }
 
   public Synthesizer(Scope scope) {
-    this.cegisSynthesizer = new CegisSynthesizer<>(FolSynthesisProblem.withTotalOrder(scope));
+    this.cegisSynthesizer =
+        CegisSynthesizer.withSmartSearchFormula(FolSynthesisProblem.withTotalOrder(scope), true);
     this.ceroneExecutions = null;
     this.biswasExecutions = null;
   }
 
   public Synthesizer(Scope scope, HistoryFormula hf) {
     FolSynthesisInput input = new FolSynthesisInput.Builder(scope).formula(hf).build();
-    this.cegisSynthesizer = new CegisSynthesizer<>(FolSynthesisProblem.withTotalOrder(input));
+    this.cegisSynthesizer =
+        CegisSynthesizer.withSmartSearchFormula(FolSynthesisProblem.withTotalOrder(input), true);
     this.ceroneExecutions = null;
     this.biswasExecutions = null;
   }
 
   public Synthesizer(Scope scope, HistoryFormula hf, HistoryDecls decls) {
     FolSynthesisInput input = new FolSynthesisInput.Builder(scope).formula(hf).delcs(decls).build();
-    this.cegisSynthesizer = new CegisSynthesizer<>(FolSynthesisProblem.withTotalOrder(input));
+    this.cegisSynthesizer =
+        CegisSynthesizer.withSmartSearchFormula(FolSynthesisProblem.withTotalOrder(input), true);
     this.ceroneExecutions = null;
     this.biswasExecutions = null;
   }

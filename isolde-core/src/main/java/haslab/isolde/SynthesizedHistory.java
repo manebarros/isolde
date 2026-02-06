@@ -30,7 +30,7 @@ public class SynthesizedHistory {
   }
 
   public long time() {
-    return this.cegisResult.getTime();
+    return this.cegisResult.getTotalTime();
   }
 
   public History history() {

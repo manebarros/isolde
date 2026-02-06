@@ -97,20 +97,45 @@ public class NaiveSynthesizer<T, S> {
         synthesizer.solveAll(searchProblem.formula(), searchProblem.bounds());
 
     List<? extends Counterexample<? extends Execution>> counterexamples;
+    Instant synthStart = Instant.now();
     Solution sol = solutions.next();
+    long synthTime = Duration.between(synthStart, Instant.now()).toMillis();
+    int firstSynthClauses = sol.stats().clauses();
+
+    long checkTime = 0;
+    Instant checkStart = Instant.now();
     while (sol.sat()
         && !(counterexamples = verify(historyEncoding(), sol.instance(), checker)).isEmpty()) {
+      checkTime += Duration.between(checkStart, Instant.now()).toMillis();
       failedCandidates.add(
           new FailedCandidate(
               sol.instance(), counterexamples)); // is this right in terms of pointers?
+      synthStart = Instant.now();
       sol = solutions.next();
+      synthTime += Duration.between(synthStart, Instant.now()).toMillis();
     }
-
+    checkTime += Duration.between(checkStart, Instant.now()).toMillis();
     long time = Duration.between(start, Instant.now()).toMillis();
 
+    int totalSynthClauses = sol.stats().clauses();
     return sol.sat()
-        ? CegisResult.success(historyEncoding(), sol.instance(), failedCandidates, time)
-        : CegisResult.fail(historyEncoding(), failedCandidates, time);
+        ? CegisResult.success(
+            historyEncoding(),
+            sol.instance(),
+            failedCandidates,
+            firstSynthClauses,
+            totalSynthClauses,
+            synthTime,
+            checkTime,
+            time)
+        : CegisResult.fail(
+            historyEncoding(),
+            failedCandidates,
+            firstSynthClauses,
+            totalSynthClauses,
+            synthTime,
+            checkTime,
+            time);
   }
 
   public CegisResult synthesize() {
