@@ -1,8 +1,5 @@
 package haslab.isolde.cerone.definitions;
 
-import static haslab.isolde.core.ExecutionFormula.and;
-import static java.util.Arrays.asList;
-
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.kodkod.KodkodUtil;
@@ -71,13 +68,11 @@ public final class CeroneDefinitions {
   public static final ExecutionFormula<CeroneExecution> SESSION =
       e -> e.history().sessionOrder().in(e.vis());
 
-  public static final ExecutionFormula<CeroneExecution> RA = EXT.and(SESSION);
-  public static final ExecutionFormula<CeroneExecution> CC = EXT.and(SESSION).and(TRANS_VIS);
-  public static final ExecutionFormula<CeroneExecution> UA = EXT.and(SESSION).and(NO_CONF);
-  public static final ExecutionFormula<CeroneExecution> PSI =
-      EXT.and(SESSION).and(TRANS_VIS).and(NO_CONF);
-  public static final ExecutionFormula<CeroneExecution> PC = and(asList(EXT, SESSION, PREFIX));
-  public static final ExecutionFormula<CeroneExecution> SI =
-      and(asList(EXT, SESSION, PREFIX, NO_CONF));
-  public static final ExecutionFormula<CeroneExecution> Ser = EXT.and(TOTAL_VIS);
+  public static final ExecutionFormula<CeroneExecution> RA = e -> Formula.TRUE;
+  public static final ExecutionFormula<CeroneExecution> CC = TRANS_VIS;
+  public static final ExecutionFormula<CeroneExecution> UA = NO_CONF;
+  public static final ExecutionFormula<CeroneExecution> PSI = TRANS_VIS.and(NO_CONF);
+  public static final ExecutionFormula<CeroneExecution> PC = PREFIX;
+  public static final ExecutionFormula<CeroneExecution> SI = PREFIX.and(NO_CONF);
+  public static final ExecutionFormula<CeroneExecution> Ser = TOTAL_VIS;
 }

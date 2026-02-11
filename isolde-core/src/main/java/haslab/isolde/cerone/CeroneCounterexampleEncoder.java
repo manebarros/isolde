@@ -1,5 +1,8 @@
 package haslab.isolde.cerone;
 
+import static haslab.isolde.cerone.definitions.CeroneDefinitions.EXT;
+import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
+
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.cegis.CounterexampleEncoder;
@@ -38,6 +41,7 @@ public class CeroneCounterexampleEncoder implements CounterexampleEncoder<Cerone
     Relation cexArRel = Relation.binary("cex ar");
     bounds.boundExactly(cexVisRel, visVal);
     bounds.boundExactly(cexArRel, arVal);
-    return h -> formula.resolve(new CeroneExecution(h, cexVisRel, cexArRel));
+    return h ->
+        EXT.and(SESSION).implies(formula).resolve(new CeroneExecution(h, cexVisRel, cexArRel));
   }
 }

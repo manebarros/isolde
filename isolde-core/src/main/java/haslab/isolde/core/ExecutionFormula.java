@@ -11,6 +11,10 @@ public interface ExecutionFormula<E extends Execution> {
     return e -> this.resolve(e).and(f.resolve(e));
   }
 
+  default ExecutionFormula<E> implies(ExecutionFormula<E> f) {
+    return e -> this.resolve(e).implies(f.resolve(e));
+  }
+
   default ExecutionFormula<E> not() {
     return e -> this.resolve(e).not();
   }

@@ -25,7 +25,7 @@ public class BiswasCounterexampleEncoder implements CounterexampleEncoder<Biswas
     return instance;
   }
 
-  private Formula wellFormed(BiswasExecution execution) {
+  private static Formula wellFormed(BiswasExecution execution) {
     AbstractHistoryK h = execution.history();
     return h.sessionOrder().union(h.binaryWr()).in(execution.co());
   }

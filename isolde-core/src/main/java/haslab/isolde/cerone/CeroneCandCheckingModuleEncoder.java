@@ -1,5 +1,8 @@
 package haslab.isolde.cerone;
 
+import static haslab.isolde.cerone.definitions.CeroneDefinitions.EXT;
+import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
+
 import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
@@ -89,17 +92,19 @@ public class CeroneCandCheckingModuleEncoder
       Expression vis = orderings.get(i).fst();
       Relation arTransReduction = orderings.get(i).snd();
       Expression ar = arTransReduction.closure();
+      var execution = new CeroneExecution(historyEncoding, vis, ar);
 
       formula =
           formula.and(
               Formula.and(
                   vis.in(ar),
-                  historyEncoding.sessionOrder().in(ar),
                   arTransReduction.totalOrder(
                       historyEncoding.transactions(),
                       historyEncoding.initialTransaction(),
                       lastTxn),
-                  formulas.get(i).resolve(executions(historyEncoding).get(i))));
+                  EXT.resolve(execution),
+                  SESSION.resolve(execution),
+                  formulas.get(i).resolve(execution)));
     }
 
     return formula;

@@ -1,5 +1,7 @@
 package haslab.isolde.cerone;
 
+import static haslab.isolde.cerone.definitions.CeroneDefinitions.EXT;
+import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
 import static haslab.isolde.kodkod.KodkodUtil.total;
 import static haslab.isolde.kodkod.KodkodUtil.transitive;
 
@@ -89,18 +91,21 @@ public class CeroneSynthesisModule
     var enc = DirectAbstractHistoryEncoding.instance();
 
     for (int i = 0; i < formulas.size(); i++) {
-      var execution = relations.get(i);
-      Relation vis = vis(execution);
-      Relation ar = ar(execution);
+      var rels = relations.get(i);
+      Relation vis = vis(rels);
+      Relation ar = ar(rels);
       b.bound(vis, visAndArLowerBound, commitOrderTs);
       b.bound(ar, visAndArLowerBound, commitOrderTs);
+
+      var execution = new CeroneExecution(history, vis, ar);
       formula =
           formula
               .and(vis.in(ar))
               .and(transitive(ar))
-              .and(enc.sessionOrder().in(ar))
               .and(total(ar, enc.transactions()))
-              .and(formulas.get(i).resolve(new CeroneExecution(history, vis, ar)));
+              .and(EXT.resolve(execution))
+              .and(SESSION.resolve(execution))
+              .and(formulas.get(i).resolve(execution));
     }
     return formula;
   }
@@ -115,30 +120,39 @@ public class CeroneSynthesisModule
     TupleSet visLb =
         tf.setOf(historyAtoms.initialTxn()).product(tf.setOf(historyAtoms.normalTxns().toArray()));
 
-    b.boundExactly(ar(relations.get(0)), txnTotalOrderTs);
-    b.bound(vis(relations.get(0)), visLb, txnTotalOrderTs);
+    var rels = relations.get(0);
+    Relation vis = vis(rels);
+    Relation ar = ar(rels);
+    var execution = new CeroneExecution(history, vis, ar);
+    b.boundExactly(ar, txnTotalOrderTs);
+    b.bound(vis, visLb, txnTotalOrderTs);
+
     Formula formula =
         formulas
             .get(0)
-            .resolve(new CeroneExecution(history, vis(relations.get(0)), ar(relations.get(0))));
+            .resolve(execution)
+            .and(EXT.resolve(execution))
+            .and(SESSION.resolve(execution));
 
     var enc = DirectAbstractHistoryEncoding.instance();
 
     TupleSet commitOrderTs = Util.irreflexiveBound(tf, historyAtoms.normalTxns());
     commitOrderTs.addAll(visLb);
     for (int i = 1; i < formulas.size(); i++) {
-      var execution = relations.get(i);
-      Relation vis = vis(execution);
-      Relation ar = ar(execution);
+      rels = relations.get(i);
+      vis = vis(rels);
+      ar = ar(rels);
+      execution = new CeroneExecution(history, vis, ar);
       b.bound(vis, visLb, commitOrderTs);
       b.bound(ar, visLb, commitOrderTs);
       formula =
           formula
               .and(vis.in(ar))
               .and(transitive(ar))
-              .and(enc.sessionOrder().in(ar))
               .and(total(ar, enc.transactions()))
-              .and(formulas.get(i).resolve(new CeroneExecution(history, vis, ar)));
+              .and(EXT.resolve(execution))
+              .and(SESSION.resolve(execution))
+              .and(formulas.get(i).resolve(execution));
     }
     return formula;
   }
