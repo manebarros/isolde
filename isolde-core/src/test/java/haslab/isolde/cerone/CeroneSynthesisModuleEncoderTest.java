@@ -1,7 +1,7 @@
 package haslab.isolde.cerone;
 
 import haslab.isolde.SynthesisModuleEncoderTest;
-import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.general.ExecutionModuleConstructor;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
@@ -50,9 +50,22 @@ public interface CeroneSynthesisModuleEncoderTest
   }
 
   @Test
-  default void soMightNotBeInVis() {
-    ExecutionFormula<CeroneExecution> f = e -> e.history().sessionOrder().in(e.vis()).not();
-    assertSat(f);
-    assertSatWoTotalOrder(f);
+  default void soInVis() {
+    assertFact(CeroneDefinitions.SESSION);
+  }
+
+  @Test
+  default void soInVisInExtraExecution() {
+    assertFactWoTotalOrder(CeroneDefinitions.SESSION);
+  }
+
+  @Test
+  default void externalConsistency() {
+    assertFact(CeroneDefinitions.EXT);
+  }
+
+  @Test
+  default void externalConsistencyInExtraExecution() {
+    assertFactWoTotalOrder(CeroneDefinitions.EXT);
   }
 }

@@ -79,7 +79,7 @@ public interface CeroneCheckingEncoderTest {
   }
 
   @Test
-  default void soMightNotBeSubsetOfVis() {
+  default void soSubsetOfVis() {
     History hist =
         new History(
             new Session(
@@ -90,7 +90,7 @@ public interface CeroneCheckingEncoderTest {
     Solution sol =
         histCheckEncoder()
             .check(hist, e -> e.history().sessionOrder().in(e.vis()).not(), new Solver());
-    assertTrue(sol.sat());
+    assertTrue(sol.unsat());
   }
 
   @Test

@@ -10,9 +10,8 @@ mvn clean package && \
 java -Xms2g -Xmx8g \
   -jar isolde-experiments/target/isolde-experiments-1.0-SNAPSHOT.jar \
   "$CSV_PATH" \
-  --txn 3:10 \
+  --txn 3:7 \
   --obj 5 \
   --val 5 \
   --sess 3 \
-  --solvers glucose \
-  -s   
+  --solvers minisat,glucose
