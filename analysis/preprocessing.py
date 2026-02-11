@@ -48,9 +48,9 @@ def validate(df, setup=setup, check_num_measurements=True):
 def clean(
     df,
     setup=setup,
-    txn_max_lim=None,
     check_num_measurements=True,
     remove_timeouts=False,
+    txn_max_lim=None,
     solvers=None,
     problems=None,
     implementations=None,

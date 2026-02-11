@@ -1,9 +1,9 @@
 import itertools
-from typing import List, Tuple
+from typing import List
 
 from domain import Definition, Problem
 from plotting import Style
-from preprocessing import clean, validate
+from preprocessing import clean
 
 BLUE = "#1f77b4"
 ORANGE = "#ff7f0e"
@@ -17,13 +17,6 @@ implementation_styles = {
     "without smart search": Style("No smart search", "#CC79A7", "X", ":"),
 }
 
-
-problems_new_table1 = [
-    "SI_b UpdateSer_b\tSer_b",
-    "SI_b UpdateSer_c\tSer_c",
-    "CC_b\tPlumeCC_b",
-    "RA_b\tRA_c",
-]
 
 problems_rq1 = [
     Problem.from_str("SI_c UpdateSer_c\tSer_c"),

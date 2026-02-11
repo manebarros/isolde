@@ -5,7 +5,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 
 
-@dataclass
+@dataclass(frozen=True)
 class Style:
     name: str
     color: str

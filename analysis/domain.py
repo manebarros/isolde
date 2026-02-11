@@ -4,8 +4,8 @@ from typing import List
 
 
 class Framework(StrEnum):
-    B = "b"
-    C = "c"
+    BISWAS = "b"
+    CERONE = "c"
 
     def as_latex(self) -> str:
         return rf"\mathcal{{{self.upper()}}}"
