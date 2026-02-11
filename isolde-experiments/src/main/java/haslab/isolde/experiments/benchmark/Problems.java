@@ -20,11 +20,11 @@ import java.util.Map;
 public class Problems {
 
   public static enum Framework {
-    CER,
-    BIS;
+    CERONE,
+    BISWAS;
 
     public static Framework fromString(String str) {
-      return str.equals("c") ? CER : BIS;
+      return str.equals("c") ? CERONE : BISWAS;
     }
   }
 
@@ -39,19 +39,19 @@ public class Problems {
     }
 
     public static DefinitionId bis(String levelName) {
-      return new DefinitionId(levelName, Framework.BIS);
+      return new DefinitionId(levelName, Framework.BISWAS);
     }
 
     public static DefinitionId cer(String levelName) {
-      return new DefinitionId(levelName, Framework.CER);
+      return new DefinitionId(levelName, Framework.CERONE);
     }
 
     public static DefinitionId bis(String levelName, String style) {
-      return new DefinitionId(levelName, style, Framework.BIS);
+      return new DefinitionId(levelName, style, Framework.BISWAS);
     }
 
     public static DefinitionId cer(String levelName, String style) {
-      return new DefinitionId(levelName, style, Framework.CER);
+      return new DefinitionId(levelName, style, Framework.CERONE);
     }
 
     public DefinitionId(String levelName, Framework framework) {
@@ -59,7 +59,7 @@ public class Problems {
     }
 
     public String toString() {
-      return levelName + "_" + style + "_" + (this.framework == Framework.CER ? "c" : "b");
+      return levelName + "_" + style + "_" + (this.framework == Framework.CERONE ? "c" : "b");
     }
   }
 
@@ -68,27 +68,29 @@ public class Problems {
   private static Map<DefinitionId, IsoldeConstraint> buildDefinitions() {
     Map<DefinitionId, IsoldeConstraint> m = new HashMap<>();
     // biswas axiomatic
-    m.put(new DefinitionId("RA", "ax", Framework.BIS), biswas(AxiomaticDefinitions.ReadAtomic));
-    m.put(new DefinitionId("CC", "ax", Framework.BIS), biswas(AxiomaticDefinitions.Causal));
-    m.put(new DefinitionId("PC", "ax", Framework.BIS), biswas(AxiomaticDefinitions.Prefix));
-    m.put(new DefinitionId("SI", "ax", Framework.BIS), biswas(AxiomaticDefinitions.Snapshot));
-    m.put(new DefinitionId("Ser", "ax", Framework.BIS), biswas(AxiomaticDefinitions.Ser));
-    m.put(new DefinitionId("UpdateSer", Framework.BIS), biswas(FeketeReadOnlyAnomaly::updateSer));
+    m.put(new DefinitionId("RA", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.ReadAtomic));
+    m.put(new DefinitionId("CC", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Causal));
+    m.put(new DefinitionId("PC", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Prefix));
+    m.put(new DefinitionId("SI", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Snapshot));
+    m.put(new DefinitionId("Ser", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Ser));
+    m.put(
+        new DefinitionId("UpdateSer", Framework.BISWAS), biswas(FeketeReadOnlyAnomaly::updateSer));
 
     // cerone axiomatic
-    m.put(new DefinitionId("RA", "ax", Framework.CER), cerone(CeroneDefinitions.RA));
-    m.put(new DefinitionId("CC", "ax", Framework.CER), cerone(CeroneDefinitions.CC));
-    m.put(new DefinitionId("PC", "ax", Framework.CER), cerone(CeroneDefinitions.PC));
-    m.put(new DefinitionId("SI", "ax", Framework.CER), cerone(CeroneDefinitions.SI));
-    m.put(new DefinitionId("Ser", "ax", Framework.CER), cerone(CeroneDefinitions.Ser));
-    m.put(new DefinitionId("UpdateSer", Framework.CER), cerone(FeketeReadOnlyAnomaly::updateSer));
+    m.put(new DefinitionId("RA", "ax", Framework.CERONE), cerone(CeroneDefinitions.RA));
+    m.put(new DefinitionId("CC", "ax", Framework.CERONE), cerone(CeroneDefinitions.CC));
+    m.put(new DefinitionId("PC", "ax", Framework.CERONE), cerone(CeroneDefinitions.PC));
+    m.put(new DefinitionId("SI", "ax", Framework.CERONE), cerone(CeroneDefinitions.SI));
+    m.put(new DefinitionId("Ser", "ax", Framework.CERONE), cerone(CeroneDefinitions.Ser));
+    m.put(
+        new DefinitionId("UpdateSer", Framework.CERONE), cerone(FeketeReadOnlyAnomaly::updateSer));
 
     // biswas tap
     m.put(
-        new DefinitionId("RA", "tap", Framework.BIS),
+        new DefinitionId("RA", "tap", Framework.BISWAS),
         biswas(TransactionalAnomalousPatterns.ReadAtomic));
     m.put(
-        new DefinitionId("CC", "tap", Framework.BIS),
+        new DefinitionId("CC", "tap", Framework.BISWAS),
         biswas(TransactionalAnomalousPatterns.Causal));
     return m;
   }
@@ -132,14 +134,14 @@ public class Problems {
       // Biswas
       problems.add(
           resolve(
-              new DefinitionId(pos, "ax", Framework.BIS),
-              new DefinitionId(neg, "ax", Framework.BIS)));
+              new DefinitionId(pos, "ax", Framework.BISWAS),
+              new DefinitionId(neg, "ax", Framework.BISWAS)));
 
       // Cerone
       problems.add(
           resolve(
-              new DefinitionId(pos, "ax", Framework.CER),
-              new DefinitionId(neg, "ax", Framework.CER)));
+              new DefinitionId(pos, "ax", Framework.CERONE),
+              new DefinitionId(neg, "ax", Framework.CERONE)));
     }
 
     // Biswas read-only anomaly
