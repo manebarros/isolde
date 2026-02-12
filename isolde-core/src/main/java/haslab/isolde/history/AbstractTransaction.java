@@ -7,6 +7,11 @@ public class AbstractTransaction {
   private Map<Integer, Integer> reads;
   private Map<Integer, Integer> writes;
 
+  public AbstractTransaction(Map<Integer, Integer> reads, Map<Integer, Integer> writes) {
+    this.reads = reads;
+    this.writes = writes;
+  }
+
   public AbstractTransaction(Transaction t) throws TransactionNotInternallyConsistentException {
     Map<Integer, Integer> state = new HashMap<>();
     this.reads = new HashMap<>();
