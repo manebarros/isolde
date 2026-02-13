@@ -14,4 +14,5 @@ java -Xms2g -Xmx8g \
   --obj 5 \
   --val 5 \
   --sess 3 \
-  --solvers minisat,glucose
+  --solvers glucose \
+  --impl all,no_smart_search,no_fixed_co,no_incremental,no_learning

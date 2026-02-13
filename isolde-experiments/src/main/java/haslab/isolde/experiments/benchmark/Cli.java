@@ -135,7 +135,7 @@ public class Cli implements Runnable {
         case "no_fixed_co" -> Implementation.CEGIS_NO_FIXED_COMMIT_ORDER;
         case "no_incremental" -> Implementation.CEGIS_NO_INC_SOLVING;
         case "no_learning" -> Implementation.NO_LEARNING;
-        default -> throw new TypeConversionException("Invalid mode: " + value);
+        default -> throw new TypeConversionException("Invalid implementation: " + value);
       };
     }
   }
