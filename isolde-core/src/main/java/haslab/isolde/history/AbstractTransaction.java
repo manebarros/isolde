@@ -1,7 +1,9 @@
 package haslab.isolde.history;
 
 import java.util.HashMap;
+import java.util.HashSet;
 import java.util.Map;
+import java.util.Set;
 
 public class AbstractTransaction {
   private Map<Integer, Integer> reads;
@@ -37,5 +39,32 @@ public class AbstractTransaction {
 
   public Map<Integer, Integer> getWrites() {
     return writes;
+  }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    for (var key : this.reads.keySet()) {
+      sb.append(String.format("r(%d, %d) ", key, this.reads.get(key)));
+    }
+    for (var key : this.writes.keySet()) {
+      sb.append(String.format("w(%d, %d) ", key, this.writes.get(key)));
+    }
+    sb.append('\n');
+    return sb.toString();
+  }
+
+  public Set<Integer> keySet() {
+    Set<Integer> r = new HashSet<>();
+    r.addAll(reads.keySet());
+    r.addAll(writes.keySet());
+    return r;
+  }
+
+  public Set<Integer> valueSet() {
+    Set<Integer> r = new HashSet<>();
+    r.addAll(reads.values());
+    r.addAll(writes.values());
+    return r;
   }
 }
