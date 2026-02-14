@@ -4,6 +4,7 @@ import haslab.isolde.history.AbstractHistory;
 import haslab.isolde.history.AbstractTransaction;
 import java.util.List;
 import java.util.Set;
+import java.util.stream.Collectors;
 
 public class AbstractExecution {
   private final List<AbstractTransaction> transactions;
@@ -35,6 +36,20 @@ public class AbstractExecution {
 
   public List<Integer> getCommitOrder() {
     return commitOrder;
+  }
+
+  public Set<Integer> keySet() {
+    return this.transactions.stream()
+        .map(AbstractTransaction::keySet)
+        .flatMap(Set::stream)
+        .collect(Collectors.toSet());
+  }
+
+  public Set<Integer> valueSet() {
+    return this.transactions.stream()
+        .map(AbstractTransaction::valueSet)
+        .flatMap(Set::stream)
+        .collect(Collectors.toSet());
   }
 
   @Override

@@ -11,8 +11,6 @@ public interface AbstractHistoryK {
 
   Expression values();
 
-  Expression sessions();
-
   Expression initialTransaction();
 
   Expression externalReads();
@@ -20,8 +18,6 @@ public interface AbstractHistoryK {
   Expression finalWrites();
 
   Expression sessionOrder();
-
-  Expression txn_session();
 
   // TODO: We can try to use Kodkod's built in function concept to define wr
   default Expression wr() {
@@ -72,10 +68,6 @@ public interface AbstractHistoryK {
 
   default Formula sessionOrdered(Expression t, Expression s) {
     return s.in(t.join(sessionOrder()));
-  }
-
-  default Expression session(Expression t) {
-    return t.join(txn_session());
   }
 
   default Formula noReadsFromThinAir() {
@@ -200,11 +192,6 @@ public interface AbstractHistoryK {
       }
 
       @Override
-      public Expression sessions() {
-        return og.sessions();
-      }
-
-      @Override
       public Expression initialTransaction() {
         return og.initialTransaction();
       }
@@ -222,11 +209,6 @@ public interface AbstractHistoryK {
       @Override
       public Expression sessionOrder() {
         return og.sessionOrder();
-      }
-
-      @Override
-      public Expression txn_session() {
-        return og.txn_session();
       }
     };
   }
@@ -252,11 +234,6 @@ public interface AbstractHistoryK {
       }
 
       @Override
-      public Expression sessions() {
-        return og.sessions();
-      }
-
-      @Override
       public Expression initialTransaction() {
         return og.initialTransaction();
       }
@@ -274,11 +251,6 @@ public interface AbstractHistoryK {
       @Override
       public Expression sessionOrder() {
         return og.sessionOrder();
-      }
-
-      @Override
-      public Expression txn_session() {
-        return og.txn_session();
       }
     };
   }

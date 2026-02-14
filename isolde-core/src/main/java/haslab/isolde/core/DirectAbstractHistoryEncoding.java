@@ -45,11 +45,6 @@ public final class DirectAbstractHistoryEncoding implements AbstractHistoryRel {
   }
 
   @Override
-  public Expression sessions() {
-    return sessions;
-  }
-
-  @Override
   public Relation initialTransaction() {
     return initialTransaction;
   }
@@ -67,10 +62,5 @@ public final class DirectAbstractHistoryEncoding implements AbstractHistoryRel {
   @Override
   public Expression sessionOrder() {
     return sessionOrder;
-  }
-
-  @Override
-  public Expression txn_session() {
-    return txn_session;
   }
 }

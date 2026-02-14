@@ -66,7 +66,10 @@ public final class DefaultHistorySynthesisEncoder implements HistoryEncoder<Inpu
 
     return Formula.and(
         histFormula.resolve(this.encoding()),
-        encoding().sessionOrder().union(encoding().binaryWr()).in(txnTotalOrderRel),
+        encoding()
+            .sessionOrder()
+            .union(encoding().binaryWr())
+            .in(txnTotalOrderRel), // TODO: this should be in some other place.
         // KodkodUtil.acyclic(encoding().binaryWr().union(encoding().sessionOrder())),
         noBlindWrites(),
         noEmptyTransactions(),
