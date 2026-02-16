@@ -26,44 +26,46 @@ class Solver(StrEnum):
                 return "Sat4j"
 
 
-@dataclass(frozen=True)
+@dataclass(frozen=True, order=True)
 class Definition:
     name: str
     framework: Framework
 
     @classmethod
     def from_str(cls, name: str):
-        (level, fw) = name.split("_")
+        (level, style, fw) = name.split("_")
+        if style == "":
+            assert level == "UpdateSer"
+            return cls("US", Framework(fw))
+        if style == "tap":
+            return cls(f"Tap{level}", Framework(fw))
         return cls(level, Framework(fw))
 
     def as_latex(self, use_sc=False, with_fw=True) -> str:
-        match self.name:
-            case "UpdateSer":
-                level_name = "US"
-            case "PlumeRA":
-                level_name = "TapRA"
-            case "PlumeCC":
-                level_name = "TapCC"
-            case _:
-                level_name = self.name
-
-        if use_sc:
-            level_name = rf"\textsc{{{level_name}}}"
+        level_name = rf"\textsc{{{self.name}}}" if use_sc else self.name
         return (
             rf"{level_name}_{{{self.framework.as_latex()}}}" if with_fw else level_name
         )
 
+    def __str__(self) -> str:
+        return f"{self.name}_{self.framework}"
 
-@dataclass(frozen=True)
+
+@dataclass(frozen=True, order=True)
 class Problem:
-    pos: List[Definition]
+    pos: tuple[Definition, ...]
     neg: Definition
 
     @classmethod
     def from_str(cls, name: str):
         (pos, neg) = name.split("\t")
         pos_lst = pos.split(" ")
-        return cls([Definition.from_str(d) for d in pos_lst], Definition.from_str(neg))
+        return cls(
+            tuple([Definition.from_str(d) for d in pos_lst]), Definition.from_str(neg)
+        )
+
+    def __str__(self) -> str:
+        return " ".join([l.__str__() for l in self.pos]) + "|" + self.neg.__str__()
 
     def as_latex(self, use_dollar_sign=True, use_sc=False) -> str:
         pos_str = ", ".join([l.as_latex(use_sc=use_sc) for l in self.pos])
