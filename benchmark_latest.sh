@@ -1,8 +1,14 @@
 #!/usr/bin/env bash
 set -euo pipefail
 
-# Get the commit hash that main points to (14-char short hash)
-COMMIT_HASH=$(git rev-parse --short=14 main)
+# Check if staging area is clean
+if ! git diff-index --quiet --cached HEAD; then
+  echo "Error: Staging area is not clean. Please commit or unstage changes before running."
+  exit 1
+fi
+
+# Get the commit hash that HEAD points to (14-char short hash)
+COMMIT_HASH=$(git rev-parse --short=14 HEAD)
 
 CSV_PATH="isolde-experiments/data/${COMMIT_HASH}.csv"
 
