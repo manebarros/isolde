@@ -1,3 +1,7 @@
+from types import NoneType
+from typing import List, Tuple
+
+from config import sat
 from domain import Problem, Solver
 
 # These columns identify a particular configuration for an Isolde run
@@ -12,19 +16,33 @@ setup = [
 ]
 
 
+def preprocess(
+    df,
+    txn_num: NoneType | Tuple[int, int] | List[int] = None,
+    remove_timeouts=False,
+    solvers=None,
+    problems=None,
+    implementations=None,
+):
+    df = typify(df)
+    df = trim(
+        df,
+        txn_num=txn_num,
+        remove_timeouts=remove_timeouts,
+        solvers=solvers,
+        problems=problems,
+        implementations=implementations,
+    )
+    return merge_rows(df, check_num_measurements=False)
+
+
 # Validates a dataframe. A dataframe is valid iff:
 # - all different setups (i.e., implementation + solver + input problem + scope) have the same number of measurements
 # - each setup always results in the same number of candidates
 def validate(df, setup=setup, check_num_measurements=True):
-    # Assert unique values for the number of keys, values, and sessions
-    params = ["num_keys", "num_values", "num_sessions"]
-    for param in params:
-        values = df[param].unique()
-        if len(values) > 1:
-            return (
-                False,
-                f"Not all measurements use the same '{param}' value. Values present: {values}",
-            )
+    # Assert that the result of all non-timeout rows is equivalent to the expected result
+    if not ((df["outcome"] == "TIMEOUT") | (df["outcome"] == df["expected"])).all():
+        return (False, f"Results do not match expected results.")
 
     grouped = df.groupby(setup)
 
@@ -36,48 +54,71 @@ def validate(df, setup=setup, check_num_measurements=True):
             f"Not all setups have the same number of measurements. Numbers of measurements: {number_of_measurements}",
         )
 
-    # Assert that among a group we have a single number of candidates
-    if not (grouped["candidates"].nunique() == 1).all():
-        return (False, f"Not all groups have a consistent 'candidates' value")
+    # Assert determinism in the fields 'candidates', 'initial_synth_clauses', and 'total_synth_clauses'
+    fields = ["candidates", "initial_synth_clauses", "total_synth_clauses", "outcome"]
+    for field in fields:
+        if not (grouped[field].nunique() == 1).all():
+            return (False, f"Not all groups have a consistent '{field}' value")
+
     return (True, None)
 
 
-# Cleans a dataframe by grouping together rows corresponding to the same setup,
-# creating three new columns "avg_time_ms", "max_time_ms", and "min_time_ms".
-# We keep the number of candidates of each group.
-def clean(
+def trim(
     df,
-    setup=setup,
-    check_num_measurements=True,
+    txn_num: NoneType | Tuple[int, int] | List[int] = None,
     remove_timeouts=False,
-    txn_max_lim=None,
     solvers=None,
     problems=None,
     implementations=None,
 ):
-    validation_result = validate(df, setup, check_num_measurements)
-    assert validation_result[0], validation_result[1]
-    if txn_max_lim:
-        df = df[df["num_txn"] <= txn_max_lim]
+    if txn_num != None:
+        if isinstance(txn_num, Tuple):
+            txn_num = list(range(txn_num[0], txn_num[1] + 1))
+        df = df[df["num_txn"].isin(txn_num)]
     if remove_timeouts:
-        df = df[df["timed_out"] == False]
+        df = df[~(df["outcome"] == "TIMEOUT")]
     if solvers:
         df = df[df["solver"].isin(solvers)]
     if problems:
         df = df[df["problem"].isin(problems)]
     if implementations:
         df = df[df["implementation"].isin(implementations)]
+    return df
+
+
+def typify(df):
+    df["problem"] = df["problem"].apply(Problem.from_str)
+    df["solver"] = df["solver"].apply(lambda s: Solver(s.lower()))
+    df["expected"] = df["problem"].apply(lambda p: "SAT" if sat(p) else "UNSAT")
+    return df
+
+
+# Cleans a dataframe by grouping together rows corresponding to the same setup,
+# creating three new columns "avg_time_ms", "max_time_ms", and "min_time_ms".
+# We keep the number of candidates of each group.
+def merge_rows(
+    df,
+    setup=setup,
+    check_num_measurements=True,
+):
+    validation_result = validate(df, setup, check_num_measurements)
+    assert validation_result[0], validation_result[1]
     df = (
         df.groupby(setup)
         .agg(
             candidates=("candidates", "first"),
-            avg_time_ms=("time_ms", "mean"),
-            min_time_ms=("time_ms", "min"),
-            max_time_ms=("time_ms", "max"),
+            initial_clauses=("initial_synth_clauses", "first"),
+            final_clauses=("total_synth_clauses", "first"),
+            avg_time_ms=("total_time_ms", "mean"),
+            min_time_ms=("total_time_ms", "min"),
+            max_time_ms=("total_time_ms", "max"),
+            outcome=(
+                "outcome",
+                lambda x: "TIMEOUT" if (x == "TIMEOUT").any() else x.iloc[0],
+            ),
+            expected=("expected", "first"),
         )
         .reset_index()
     )
     df["avg_time_ms"] = df["avg_time_ms"].round().astype(int)
-    df["problem"] = df["problem"].apply(lambda p: Problem.from_str(p))
-    df["solver"] = df["solver"].apply(lambda s: Solver(s))
     return df
