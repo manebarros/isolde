@@ -19,7 +19,7 @@ public class SequenceCombinations {
     }
 
     List<Integer> elements = new ArrayList<>();
-    for (int i = 1; i <= size; i++) {
+    for (int i = 0; i < size; i++) {
       elements.add(i);
     }
 
@@ -144,20 +144,5 @@ public class SequenceCombinations {
       newCurrent.add(permutation);
       generateCartesianProduct(allSubsetPermutations, index + 1, newCurrent, result);
     }
-  }
-
-  // Test method
-  public static void main(String[] args) {
-    Iterator<Set<List<Integer>>> iter = allSequenceCombinations(3);
-    int count = 0;
-
-    System.out.println("All sequence combinations for size 3:");
-    while (iter.hasNext()) {
-      Set<List<Integer>> combination = iter.next();
-      count++;
-      System.out.println(count + ": " + combination);
-    }
-
-    System.out.println("\nTotal combinations: " + count);
   }
 }

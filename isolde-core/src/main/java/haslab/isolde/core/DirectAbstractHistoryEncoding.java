@@ -7,7 +7,6 @@ public final class DirectAbstractHistoryEncoding implements AbstractHistoryRel {
   public static final Relation transactions = Relation.unary("transactions");
   public static final Relation keys = Relation.unary("keys");
   public static final Relation values = Relation.unary("values");
-  public static final Relation sessions = Relation.unary("sessions");
 
   public static final Relation initialTransaction = Relation.unary("initialTransaction");
 
@@ -15,8 +14,6 @@ public final class DirectAbstractHistoryEncoding implements AbstractHistoryRel {
   public static final Relation writes = Relation.ternary("final writes");
 
   public static final Relation sessionOrder = Relation.binary("session order");
-
-  public static final Relation txn_session = Relation.binary("session function");
 
   private static DirectAbstractHistoryEncoding instance = null;
 

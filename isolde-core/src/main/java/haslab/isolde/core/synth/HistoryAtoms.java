@@ -11,7 +11,6 @@ public class HistoryAtoms implements AtomsContainer {
   private List<Atom<Integer>> txnAtoms;
   private List<Atom<Integer>> objAtoms;
   private List<Atom<Integer>> valAtoms;
-  private List<Atom<Integer>> sessionAtoms;
 
   public HistoryAtoms(Scope scope) {
     this.txnAtoms =
@@ -27,11 +26,6 @@ public class HistoryAtoms implements AtomsContainer {
     this.valAtoms =
         IntStream.range(0, scope.getValues())
             .mapToObj(i -> new Atom<>("v", i))
-            .collect(Collectors.toList());
-
-    this.sessionAtoms =
-        IntStream.range(0, scope.getSessions())
-            .mapToObj(i -> new Atom<>("s", i))
             .collect(Collectors.toList());
   }
 
@@ -53,7 +47,6 @@ public class HistoryAtoms implements AtomsContainer {
     atoms.addAll(this.txnAtoms);
     atoms.addAll(this.objAtoms);
     atoms.addAll(this.valAtoms);
-    atoms.addAll(this.sessionAtoms);
     return atoms;
   }
 
@@ -67,9 +60,5 @@ public class HistoryAtoms implements AtomsContainer {
 
   public List<Atom<Integer>> getValAtoms() {
     return valAtoms;
-  }
-
-  public List<Atom<Integer>> getSessionAtoms() {
-    return sessionAtoms;
   }
 }

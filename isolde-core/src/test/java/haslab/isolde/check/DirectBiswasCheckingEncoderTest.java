@@ -4,9 +4,7 @@ import static haslab.isolde.core.DirectAbstractHistoryEncoding.initialTransactio
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.keys;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.reads;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessionOrder;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessions;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.transactions;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.txn_session;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.values;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.writes;
 import static haslab.isolde.history.Operation.readOf;
@@ -49,7 +47,6 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
 
     Atom<Integer> initTxnAtom = new Atom<>("t", 0);
     Atom<Integer> txnAtom = new Atom<>("t", 1);
-    Atom<Integer> sessionAtom = new Atom<>("s", 0);
     Atom<Integer> keyAtom = new Atom<Integer>("x", 0);
     Atom<Integer> initialValueAtom = new Atom<Integer>("v", 0);
     Atom<Integer> valAtom = new Atom<Integer>("v", 1);
@@ -62,15 +59,13 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
             transactions, f.setOf(initTxnAtom, txnAtom),
             keys, f.setOf(keyAtom),
             values, f.setOf(initialValueAtom, valAtom),
-            sessions, f.setOf(sessionAtom),
             initialTransaction, f.setOf(initTxnAtom),
             reads, f.setOf(f.tuple(txnAtom, keyAtom, initialValueAtom)),
             writes,
                 f.setOf(
                     f.tuple(initTxnAtom, keyAtom, initialValueAtom),
                     f.tuple(txnAtom, keyAtom, valAtom)),
-            sessionOrder, f.setOf(f.tuple(initTxnAtom, txnAtom)),
-            txn_session, f.setOf(f.tuple(txnAtom, sessionAtom)));
+            sessionOrder, f.setOf(f.tuple(initTxnAtom, txnAtom)));
 
     for (Relation rel : expectedTupleSets.keySet()) {
       assertEquals(expectedTupleSets.get(rel), b.lowerBound(rel));
@@ -96,7 +91,6 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
 
     List<Atom<Integer>> txnAtoms =
         Arrays.asList(new Atom<>("t", 0), new Atom<>("t", 1), new Atom<>("t", 2));
-    List<Atom<Integer>> sessionAtoms = Arrays.asList(new Atom<>("s", 0), new Atom<>("s", 1));
     Atom<Integer> keyAtom = new Atom<Integer>("x", 0);
     List<Atom<Integer>> valAtoms =
         Arrays.asList(new Atom<>("v", 0), new Atom<>("v", 1), new Atom<>("v", 2));
@@ -108,7 +102,6 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
             transactions, f.setOf(txnAtoms.toArray()),
             keys, f.setOf(keyAtom),
             values, f.setOf(valAtoms.toArray()),
-            sessions, f.setOf(sessionAtoms.toArray()),
             initialTransaction, f.setOf(txnAtoms.get(0)),
             reads,
                 f.setOf(
@@ -122,11 +115,7 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
             sessionOrder,
                 f.setOf(
                     f.tuple(txnAtoms.get(0), txnAtoms.get(1)),
-                    f.tuple(txnAtoms.get(0), txnAtoms.get(2))),
-            txn_session,
-                f.setOf(
-                    f.tuple(txnAtoms.get(1), sessionAtoms.get(0)),
-                    f.tuple(txnAtoms.get(2), sessionAtoms.get(1))));
+                    f.tuple(txnAtoms.get(0), txnAtoms.get(2))));
 
     for (Relation rel : expectedTupleSets.keySet()) {
       assertEquals(expectedTupleSets.get(rel), b.lowerBound(rel));

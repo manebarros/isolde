@@ -1,59 +1,90 @@
 package haslab.isolde.history;
 
 import static haslab.isolde.kodkod.Util.readBinaryExpression;
-import static haslab.isolde.kodkod.Util.readUnaryExpression;
 
 import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.kodkod.Atom;
 import java.util.ArrayList;
-import java.util.HashSet;
+import java.util.Collections;
 import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
+import java.util.stream.Collectors;
 import kodkod.engine.Evaluator;
 import kodkod.instance.Instance;
 import kodkod.instance.TupleSet;
 
+// TODO: test this class
 public class HistoryIntermediateRepresentation {
-  private Set<Integer> sessions;
-
   private TupleSet readsTs;
   private TupleSet writesTs;
-
-  private Map<Integer, Set<Integer>> sessionOrder;
-  private Map<Integer, Set<Integer>> session_txn;
+  private Map<Integer, Set<Integer>> so;
 
   public HistoryIntermediateRepresentation(AbstractHistoryK encoding, Instance instance) {
     Evaluator evaluator = new Evaluator(instance);
-
-    this.sessions = readUnaryExpression(evaluator, encoding.sessions(), Integer.class);
-
     this.readsTs = evaluator.evaluate(encoding.externalReads());
     this.writesTs = evaluator.evaluate(encoding.finalWrites());
-
-    this.sessionOrder =
+    this.so =
         readBinaryExpression(evaluator, encoding.sessionOrder(), Integer.class, Integer.class);
-
-    this.session_txn =
-        readBinaryExpression(
-            evaluator, encoding.txn_session().transpose(), Integer.class, Integer.class);
   }
 
+  // TODO: test this
   public History buildHistory() {
     Map<Integer, List<Operation>> ts = decodeTransactions();
-    return new History(this.sessions.stream().sorted().map(sid -> decodeSession(ts, sid)).toList());
+    List<List<Integer>> soTranslated = translate(this.so);
+
+    List<Session> sessions = new ArrayList<>();
+    for (var list : soTranslated) {
+      List<Transaction> sessionTransactions = new ArrayList<>();
+      for (var tid : list) {
+        sessionTransactions.add(new Transaction(tid, ts.get(tid)));
+      }
+      sessions.add(new Session(sessionTransactions));
+    }
+
+    return new History(sessions);
   }
 
-  private Session decodeSession(Map<Integer, List<Operation>> ts, int sid) {
-    return new Session(
-        this.session_txn.getOrDefault(sid, new HashSet<>()).stream()
-            .sorted(
-                (t, s) ->
-                    sessionOrder.getOrDefault(s, new HashSet<>()).size()
-                        - sessionOrder.getOrDefault(t, new HashSet<>()).size())
-            .map(tid -> new Transaction(tid, ts.get(tid)))
-            .toList());
+  // TODO: test this
+  private List<List<Integer>> translate(Map<Integer, Set<Integer>> so) {
+    Map<Integer, Integer> txn_session = new LinkedHashMap<>();
+    List<Set<Integer>> sessionSets = new ArrayList<>();
+    int nextSession = 0;
+
+    for (var tid : so.keySet()) {
+      boolean inExistingSession = false;
+      for (var followingTid : so.get(tid)) {
+        if (txn_session.containsKey(followingTid)) {
+          inExistingSession = true;
+          var session = txn_session.get(followingTid);
+          txn_session.put(tid, session);
+          sessionSets.get(session).add(tid);
+          break;
+        }
+      }
+      if (!inExistingSession) {
+        txn_session.put(tid, nextSession++);
+        Set<Integer> newSession = new LinkedHashSet<>();
+        newSession.add(tid);
+        sessionSets.add(newSession);
+      }
+    }
+
+    return sessionSets.stream()
+        .map(
+            sessionSet ->
+                sessionSet.stream()
+                    .sorted(
+                        (a, b) -> {
+                          int sizeA = so.getOrDefault(a, Collections.emptySet()).size();
+                          int sizeB = so.getOrDefault(b, Collections.emptySet()).size();
+                          return Integer.compare(
+                              sizeB, sizeA); // descending order (bigger sets first)
+                        })
+                    .collect(Collectors.toList()))
+        .collect(Collectors.toList());
   }
 
   private Map<Integer, List<Operation>> decodeTransactions() {

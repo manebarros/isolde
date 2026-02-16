@@ -21,7 +21,6 @@ import haslab.isolde.core.synth.Scope;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
 import haslab.isolde.history.Transaction;
-import haslab.isolde.kodkod.FormulaUtil;
 import haslab.isolde.kodkod.KodkodProblem;
 import java.util.Arrays;
 import kodkod.ast.Formula;
@@ -106,7 +105,6 @@ public final class FeketeReadOnlyAnomaly {
             AxiomaticDefinitions.Ser.not());
     HistoryFormula oneTransactionPerSession =
         h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
-    HistoryFormula equivalentToAnomaly = FormulaUtil.equivalentToHistory(readOnlyAnomaly);
 
     Synthesizer synth = new Synthesizer(scope, oneTransactionPerSession);
 

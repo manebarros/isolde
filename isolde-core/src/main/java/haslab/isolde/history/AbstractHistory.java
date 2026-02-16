@@ -19,4 +19,14 @@ public class AbstractHistory {
   public Set<List<Integer>> getSessionOrder() {
     return sessionOrder;
   }
+
+  @Override
+  public String toString() {
+    StringBuilder sb = new StringBuilder();
+    for (int i = 0; i < transactions.size(); i++) {
+      sb.append(String.format("T%d : %s", i, transactions.get(i)));
+    }
+    sb.append('\n').append("so: ").append(sessionOrder);
+    return sb.toString();
+  }
 }

@@ -1,23 +1,33 @@
 package haslab.isolde.experiments;
 
-import haslab.isolde.core.synth.Scope;
-import haslab.isolde.experiments.benchmark.exhaustive.AbstractExecution;
-import haslab.isolde.experiments.benchmark.exhaustive.ExecutionGenerator;
-import java.util.Iterator;
+import haslab.isolde.experiments.benchmark.Cli;
+import picocli.CommandLine;
 
 public class Main {
   public static void main(String[] args) throws Exception {
-    // CommandLine cmd = new CommandLine(new Cli()).setCaseInsensitiveEnumValuesAllowed(true);
-    // int exitCode = cmd.execute(args);
-    // System.exit(exitCode);
-    Scope scope = new Scope(3);
-    ExecutionGenerator generator = new ExecutionGenerator(scope);
-    Iterator<AbstractExecution> executionIterator = generator.allExecutions();
-    int counter = 0;
-    while (executionIterator.hasNext()) {
-      var execution = executionIterator.next();
-      System.out.println(execution);
-      System.out.println(++counter);
-    }
+    CommandLine cmd = new CommandLine(new Cli()).setCaseInsensitiveEnumValuesAllowed(true);
+    int exitCode = cmd.execute(args);
+    System.exit(exitCode);
+    // Synthesizer synth = new Synthesizer(SATFactory.Glucose);
+    // for (int i = 2; i <= 5; i++) {
+    //  System.out.println(
+    //      String.format(
+    //          "Start looking for scope %d at %s",
+    //          i, LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"))));
+    //  SynthesisSolution solution =
+    //      synth.synthesize(new Scope(i), AxiomaticDefinitions.ReadAtomic,
+    // AxiomaticDefinitions.Ser);
+    //  if (solution.history().isPresent()) {
+    //    System.out.println(
+    //        String.format(
+    //            "Found history after %d seconds and %d candidates:\n%s",
+    //            solution.time_ms(), solution.candidates(), solution.history().get()));
+    //  } else {
+    //    System.out.println(
+    //        String.format(
+    //            "Failed to find a history after %d seconds and %d candidates.",
+    //            solution.time_ms(), solution.candidates()));
+    //  }
+    // }
   }
 }

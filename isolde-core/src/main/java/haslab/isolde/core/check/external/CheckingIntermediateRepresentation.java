@@ -10,7 +10,6 @@ import java.util.Map;
 import java.util.stream.Collectors;
 
 public class CheckingIntermediateRepresentation implements AtomsContainer {
-  private List<Atom<Integer>> sessAtoms;
   private List<List<Atom<Integer>>> txnAtoms;
   private Map<Integer, Atom<Integer>> keyAtoms;
   private Map<Integer, Atom<Integer>> valAtoms;
@@ -26,7 +25,6 @@ public class CheckingIntermediateRepresentation implements AtomsContainer {
   }
 
   public CheckingIntermediateRepresentation(History history) {
-    this.sessAtoms = new ArrayList<>();
     this.txnAtoms = new ArrayList<>();
     this.keyAtoms = new LinkedHashMap<>();
     this.valAtoms = new LinkedHashMap<>();
@@ -35,9 +33,7 @@ public class CheckingIntermediateRepresentation implements AtomsContainer {
     valAtoms.put(0, new Atom<>("v", 0));
 
     int nextTid = 1;
-    int nextSid = 0;
     for (var session : history.getSessions()) {
-      sessAtoms.add(new Atom<>("s", nextSid++));
       List<Atom<Integer>> sessTxnAtoms = new ArrayList<>();
       txnAtoms.add(sessTxnAtoms);
       for (var txn : session.transactions()) {
@@ -63,12 +59,7 @@ public class CheckingIntermediateRepresentation implements AtomsContainer {
     allAtoms.add(initialTxnAtom);
     allAtoms.addAll(keyAtoms.values());
     allAtoms.addAll(valAtoms.values());
-    allAtoms.addAll(sessAtoms);
     return allAtoms;
-  }
-
-  public List<Atom<Integer>> getSessAtoms() {
-    return sessAtoms;
   }
 
   public List<List<Atom<Integer>>> getTxnAtoms() {

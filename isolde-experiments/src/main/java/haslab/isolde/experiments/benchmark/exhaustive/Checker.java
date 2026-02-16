@@ -5,7 +5,6 @@ import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.kodkod.Atom;
-import haslab.isolde.kodkod.KodkodProblem;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.HashSet;
@@ -32,13 +31,17 @@ public class Checker {
 
   private static final Relation reads = Relation.ternary("reads");
   private static final Relation writes = Relation.ternary("writes");
-  private static final Relation so = Relation.ternary("so");
-  private static final Relation co = Relation.ternary("co");
+  private static final Relation so = Relation.binary("so");
+  private static final Relation co = Relation.binary("co");
 
   private Solver solver = new Solver();
 
   public Checker() {
     this(SATFactory.MiniSat);
+  }
+
+  public Checker(Solver solver) {
+    this.solver = solver;
   }
 
   public Checker(SATFactory solver) {
@@ -98,7 +101,7 @@ public class Checker {
     AbstractHistoryK encoding = encoding();
     return Formula.and(
         uniqueWrites(),
-        encoding.sessionOrder().union(encoding.wr()).in(co),
+        encoding.sessionOrder().union(encoding.binaryWr()).in(co),
         encoding.noReadsFromThinAir(),
         formula.resolve(new BiswasExecution(encoding, co)));
   }
@@ -162,8 +165,10 @@ public class Checker {
     // normal transactions
     for (var session : execution.getSessionOrder()) {
       for (int i = 0; i < session.size() - 1; i++) {
-        for (int j = i + 1; i < session.size(); j++) {
-          soTs.add(factory.tuple(txnAtoms.get(i), txnAtoms.get(j)));
+        for (int j = i + 1; j < session.size(); j++) {
+          var fstAtom = session.get(i);
+          var sndAtom = session.get(j);
+          soTs.add(factory.tuple(txnAtoms.get(fstAtom), txnAtoms.get(sndAtom)));
         }
       }
     }
@@ -176,8 +181,10 @@ public class Checker {
     TupleSet coTs = factory.noneOf(2);
     // normal transactions
     for (int i = 0; i < execution.getCommitOrder().size() - 1; i++) {
-      for (int j = i + 1; i < execution.getCommitOrder().size(); j++) {
-        coTs.add(factory.tuple(txnAtoms.get(i), txnAtoms.get(j)));
+      for (int j = i + 1; j < execution.getCommitOrder().size(); j++) {
+        var fstAtom = execution.getCommitOrder().get(i);
+        var sndAtom = execution.getCommitOrder().get(j);
+        coTs.add(factory.tuple(txnAtoms.get(fstAtom), txnAtoms.get(sndAtom)));
       }
     }
     for (var txnAtom : txnAtoms) {
@@ -192,13 +199,7 @@ public class Checker {
     return bounds;
   }
 
-  public boolean check(
-      AbstractExecution execution,
-      ExecutionFormula<BiswasExecution> pos,
-      ExecutionFormula<BiswasExecution> neg) {
-    Bounds bounds = generateBounds(execution);
-    KodkodProblem p1 = new KodkodProblem(formula(pos), bounds);
-    KodkodProblem p2 = new KodkodProblem(formula(neg), bounds);
-    return p1.solve(this.solver).sat() && p2.solve(this.solver).unsat();
+  public boolean check(AbstractExecution execution, ExecutionFormula<BiswasExecution> formula) {
+    return this.solver.solve(formula(formula), generateBounds(execution)).sat();
   }
 }

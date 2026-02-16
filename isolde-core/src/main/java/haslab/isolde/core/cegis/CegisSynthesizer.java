@@ -362,8 +362,6 @@ public class CegisSynthesizer<T, S> {
 
     Solver checker = new Solver(checkOptions);
 
-    Instant start = Instant.now();
-
     Solution candSol = searchProblem.solve(synthesizer);
     int candCount = 0;
 

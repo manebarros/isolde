@@ -4,9 +4,7 @@ import static haslab.isolde.core.DirectAbstractHistoryEncoding.initialTransactio
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.keys;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.reads;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessionOrder;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessions;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.transactions;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.txn_session;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.values;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.writes;
 import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
@@ -51,7 +49,6 @@ public class DefaultCandCheckingEncoder implements HistoryEncoder<Contextualized
         transactions, asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.transactions()))));
     b.boundExactly(keys, asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.keys()))));
     b.boundExactly(values, asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.values()))));
-    b.boundExactly(sessions, asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.sessions()))));
     b.boundExactly(
         initialTransaction,
         asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.initialTransaction()))));
@@ -59,7 +56,6 @@ public class DefaultCandCheckingEncoder implements HistoryEncoder<Contextualized
     b.boundExactly(writes, Util.convert(ev, context, AbstractHistoryK::finalWrites, f, 3));
     b.boundExactly(reads, Util.convert(ev, context, AbstractHistoryK::externalReads, f, 3));
     b.boundExactly(sessionOrder, Util.convert(ev, context, AbstractHistoryK::sessionOrder, f, 2));
-    b.boundExactly(txn_session, Util.convert(ev, context, AbstractHistoryK::txn_session, f, 2));
 
     return Formula.TRUE;
   }

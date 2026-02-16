@@ -4,9 +4,7 @@ import static haslab.isolde.core.DirectAbstractHistoryEncoding.initialTransactio
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.keys;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.reads;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessionOrder;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessions;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.transactions;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.txn_session;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.values;
 import static haslab.isolde.core.DirectAbstractHistoryEncoding.writes;
 import static org.junit.jupiter.api.Assertions.assertTrue;
@@ -47,12 +45,10 @@ public interface CeroneCandCheckEncoderTest {
     instance.add(transactions, tf.setOf("t0", "t1", "t2"));
     instance.add(keys, tf.setOf("x"));
     instance.add(values, tf.setOf(0, 1));
-    instance.add(sessions, tf.setOf("s1"));
     instance.add(initialTransaction, tf.setOf("t0"));
     instance.add(writes, tf.setOf(tf.tuple("t0", "x", 0), tf.tuple("t1", "x", 1)));
     instance.add(reads, tf.setOf(tf.tuple("t1", "x", 0), tf.tuple("t2", "x", 0)));
     instance.add(sessionOrder, tf.setOf(tf.tuple("t1", "t2")));
-    instance.add(txn_session, tf.setOf(tf.tuple("t1", "s1"), tf.tuple("t2", "s1")));
     Solution sol =
         candCheckEncoder()
             .check(

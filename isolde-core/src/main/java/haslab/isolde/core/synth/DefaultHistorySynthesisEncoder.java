@@ -6,7 +6,6 @@ import haslab.isolde.core.*;
 import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.core.synth.FolSynthesisProblem.InputWithTotalOrder;
 import haslab.isolde.kodkod.KodkodUtil;
-import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Relation;
 import kodkod.ast.Variable;
@@ -32,7 +31,6 @@ public final class DefaultHistorySynthesisEncoder implements HistoryEncoder<Inpu
     b.boundExactly(transactions, f.setOf(historyAtoms.getTxnAtoms().toArray()));
     b.boundExactly(keys, f.setOf(historyAtoms.getObjAtoms().toArray()));
     b.boundExactly(values, f.setOf(historyAtoms.getValAtoms().toArray()));
-    b.boundExactly(sessions, f.setOf(historyAtoms.getSessionAtoms().toArray()));
     b.boundExactly(initialTransaction, f.setOf(historyAtoms.initialTxn()));
 
     TupleSet writesLowerBound =
@@ -56,26 +54,18 @@ public final class DefaultHistorySynthesisEncoder implements HistoryEncoder<Inpu
         f.setOf(historyAtoms.initialTxn()).product(f.setOf(historyAtoms.normalTxns().toArray()));
 
     b.bound(sessionOrder, sessionOrderLowerBound, txnTotalOrderTs);
-    b.bound(
-        txn_session,
-        f.setOf(historyAtoms.normalTxns().toArray())
-            .product(f.setOf(historyAtoms.getSessionAtoms().toArray())));
 
     Relation txnTotalOrderRel = Relation.binary("Txn total order");
     b.boundExactly(txnTotalOrderRel, txnTotalOrderTs);
 
     return Formula.and(
         histFormula.resolve(this.encoding()),
-        encoding()
-            .sessionOrder()
-            .union(encoding().binaryWr())
-            .in(txnTotalOrderRel), // TODO: this should be in some other place.
-        // KodkodUtil.acyclic(encoding().binaryWr().union(encoding().sessionOrder())),
+        encoding().binaryWr().in(txnTotalOrderRel), // TODO: this should be in some other place.
         noBlindWrites(),
         noEmptyTransactions(),
         transactionsWriteToKeyAtMostOnce(),
         transactionsReadKeyAtMostOnce(),
-        sessionSemantics(),
+        KodkodUtil.transitive(this.encoding().sessionOrder()),
         this.encoding().noReadsFromThinAir(),
         uniqueWrites());
   }
@@ -107,17 +97,6 @@ public final class DefaultHistorySynthesisEncoder implements HistoryEncoder<Inpu
     Variable t = Variable.unary("t");
     Variable x = Variable.unary("x");
     return x.join(t.join(reads)).lone().forAll(t.oneOf(transactions).and(x.oneOf(keys)));
-  }
-
-  private Formula sessionSemantics() {
-    Variable s = Variable.unary("s");
-    Expression normalTxns = DirectAbstractHistoryEncoding.instance().normalTxns();
-
-    return Formula.and(
-        txn_session.function(normalTxns, sessions),
-        txn_session.transpose().join(sessionOrder.join(txn_session)).in(Expression.IDEN),
-        KodkodUtil.total(sessionOrder, txn_session.join(s)).forAll(s.oneOf(sessions)),
-        KodkodUtil.transitive(sessionOrder));
   }
 
   private Formula uniqueWrites() {

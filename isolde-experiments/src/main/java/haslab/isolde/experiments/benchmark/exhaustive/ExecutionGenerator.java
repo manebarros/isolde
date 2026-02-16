@@ -98,7 +98,7 @@ public class ExecutionGenerator {
     };
   }
 
-  private Iterator<AbstractHistory> allHistories() {
+  public Iterator<AbstractHistory> allHistories() {
     Iterator<List<AbstractTransaction>> txnIterator = allTransactionCombinations();
 
     assert txnIterator.hasNext();
@@ -160,28 +160,42 @@ public class ExecutionGenerator {
 
     assert allHistories.hasNext();
 
-    Set<Integer> transactions = new HashSet<>();
-    for (int i = 0; i < this.scope.getTransactions(); i++) {
-      transactions.add(i);
-    }
-
     return new Iterator<AbstractExecution>() {
       private AbstractHistory currentHistory = allHistories.next();
+      private Iterator<AbstractExecution> executionIterator = allExecutions(this.currentHistory);
+
+      @Override
+      public boolean hasNext() {
+        return executionIterator.hasNext() || allHistories.hasNext();
+      }
+
+      @Override
+      public AbstractExecution next() {
+        if (!executionIterator.hasNext()) {
+          this.currentHistory = allHistories.next();
+          this.executionIterator = allExecutions(this.currentHistory);
+        }
+        return this.executionIterator.next();
+      }
+    };
+  }
+
+  public Iterator<AbstractExecution> allExecutions(AbstractHistory history) {
+    Set<Integer> transactions = transactions();
+
+    return new Iterator<AbstractExecution>() {
       private Iterator<List<Integer>> commitOrderIterator =
           PermutationIterator.allPermutations(transactions);
 
       @Override
       public boolean hasNext() {
-        return commitOrderIterator.hasNext() || allHistories.hasNext();
+        return commitOrderIterator.hasNext();
       }
 
       @Override
       public AbstractExecution next() {
-        if (!commitOrderIterator.hasNext()) {
-          this.currentHistory = allHistories.next();
-          this.commitOrderIterator = PermutationIterator.allPermutations(transactions);
-        }
-        return new AbstractExecution(currentHistory, commitOrderIterator.next());
+        var co = commitOrderIterator.next();
+        return new AbstractExecution(history, co);
       }
     };
   }
@@ -218,6 +232,14 @@ public class ExecutionGenerator {
       values.add(i);
     }
     return values;
+  }
+
+  private Set<Integer> transactions() {
+    Set<Integer> transactions = new HashSet<>();
+    for (int i = 0; i < this.scope.getTransactions(); i++) {
+      transactions.add(i);
+    }
+    return transactions;
   }
 
   public Iterator<List<Map<Integer, Integer>>> allMappings(

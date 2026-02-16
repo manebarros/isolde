@@ -102,10 +102,9 @@ public final class CustomDefinitions {
   }
 
   public static Expression versionOrder(BiswasExecution e, Expression x) {
-    Variable m, n, t;
+    Variable m, n;
     m = Variable.unary("m");
     n = Variable.unary("n");
-    t = Variable.unary("t");
     AbstractHistoryK h = e.history();
     return h.writerOf(x, m)
         .product(h.writerOf(x, n))
@@ -273,7 +272,7 @@ public final class CustomDefinitions {
   }
 
   public static Formula newLongFork(BiswasExecution e) {
-    Variable s, t, x, y, xi, xf, yi, yf;
+    Variable s, t, x, y, xi, yi;
     s = Variable.unary("s");
     t = Variable.unary("t");
     x = Variable.unary("x");
