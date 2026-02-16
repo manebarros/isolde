@@ -55,7 +55,6 @@ public record Measurement(
             "num_txn",
             "num_keys",
             "num_values",
-            "num_sessions",
             "synth_time_ms",
             "check_time_ms",
             "total_time_ms",
@@ -77,14 +76,13 @@ public record Measurement(
     DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
 
     return String.format(
-        "%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%s",
+        "%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%s",
         input.implementationName(),
         input.solver(),
         input.problemName(),
         input.scope().getTransactions(),
         input.scope().getObjects(),
         input.scope().getValues(),
-        input.scope().getSessions(),
         synthTime,
         checkTime,
         totalTime,

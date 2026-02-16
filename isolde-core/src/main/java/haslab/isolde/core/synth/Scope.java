@@ -4,7 +4,6 @@ public class Scope {
   private final int transactions;
   private final int objects;
   private final int values;
-  private final int sessions;
 
   private static final int DEFAULT_SCOPE = 3;
 
@@ -12,13 +11,11 @@ public class Scope {
     private int transactions;
     private int objects;
     private int values;
-    private int sessions;
 
     public Builder(int scope) {
       this.transactions = scope;
       this.objects = scope;
       this.values = scope;
-      this.sessions = scope;
     }
 
     public Builder() {
@@ -40,11 +37,6 @@ public class Scope {
       return this;
     }
 
-    public Builder sess(int scope) {
-      sessions = scope;
-      return this;
-    }
-
     public Scope build() {
       return new Scope(this);
     }
@@ -58,7 +50,6 @@ public class Scope {
     this.transactions = builder.transactions;
     this.objects = builder.objects;
     this.values = builder.values;
-    this.sessions = builder.sessions;
   }
 
   public int getTransactions() {
@@ -73,17 +64,12 @@ public class Scope {
     return values;
   }
 
-  public int getSessions() {
-    return sessions;
-  }
-
   @Override
   public String toString() {
     StringBuilder sb = new StringBuilder();
     sb.append(this.transactions).append(" transactions, ");
     sb.append(this.objects).append(" objects, ");
     sb.append(this.values).append(" values, ");
-    sb.append(this.sessions).append(" sessions");
     return sb.toString();
   }
 }

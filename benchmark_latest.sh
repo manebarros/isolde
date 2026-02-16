@@ -19,6 +19,6 @@ java -Xms2g -Xmx8g \
   --txn 3:7 \
   --obj 5 \
   --val 5 \
-  --sess 3 \
   --solvers glucose \
+  --timeout 3600 \
   --impl all,no_smart_search,no_fixed_co,no_incremental,no_learning

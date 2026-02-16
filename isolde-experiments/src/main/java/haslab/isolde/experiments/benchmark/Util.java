@@ -51,15 +51,14 @@ public final class Util {
     return sb.toString();
   }
 
-  public static List<Scope> scopesFromRange(int keys, int val, int sessions, int from, int to) {
-    return scopesFromRange(keys, val, sessions, from, to, 1);
+  public static List<Scope> scopesFromRange(int keys, int val, int from, int to) {
+    return scopesFromRange(keys, val, from, to, 1);
   }
 
-  public static List<Scope> scopesFromRange(
-      int keys, int val, int sessions, int from, int to, int step) {
+  public static List<Scope> scopesFromRange(int keys, int val, int from, int to, int step) {
     List<Scope> scopes = new ArrayList<>();
     for (int txn_num = from; txn_num <= to; txn_num += step) {
-      scopes.add(new Scope.Builder().txn(txn_num).obj(keys).val(val).sess(sessions).build());
+      scopes.add(new Scope.Builder().txn(txn_num).obj(keys).val(val).build());
     }
     return scopes;
   }

@@ -37,9 +37,6 @@ public class Cli implements Runnable {
   @Option(names = "--val", description = "Number of values")
   Integer val_num = 3;
 
-  @Option(names = "--sess", description = "Number of sessions")
-  Integer sess_num = 3;
-
   @Option(names = "--timeout", description = "Timeout in ms")
   Integer timeout = 300;
 
@@ -79,8 +76,7 @@ public class Cli implements Runnable {
 
   @Override
   public void run() {
-    List<Scope> scopes =
-        Util.scopesFromRange(obj_num, val_num, sess_num, txn_num.fst(), txn_num.snd());
+    List<Scope> scopes = Util.scopesFromRange(obj_num, val_num, txn_num.fst(), txn_num.snd());
 
     List<Named<IsoldeSpec>> problems = new ArrayList<>();
     if (this.problems.problem_id != null) {
