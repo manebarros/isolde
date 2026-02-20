@@ -1,8 +1,11 @@
 import os
 from dataclasses import dataclass
+from sys import stdout
 
 import matplotlib.pyplot as plt
 import numpy as np
+
+TIMEOUT = 3600000
 
 
 @dataclass(frozen=True)
@@ -14,7 +17,7 @@ class Style:
 
 
 def determine_unit(max_val):
-    if max_val < 400:
+    if max_val < 1500:
         return 1, "ms"
     else:
         return 1000, "s"
@@ -35,11 +38,18 @@ def plot(
     plotWidth=5,
     paths=[],
     base_dir=None,
-    display_level_fun=None,
+    col_display_fun=lambda v: v.__str__(),
+    row_display_fun=lambda v: v.__str__(),
+    line_display_fun=lambda v: v.__str__(),
     legend=False,
-    unit="auto",
+    y_unit="auto",
+    sharey=True,
+    xlabel_pos="left",
+    timeout=None,
+    col_order=None,
 ):
-    assert unit in ["auto", "s", "ms"]
+    assert y_unit in ["auto", "s", "ms"]
+    assert xlabel_pos in ["left", "center"]
 
     col_vals = df[col_field].unique()
     row_vals = df[row_field].unique()
@@ -70,20 +80,44 @@ def plot(
 
         # We calculate the maximum y-limit for this row
         max_y = df[(df[row_field] == row_val)]["max_time_ms"].max()
-
         min_y = df[(df[row_field] == row_val)]["min_time_ms"].min()
 
-        match unit:
+        if max_y == TIMEOUT:
+            max_y = 4000000
+
+        match y_unit:
             case "auto":
-                # Use `y_lim` to infer the correct unit to use
                 scale_factor, unit = determine_unit(max_y)
             case "s":
                 scale_factor, unit = 1000, "s"
             case _:
                 scale_factor, unit = 1, "ms"
 
+        if col_order != None:
+            col_vals = sorted(col_vals, key=lambda v: col_order[v])
+
         for j, col_val in enumerate(col_vals):
             ax = axes[i, j]
+
+            if timeout != None:
+                ax.axhline(
+                    y=timeout,
+                    linestyle="--",
+                    linewidth=2,
+                    color="red",
+                )
+
+            if not sharey:
+                max_y = df[(df[row_field] == row_val) & (df[col_field] == col_val)][
+                    "max_time_ms"
+                ].max()
+
+                if max_y >= TIMEOUT:
+                    max_y = 4000000
+
+                min_y = df[(df[row_field] == row_val) & (df[col_field] == col_val)][
+                    "max_time_ms"
+                ].min()
 
             for line_val in line_vals:
                 subset = df[
@@ -100,7 +134,7 @@ def plot(
                         "linestyle": styles[line_val].linestyle,
                     }
                 else:
-                    bar_style = {}
+                    bar_style = {"label": line_display_fun(line_val)}
 
                 ax.errorbar(
                     subset["num_txn"],
@@ -125,20 +159,21 @@ def plot(
 
             # Only the top row gets titles
             if i == 0 and n_cols > 1:
-                ax.set_title(col_val)
+                ax.set_title(col_display_fun(col_val))
 
             # Only the left-most column gets y-axis labels
             if j == 0:
                 label = f"Time ({unit})"
-                if display_level_fun != None:
-                    label = display_level_fun(row_val) + "\n\n" + label
+                if n_rows > 1:
+                    label = row_display_fun(row_val) + "\n\n" + label
                 ax.set_ylabel(label)
             else:
                 ax.set_ylabel("")
-                ax.set_yticklabels([])
+                if sharey:
+                    ax.set_yticklabels([])
 
             # Only the bottom-left gets x-axis label
-            if i == n_rows - 1 and j == n_cols // 2:
+            if i == n_rows - 1 and j == 0:
                 ax.set_xlabel("Number of Transactions")
             else:
                 ax.set_xlabel("")
@@ -158,6 +193,10 @@ def plot(
             )
 
     plt.tight_layout()
+
+    if not paths:
+        plt.show()
+
     for path in paths:
         if base_dir:
             plt.savefig(os.path.join(base_dir, path))

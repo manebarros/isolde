@@ -9,33 +9,6 @@ ORANGE = "#ff7f0e"
 GREEN = "#2ca02c"
 PURPLE = "#800080"
 
-implementation_styles = {
-    "default": Style("Optimized", "#E69F00", "D", "-."),  # orange-yellow
-    "no optimizations": Style("No optimization", "#56B4E9", "v", "--"),  # sky blue
-    "without fixed order": Style("No fixed txn order", "#009E73", "P", "-"),
-    "without smart search": Style("No smart search", "#CC79A7", "X", ":"),
-}
-
-
-problems_rq1: List[Problem] = [
-    Problem.from_str("SI_ax_c UpdateSer__c\tSer_ax_c"),
-    Problem.from_str("SI_ax_c UpdateSer__b\tSer_ax_c"),
-    Problem.from_str("Ser_ax_b\tSI_ax_b"),
-    Problem.from_str("SI_ax_c\tSI_ax_b"),
-]
-
-problems_rq1_colors: List[Tuple[str, str, str]] = [
-    (BLUE, "s", "--"),
-    (ORANGE, "^", ":"),
-    (GREEN, "o", "-"),
-    (PURPLE, "^", "--"),
-]
-
-problems_rq1_styles: Dict[Problem, Style] = {
-    p: Style(p.as_latex(), *colors)
-    for p, colors in zip(problems_rq1, problems_rq1_colors)
-}
-
 levels = ["RA", "CC", "PC", "SI", "Ser"]
 
 edges = [("RA", "CC"), ("CC", "PC"), ("PC", "SI"), ("SI", "Ser")]

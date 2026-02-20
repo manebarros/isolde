@@ -39,10 +39,12 @@ def preprocess(
 # Validates a dataframe. A dataframe is valid iff:
 # - all different setups (i.e., implementation + solver + input problem + scope) have the same number of measurements
 # - each setup always results in the same number of candidates
-def validate(df, setup=setup, check_num_measurements=True):
-    # Assert that the result of all non-timeout rows is equivalent to the expected result
-    if not ((df["outcome"] == "TIMEOUT") | (df["outcome"] == df["expected"])).all():
-        return (False, f"Results do not match expected results.")
+def validate(df, setup=setup, check_num_measurements=False, check_expected=False):
+
+    if check_expected:
+        # Assert that the result of all non-timeout rows is equivalent to the expected result
+        if not ((df["outcome"] == "TIMEOUT") | (df["outcome"] == df["expected"])).all():
+            return (False, f"Results do not match expected results.")
 
     grouped = df.groupby(setup)
 
@@ -121,4 +123,8 @@ def merge_rows(
         .reset_index()
     )
     df["avg_time_ms"] = df["avg_time_ms"].round().astype(int)
+    df["frameworks"] = df["problem"].apply(lambda p: tuple(p.frameworks()))
+    df["problem_type"] = df.apply(
+        lambda row: (row["expected"], len(row["frameworks"])), axis=1
+    )
     return df

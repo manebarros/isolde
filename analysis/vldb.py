@@ -1,9 +1,32 @@
+import argparse
+import os
+import time
+from pathlib import Path
+from sys import implementation
+
+import matplotlib.pyplot as plt
+import pandas as pd
+import preprocessing as pre
+from domain import Framework, Problem
+from pandas.core import sorting
+from plotting import Style, plot
+
 Class = tuple[str, int]
 
 TableData = dict[str, dict[str, dict[int, tuple[tuple[int, int], tuple[int, int]]]]]
 Helper = dict[str, dict[str, int]]
 
-timeout = 3600000
+TIMEOUT = 3600000
+
+STYLES = {
+    "all": Style("Isolde", "#E69F00", "D", "-."),  # orange-yellow
+    "no_smart_search": Style("No smart search", "#56B4E9", "v", "--"),  # sky blue
+    "no_fixed_co": Style("No fixed co", "#009E73", "P", "-"),
+    "no_learning": Style("No learning", "#CC79A7", "X", ":"),
+    "no_incremental": Style("No incremental", "#CC79A7", "X", ":"),
+    "brute_force": Style("Brute force", "#CC79A8", "X", "--"),
+}
+
 
 def dfToTableData(df, txn_lim=10) -> TableData:
     d = {}
@@ -42,12 +65,12 @@ def dfToTableData(df, txn_lim=10) -> TableData:
             (max_time, max_cand),
         )
 
-        if avg_time_ms == timeout:
+        if avg_time_ms == TIMEOUT:
             for i in range(num_txn + 1, txn_lim + 1):
                 if i in d[implementation][problem_class]:
                     min_time = d[implementation][problem_class][i][0]
                 else:
-                    min_time = (timeout + 1000, -1)
+                    min_time = (TIMEOUT + 1000, -1)
                 d[implementation][problem_class][i] = (min_time, (avg_time_ms, -1))
     return d
 
@@ -58,11 +81,11 @@ def formatTable2(data: TableData, num_txn=5) -> str:
         s += r"\midrule" + "\n" + r"\multirow{2}{*}{" + impl.replace("_", " ") + r"}"
         for pclass, pclass_data in sorted(impl_data.items()):
             (_, (time, _)) = pclass_data[num_txn]
-            s += f" & {time if time < timeout else "\\multirow{2}{*}{TO}"}"
+            s += f" & {time if time < TIMEOUT else "\\multirow{2}{*}{TO}"}"
         s += r"\\" + "\n\n"
         for pclass, pclass_data in sorted(impl_data.items()):
             (_, (time, cand)) = pclass_data[num_txn]
-            s += f" & {cand if time < timeout else ""}"
+            s += f" & {cand if time < TIMEOUT else ""}"
         s += r"\\" + "\n\n"
     return s
 
@@ -78,11 +101,11 @@ def formatTable3(data: TableData) -> str:
         s += r"\midrule" + "\n" + r"\multirow{2}{*}{" + impl.replace("_", " ") + r"}"
         for pclass, pclass_data in sorted(impl_data.items()):
             for num_txn, (_, (time, cand)) in pclass_data.items():
-                s += f" & {time if time < timeout else "\\multirow{2}{*}{TO}"}"
+                s += f" & {time if time < TIMEOUT else "\\multirow{2}{*}{TO}"}"
         s += r"\\" + "\n"
         for pclass, pclass_data in sorted(impl_data.items()):
             for num_txn, (_, (time, cand)) in pclass_data.items():
-                s += f" & {cand if time < timeout else ""}"
+                s += f" & {cand if time < TIMEOUT else ""}"
         s += r"\\" + "\n\n"
     return s
 
@@ -92,3 +115,197 @@ table3Header = r"""\toprule
 		\cmidrule(lr){2-13}
                     & 3 & 4 & 5 & 3 & 4 & 5 & 3 & 4 & 5  & 3 & 4 & 5 \\  
 """
+
+
+def prepare(path):
+    df = pd.read_csv(path)
+    df = pre.preprocess(df, txn_num=(3, 10))
+    df["timeout"] = df["outcome"].apply(lambda o: o == "TIMEOUT")
+
+    # remove rows that have not RA_c in them
+    def has_RA_c(row):
+        problem = row["problem"]
+        return problem.neg.name == "RA" and problem.neg.framework == Framework.CERONE
+
+    df = df.loc[df.apply(lambda row: not has_RA_c(row), axis=1)]
+    return df
+
+
+def plot1(df, basedir=None):
+
+    df = df.copy(deep=True)
+    df = df[df["implementation"] != "no_incremental"]
+
+    # Group and count non-timeout rows
+    filtered = df[df["timeout"] == False]
+
+    # Build the full combination grid
+    full_index = pd.MultiIndex.from_product(
+        [
+            df["problem_type"].unique(),
+            df["num_txn"].unique(),
+            df["implementation"].unique(),
+        ],
+        names=["problem_type", "num_txn", "implementation"],
+    )
+
+    # Reindex and fill missing with 0
+    grouped = (
+        filtered.groupby(["problem_type", "num_txn", "implementation"])
+        .size()
+        .reindex(full_index, fill_value=0)
+        .reset_index(name="count")
+    )
+
+    problem_types = grouped["problem_type"].unique()
+    implementations = list(grouped["implementation"].unique())
+    implementations.append("brute_force")
+
+    fig, axes = plt.subplots(
+        1, len(problem_types), figsize=(3 * len(problem_types), 3), sharey=True
+    )
+
+    # Handle case of single problem type
+    if len(problem_types) == 1:
+        axes = [axes]
+
+    for idx, (ax, problem) in enumerate(zip(axes, sorted(problem_types))):
+        subset = grouped[grouped["problem_type"] == problem]
+
+        offsets = {impl: i * 0.08 for i, impl in enumerate(implementations)}
+
+        for impl in implementations:
+            if impl != "brute_force":
+                impl_data = subset[subset["implementation"] == impl].sort_values(
+                    "num_txn"
+                )
+                x = impl_data["num_txn"] + offsets[impl]
+                ax.plot(
+                    x,
+                    impl_data["count"],
+                    marker=STYLES[impl].marker,
+                    color=STYLES[impl].color,
+                    label=STYLES[impl].name,
+                    linestyle=STYLES[impl].linestyle,
+                )
+            else:
+                indexes = [i + offsets[impl] for i in list(range(3, 11))]
+                ax.plot(
+                    indexes,
+                    list([0] * len(indexes)),
+                    label=STYLES[impl].name,
+                    marker=STYLES[impl].marker,
+                    color=STYLES[impl].color,
+                    linestyle=STYLES[impl].linestyle,
+                )
+
+        ax.set_title(problem)
+        ax.set_ylim(bottom=-0.5, top=15)
+        ax.grid()
+        if idx == 0:
+            ax.legend(loc="best")
+            ax.set_xlabel("Number of transactions")
+            ax.set_ylabel("Number of finished runs")
+
+    plt.tight_layout()
+
+    if not basedir:
+        plt.show()
+    else:
+        plt.savefig(os.path.join(basedir, "plot1.pgf"))
+        plt.savefig(os.path.join(basedir, "plot1.pdf"))
+
+
+def plot2(df, basedir=None):
+    problems = [
+        Problem.from_str("SI_ax_c UpdateSer__c\tSer_ax_c"),
+        Problem.from_str("SI_ax_c UpdateSer__c\tSer_ax_b"),
+        Problem.from_str("RA_ax_c\tCC_ax_c"),
+    ]
+    local = df[df["implementation"].isin(["all", "no_learning"])]
+    local = local[local["problem"].isin(problems)]
+
+    styles = {
+        "all": Style("Isolde", "#E69F00", "D", "-."),
+        "no_learning": Style("Baseline", "#CC79A7", "X", ":"),
+    }
+
+    paths = ["plot2.pgf", "plot2.pdf"] if basedir else None
+
+    plot(
+        local,
+        "problem",
+        "solver",
+        "implementation",
+        paths=paths,
+        base_dir=basedir,
+        styles=styles,
+        logScaling=True,
+        plotHeight=4,
+        plotWidth=6,
+        legend=True,
+        col_display_fun=lambda p: p.as_latex(),
+        y_unit="ms",
+        sharey=False,
+    )
+
+
+def plot3(df, basedir=None):
+
+    problems = [
+        Problem.from_str("PC_ax_b\tSI_ax_c"),
+        Problem.from_str("PC_ax_c\tCC_ax_c"),
+        Problem.from_str("Ser_ax_c\tSer_ax_b"),
+        Problem.from_str("CC_ax_b\tCC_ax_c"),
+    ]
+
+    local = df[df["implementation"].isin(["all", "no_smart_search", "no_fixed_co"])]
+    local = local[local["problem"].isin(problems)]
+
+    sorting_keys = {val: idx for idx, val in enumerate(problems)}
+
+    paths = ["plot3.pgf", "plot3.pdf"] if basedir else None
+
+    plot(
+        local,
+        "problem",
+        "solver",
+        "implementation",
+        paths=paths,
+        base_dir=basedir,
+        styles=STYLES,
+        logScaling=True,
+        plotHeight=4,
+        plotWidth=5,
+        legend=True,
+        col_display_fun=lambda p: p.as_latex(),
+        y_unit="ms",
+        sharey=False,
+        timeout=3600000,
+        col_order=sorting_keys,
+    )
+
+
+DATA_FILE = "/home/mane/code/minsolde/isolde-experiments/data/80b8403f476d5b.csv"
+
+
+def main():
+    parser = argparse.ArgumentParser(description="Plot builder")
+    parser.add_argument("path", nargs="?", default=None, help="Path to the data file")
+    parser.add_argument("--dest", "-d", default="./plots", help="Dest directory")
+    args = parser.parse_args()
+
+    path = args.path if args.path else DATA_FILE
+    commit_id = Path(path).stem
+    dir = os.path.join(args.dest, commit_id)
+    Path(dir).mkdir(exist_ok=True, parents=True)
+
+    df = prepare(path)
+
+    plot1(df, dir)
+    plot2(df, dir)
+    plot3(df, dir)
+
+
+if __name__ == "__main__":
+    main()
