@@ -45,6 +45,10 @@ public class SynthesizedHistory {
     return this.cegisResult;
   }
 
+  public int ceroneExecutions() {
+    return this.ceroneExecutions.size();
+  }
+
   @Override
   public String toString() {
     if (!sat()) return "No History";

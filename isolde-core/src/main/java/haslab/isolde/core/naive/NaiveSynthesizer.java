@@ -90,14 +90,14 @@ public class NaiveSynthesizer<T, S> {
     Solver checker = new Solver(checkOptions);
 
     List<FailedCandidate> failedCandidates = new ArrayList<>();
+    List<? extends Counterexample<? extends Execution>> counterexamples;
 
     Instant start = Instant.now();
+    Instant synthStart = Instant.now();
 
     Iterator<Solution> solutions =
         synthesizer.solveAll(searchProblem.formula(), searchProblem.bounds());
 
-    List<? extends Counterexample<? extends Execution>> counterexamples;
-    Instant synthStart = Instant.now();
     Solution sol = solutions.next();
     long synthTime = Duration.between(synthStart, Instant.now()).toMillis();
     int firstSynthClauses = sol.stats().clauses();
@@ -113,6 +113,8 @@ public class NaiveSynthesizer<T, S> {
       synthStart = Instant.now();
       sol = solutions.next();
       synthTime += Duration.between(synthStart, Instant.now()).toMillis();
+
+      checkStart = Instant.now();
     }
     checkTime += Duration.between(checkStart, Instant.now()).toMillis();
     long time = Duration.between(start, Instant.now()).toMillis();
