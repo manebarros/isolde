@@ -21,12 +21,12 @@ public class IsoldeSpec {
     // Cerone
     private boolean usesCerone = false;
     private final List<ExecutionFormula<CeroneExecution>> ceroneExistentials = new ArrayList<>();
-    private ExecutionFormula<CeroneExecution> ceroneUniversal = e -> Formula.TRUE;
+    private ExecutionFormula<CeroneExecution> ceroneUniversal = null;
 
     // Biswas
     private boolean usesBiswas = false;
     private final List<ExecutionFormula<BiswasExecution>> biswasExistentials = new ArrayList<>();
-    private ExecutionFormula<BiswasExecution> biswasUniversal = e -> Formula.TRUE;
+    private ExecutionFormula<BiswasExecution> biswasUniversal = null;
 
     public Builder(IsoldeConstraint constraint) {
       and(constraint);
@@ -58,12 +58,14 @@ public class IsoldeSpec {
 
         case IsoldeConstraint.CeroneConstraint(ExecutionFormula<CeroneExecution> formula):
           this.usesCerone = true;
-          this.ceroneUniversal = this.ceroneUniversal.and(formula.not());
+          ceroneUniversal =
+              ceroneUniversal != null ? ceroneUniversal.and(formula.not()) : formula.not();
           return this;
 
         case IsoldeConstraint.BiswasConstraint(ExecutionFormula<BiswasExecution> formula):
           this.usesBiswas = true;
-          this.biswasUniversal = this.biswasUniversal.and(formula.not());
+          this.biswasUniversal =
+              biswasUniversal != null ? biswasUniversal.and(formula.not()) : formula.not();
           return this;
       }
     }

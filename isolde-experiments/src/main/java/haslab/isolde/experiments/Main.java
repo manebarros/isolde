@@ -8,6 +8,7 @@ public class Main {
     CommandLine cmd = new CommandLine(new Cli()).setCaseInsensitiveEnumValuesAllowed(true);
     int exitCode = cmd.execute(args);
     System.exit(exitCode);
+
     // Synthesizer synth = new Synthesizer(SATFactory.Glucose);
     // for (int i = 2; i <= 5; i++) {
     //  System.out.println(

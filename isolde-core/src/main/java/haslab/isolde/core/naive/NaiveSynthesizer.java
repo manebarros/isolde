@@ -68,9 +68,11 @@ public class NaiveSynthesizer<T, S> {
   }
 
   private static <E extends Execution> List<ExecutionFormula<E>> searchFormulas(
-      List<ExecutionFormula<E>> exist, ExecutionFormula<E> univ) {
-    List<ExecutionFormula<E>> formulas = new ArrayList<>(exist);
-    formulas.add(univ);
+      SynthesisSpec<E> spec) {
+    List<ExecutionFormula<E>> formulas = new ArrayList<>(spec.existentialFormulas());
+    if (spec.hasUniversal()) {
+      formulas.add(spec.universalFormula().get());
+    }
     return formulas;
   }
 
@@ -78,9 +80,11 @@ public class NaiveSynthesizer<T, S> {
       SynthesisSpec<E> spec,
       ExecutionModuleConstructor<E, FolSynthesisInput, S, ?> encoderConstructor,
       CandCheckerI<E> checkingEncoder) {
-    this.checkingEncoders.add(new Verifier<>(checkingEncoder, spec.universalFormula()));
-    return this.synthesisEncoder.register(
-        encoderConstructor, searchFormulas(spec.existentialFormulas(), spec.universalFormula()));
+
+    if (spec.hasUniversal()) {
+      this.checkingEncoders.add(new Verifier<>(checkingEncoder, spec.universalFormula().get()));
+    }
+    return this.synthesisEncoder.register(encoderConstructor, searchFormulas(spec));
   }
 
   public CegisResult synthesize(Options synthOptions, Options checkOptions) {

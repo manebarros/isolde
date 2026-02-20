@@ -32,13 +32,7 @@ public class CegisSynthesizer<T, S> {
 
   @FunctionalInterface
   private static interface CandidateSearchFormulaConstructor {
-
-    <E extends Execution> List<ExecutionFormula<E>> construct(
-        List<ExecutionFormula<E>> exist, ExecutionFormula<E> univ);
-
-    default <E extends Execution> List<ExecutionFormula<E>> construct(SynthesisSpec<E> spec) {
-      return construct(spec.existentialFormulas(), spec.universalFormula());
-    }
+    <E extends Execution> List<ExecutionFormula<E>> construct(SynthesisSpec<E> spec);
   }
 
   private final HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder;
@@ -105,28 +99,30 @@ public class CegisSynthesizer<T, S> {
   }
 
   private static <E extends Execution> List<ExecutionFormula<E>> naiveSearchFormula(
-      List<ExecutionFormula<E>> exist, ExecutionFormula<E> univ) {
-    List<ExecutionFormula<E>> formulas = new ArrayList<>(exist);
-    formulas.add(univ);
-    return formulas;
-  }
-
-  private static <E extends Execution> List<ExecutionFormula<E>> smartSearchFormula(
-      List<ExecutionFormula<E>> exist, ExecutionFormula<E> univ) {
-    List<ExecutionFormula<E>> formulas = new ArrayList<>();
-    if (exist.isEmpty()) {
-      formulas.add(univ);
-    } else {
-      for (var formula : exist) {
-        formulas.add(formula.and(univ));
-      }
+      SynthesisSpec<E> spec) {
+    List<ExecutionFormula<E>> formulas = new ArrayList<>(spec.existentialFormulas());
+    if (spec.hasUniversal()) {
+      formulas.add(spec.universalFormula().get());
     }
     return formulas;
   }
 
-  private <E extends Execution> List<ExecutionFormula<E>> calculateCandidateSearchFormula(
+  private static <E extends Execution> List<ExecutionFormula<E>> smartSearchFormula(
       SynthesisSpec<E> spec) {
-    return this.candidateSearchFormulaConstructor.construct(spec);
+
+    var univFormula = spec.universalFormula();
+
+    assert !spec.existentialFormulas().isEmpty() || univFormula.isPresent();
+
+    List<ExecutionFormula<E>> formulas = new ArrayList<>();
+    if (spec.existentialFormulas().isEmpty()) {
+      formulas.add(spec.universalFormula().get());
+    } else {
+      for (var formula : spec.existentialFormulas()) {
+        formulas.add(univFormula.isPresent() ? formula.and(univFormula.get()) : formula);
+      }
+    }
+    return formulas;
   }
 
   public <E extends Execution> List<E> register(
@@ -134,10 +130,14 @@ public class CegisSynthesizer<T, S> {
       ExecutionModuleConstructor<E, FolSynthesisInput, S, ?> encoderConstructor,
       CandCheckerI<E> checkingEncoder,
       CounterexampleEncoder<E> counterexampleEncoder) {
-    this.checkingEncoders.add(
-        new CegisVerifier<>(checkingEncoder, counterexampleEncoder, spec.universalFormula()));
+
+    if (spec.hasUniversal()) {
+      this.checkingEncoders.add(
+          new CegisVerifier<>(
+              checkingEncoder, counterexampleEncoder, spec.universalFormula().get()));
+    }
     return this.synthesisEncoder.register(
-        encoderConstructor, calculateCandidateSearchFormula(spec));
+        encoderConstructor, this.candidateSearchFormulaConstructor.construct(spec));
   }
 
   private CegisAggregatedFeedback guide(
