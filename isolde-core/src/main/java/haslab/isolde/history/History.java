@@ -1,7 +1,6 @@
 package haslab.isolde.history;
 
 import haslab.isolde.core.AbstractHistoryK;
-
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -42,9 +41,8 @@ public class History {
     StringBuilder sb = new StringBuilder();
     if (!sessions.isEmpty()) {
       sb.append(sessions.get(0));
-
-      for (var s : sessions.subList(1, sessions.size())) {
-        sb.append("\n\n").append(s);
+      for (int i = 1; i < sessions.size(); i++) {
+        sb.append("\n\n").append(sessions.get(i));
       }
     }
     return sb.toString();

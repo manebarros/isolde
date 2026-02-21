@@ -25,6 +25,8 @@ public final class VerifyBiswasAndCeroneEquivalence {
           new Definition("PC", CeroneDefinitions.PC, AxiomaticDefinitions.Prefix),
           new Definition("SI", CeroneDefinitions.SI, AxiomaticDefinitions.Snapshot),
           new Definition("SER", CeroneDefinitions.Ser, AxiomaticDefinitions.Ser),
+          new Definition("Prefix", CeroneDefinitions.PREFIX, AxiomaticDefinitions.Prefix),
+          new Definition("No conflict", CeroneDefinitions.NO_CONF, AxiomaticDefinitions::Conflict),
           new Definition(
               "UPDATE_SER", FeketeReadOnlyAnomaly::updateSer, FeketeReadOnlyAnomaly::updateSer));
 
@@ -37,7 +39,7 @@ public final class VerifyBiswasAndCeroneEquivalence {
               def.ceroneDef(),
               "Biswas' " + def.name(),
               def.biswasDef());
-      System.out.println(result + "\n" + result.timeInfoString());
+      System.out.println(result + "\n");
     }
   }
 

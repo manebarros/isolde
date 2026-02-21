@@ -33,7 +33,7 @@ public class HistoryIntermediateRepresentation {
   // TODO: test this
   public History buildHistory() {
     Map<Integer, List<Operation>> ts = decodeTransactions();
-    List<List<Integer>> soTranslated = translate(this.so);
+    List<List<Integer>> soTranslated = translate(ts.keySet());
 
     List<Session> sessions = new ArrayList<>();
     for (var list : soTranslated) {
@@ -48,20 +48,22 @@ public class HistoryIntermediateRepresentation {
   }
 
   // TODO: test this
-  private List<List<Integer>> translate(Map<Integer, Set<Integer>> so) {
+  private List<List<Integer>> translate(Set<Integer> tids) {
     Map<Integer, Integer> txn_session = new LinkedHashMap<>();
     List<Set<Integer>> sessionSets = new ArrayList<>();
     int nextSession = 0;
 
-    for (var tid : so.keySet()) {
+    for (var tid : tids) {
       boolean inExistingSession = false;
-      for (var followingTid : so.get(tid)) {
-        if (txn_session.containsKey(followingTid)) {
-          inExistingSession = true;
-          var session = txn_session.get(followingTid);
-          txn_session.put(tid, session);
-          sessionSets.get(session).add(tid);
-          break;
+      if (this.so.containsKey(tid)) {
+        for (var followingTid : this.so.get(tid)) {
+          if (txn_session.containsKey(followingTid)) {
+            inExistingSession = true;
+            var session = txn_session.get(followingTid);
+            txn_session.put(tid, session);
+            sessionSets.get(session).add(tid);
+            break;
+          }
         }
       }
       if (!inExistingSession) {

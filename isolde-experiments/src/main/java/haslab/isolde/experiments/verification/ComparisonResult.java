@@ -25,13 +25,13 @@ public record ComparisonResult(
       str =
           String.format(
               "%s is STRONGER than %s.\n" + "History allowed by %s but not by %s:\n" + "%s\n",
-              a, b, b, a, b_not_a.history());
+              a, b, b, a, b_not_a);
     } else if (a_not_b.sat() && b_not_a.unsat()) {
       // B is stronger than A
       str =
           String.format(
               "%s is STRONGER than %s.\n" + "History allowed by %s but not by %s:\n" + "%s\n",
-              b, a, a, b, a_not_b.history());
+              b, a, a, b, a_not_b);
     } else if (a_not_b.unsat() && b_not_a.unsat()) {
       // equivalent
       str = String.format("%s and %s are EQUIVALENT.\n", a, b);
