@@ -10,6 +10,7 @@ import haslab.isolde.core.synth.Scope;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.time.Duration;
 import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
@@ -91,6 +92,8 @@ public final class Util {
             options.setSolver(solver.getSolver());
             for (int sample = 0; !timedOut && sample < samples; sample++) {
 
+              Instant start = Instant.now();
+
               CompletableFuture<SynthesizedHistory> future =
                   CompletableFuture.supplyAsync(
                       () -> implementation.value().synthesize(scope, problem.value(), options));
@@ -135,6 +138,7 @@ public final class Util {
                     Measurement.timeout(input, timeout_s * 1000, run, Date.from(Instant.now())));
               } catch (ExecutionException e) {
                 assert e.getCause() instanceof OutOfMemoryError;
+                long time = Duration.between(start, Instant.now()).toMillis();
                 future.cancel(true);
                 timedOut = true;
                 crashes++;
@@ -147,8 +151,7 @@ public final class Util {
                     solver.getId(),
                     problem.name());
 
-                rows.add(
-                    Measurement.timeout(input, timeout_s * 1000, run, Date.from(Instant.now())));
+                rows.add(Measurement.crash(input, time, run, Date.from(Instant.now())));
               }
             }
           }
@@ -158,19 +161,6 @@ public final class Util {
     System.out.printf(
         "SAT: %d\nUNSAT: %d\nTIMEOUT: %d\nOOM CRASHES: %d", success, failed, timeouts, crashes);
     return rows;
-  }
-
-  public static void measureAndWrite(
-      List<Scope> scopes,
-      List<Named<IsoldeSpec>> problems,
-      List<Solver> solvers,
-      List<Named<SynthesizerI>> implementations,
-      int samples,
-      long timeout_s,
-      Path file)
-      throws IOException, InterruptedException, ExecutionException {
-    Util.writeMeasurements(
-        measure(scopes, problems, solvers, implementations, samples, timeout_s), file);
   }
 
   public static void measureAndAppend(

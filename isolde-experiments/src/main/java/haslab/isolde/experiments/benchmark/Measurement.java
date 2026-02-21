@@ -24,7 +24,8 @@ public record Measurement(
   public static enum Outcome {
     SAT,
     UNSAT,
-    TIMEOUT
+    TIMEOUT,
+    CRASH
   }
 
   public static Measurement finished(
@@ -44,6 +45,10 @@ public record Measurement(
 
   public static Measurement timeout(IsoldeInput input, long time_ms, Date runId, Date startTime) {
     return new Measurement(input, -1, -1, time_ms, -1, -1, Outcome.TIMEOUT, -1, runId, startTime);
+  }
+
+  public static Measurement crash(IsoldeInput input, long time_ms, Date runId, Date startTime) {
+    return new Measurement(input, -1, -1, time_ms, -1, -1, Outcome.CRASH, -1, runId, startTime);
   }
 
   public static String header() {

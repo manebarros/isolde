@@ -17,7 +17,7 @@ do
     java -Xms4g -Xmx16g \
     -jar isolde-experiments/target/isolde-experiments-1.0-SNAPSHOT.jar \
     "$CSV_PATH" \
-    --txn 3 \
+    --txn 3:10 \
     --obj 5 \
     --val 5 \
     --solvers glucose \
