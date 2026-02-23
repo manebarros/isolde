@@ -136,6 +136,7 @@ def merge_rows(
     )
     df["avg_time_ms"] = df["avg_time_ms"].round().astype(int)
     df["frameworks"] = df["problem"].apply(lambda p: tuple(p.frameworks()))
+    df["terminates"] = df["outcome"].apply(lambda o: o != 'TIMEOUT' and o != 'CRASH')
     df["problem_type"] = df.apply(
         lambda row: (row["expected"], len(row["frameworks"])), axis=1
     )
