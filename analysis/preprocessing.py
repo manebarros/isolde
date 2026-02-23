@@ -22,6 +22,8 @@ def preprocess(
     solvers=None,
     problems=None,
     implementations=None,
+    with_sessions=False,
+    check_expected=False,
 ):
     df = typify(df)
     df = trim(
@@ -32,7 +34,7 @@ def preprocess(
         problems=problems,
         implementations=implementations,
     )
-    df = merge_rows(df, check_num_measurements=False)
+    df = merge_rows(df, check_num_measurements=False, check_expected=check_expected)
     df['timeout'] = df['outcome'].apply(lambda o: o == 'TIMEOUT')
     df['crash'] = df['outcome'].apply(lambda o: o == 'CRASH')
 
@@ -53,7 +55,10 @@ def validate(df, setup=setup, check_num_measurements=False, check_expected=False
 
     if check_expected:
         # Assert that the result of all non-timeout rows is equivalent to the expected result
-        if not ((df["outcome"] == "TIMEOUT") | (df["outcome"] == df["expected"])).all():
+        if not (
+            (df["outcome"].isin(["TIMEOUT", "CRASH"]))
+            | (df["outcome"] == df["expected"])
+        ).all():
             return (False, f"Results do not match expected results.")
 
     grouped = df.groupby(setup)
@@ -112,8 +117,11 @@ def merge_rows(
     df,
     setup=setup,
     check_num_measurements=True,
+    check_expected=False,
 ):
-    validation_result = validate(df, setup, check_num_measurements)
+    validation_result = validate(
+        df, setup, check_num_measurements, check_expected=check_expected
+    )
     assert validation_result[0], validation_result[1]
     assert df['num_sessions'].nunique() == 1, f"Expected all rows to have the same number of sessions, instead there are {df['num_sessions'].unique()}"
     df = df.drop(columns=['num_sessions'])
