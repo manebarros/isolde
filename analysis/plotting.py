@@ -4,6 +4,7 @@ from sys import stdout
 
 import matplotlib.pyplot as plt
 import numpy as np
+import math
 
 TIMEOUT = 3600000
 
@@ -150,7 +151,7 @@ def plot(
 
             if logScaling == True or (logScaling != False and row_val in logScaling):
                 ax.set_yscale("log")
-                ax.set_ylim(bottom=0.95 * min_y, top=1.15 * max_y)
+                ax.set_ylim(bottom=10 ** math.floor(math.log10(min_y)), top=1.15 * max_y)
             else:
                 ax.set_ylim(bottom=0, top=1.05 * max_y)
 

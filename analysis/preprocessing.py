@@ -2,17 +2,16 @@ from types import NoneType
 from typing import List, Tuple
 
 from config import sat
-from domain import Problem, Solver
+from domain import Problem, Solver, Framework
 
 # These columns identify a particular configuration for an Isolde run
 setup = [
+    "problem",
     "implementation",
     "solver",
-    "problem",
     "num_txn",
     "num_keys",
     "num_values",
-    "num_sessions",
 ]
 
 
@@ -33,7 +32,18 @@ def preprocess(
         problems=problems,
         implementations=implementations,
     )
-    return merge_rows(df, check_num_measurements=False)
+    df = merge_rows(df, check_num_measurements=False)
+    df['timeout'] = df['outcome'].apply(lambda o: o == 'TIMEOUT')
+    df['crash'] = df['outcome'].apply(lambda o: o == 'CRASH')
+
+    # remove rows that have "not RA_c" in them
+    def has_RA_c(row):
+        problem = row['problem']
+        return problem.neg.name == "RA" and problem.neg.framework == Framework.CERONE
+
+    df = df.loc[df.apply(lambda row: not has_RA_c(row), axis=1)]
+    return df
+
 
 
 # Validates a dataframe. A dataframe is valid iff:
@@ -105,6 +115,8 @@ def merge_rows(
 ):
     validation_result = validate(df, setup, check_num_measurements)
     assert validation_result[0], validation_result[1]
+    assert df['num_sessions'].nunique() == 1, f"Expected all rows to have the same number of sessions, instead there are {df['num_sessions'].unique()}"
+    df = df.drop(columns=['num_sessions'])
     df = (
         df.groupby(setup)
         .agg(
@@ -116,7 +128,7 @@ def merge_rows(
             max_time_ms=("total_time_ms", "max"),
             outcome=(
                 "outcome",
-                lambda x: "TIMEOUT" if (x == "TIMEOUT").any() else x.iloc[0],
+                lambda x: "TIMEOUT" if (x == "TIMEOUT").any() else ("CRASH" if (x == 'CRASH').any() else x.iloc[0]),
             ),
             expected=("expected", "first"),
         )

@@ -94,7 +94,6 @@ table2Header = r"""\toprule
                     & SAT single fw & SAT diff fws & UNSAT single fw & UNSAT diff fws \\
 """
 
-
 def formatTable3(data: TableData) -> str:
     s = ""
     for impl, impl_data in data.items():
@@ -285,6 +284,82 @@ def plot3(df, basedir=None):
         col_order=sorting_keys,
     )
 
+
+# For every problem `p` in the df, if there is some row `r` such that `problem(r) == p` and
+# `outcome(r) == TIMEOUT`, remove all rows in df that have `p` as their problem.
+def exclude_problems_that_timeout(df):
+    problems_to_remove = df.loc[df['outcome'] == 'TIMEOUT', 'problem'].unique()
+    df = df[~df['problem'].isin(problems_to_remove)]
+    return df
+
+def compute_means(df):
+    grouping_cols = [
+        "problem_type",
+        "implementation",
+        "solver",
+        "num_txn",
+        "num_keys",
+        "num_values",
+    ]
+
+    df = (
+        df.groupby(grouping_cols)
+        .agg(
+            avg_cand=("candidates", "mean"),
+            min_cand=("candidates", "min"),
+            max_cand=("candidates", "max"),
+            avg_time_ms=("avg_time_ms", "mean"),
+            min_time_ms=("min_time_ms", "min"),
+            max_time_ms=("max_time_ms", "max"),
+        )
+        .reset_index()
+    )
+    df["avg_time_ms"] = df["avg_time_ms"].round().astype(int)
+    return df
+
+def fill_with_timeouts(df, txn_lim=10):
+    default_vals = {
+        'avg_time_ms' : TIMEOUT,
+        'min_time_ms' : TIMEOUT,
+        'max_time_ms' : TIMEOUT,
+    }
+
+    extra_feats = [ 
+        "outcome", 	
+        "expected", 	
+        "frameworks", 	
+        "problem_type", 	
+        "timeout", 	
+        "crash"
+    ]
+
+    new_rows = []
+
+    for _, r in df.iterrows():
+        if r['timeout']:
+            n = r['num_txn']
+            for k in range(n + 1, txn_lim + 1):  # n+1 up to and including 10
+                new_row = {}
+                # copy setup from r
+                for col in pre.setup:
+                    new_row[col] = r[col]
+                for col in extra_feats:
+                    new_row[col] = r[col]
+                # override num_txn
+                new_row['num_txn'] = k
+                # fill remaining cols with defaults
+                for col, val in default_vals.items():
+                    new_row[col] = val
+                new_rows.append(new_row)
+
+    df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
+    return df
+
+def double_timeout(df):
+    df_copy = df.copy()
+    mask = df_copy['timeout'] == True
+    df_copy.loc[mask, ['x', 'y', 'z']] *= 2
+    return df_copy
 
 DATA_FILE = "/home/mane/code/minsolde/isolde-experiments/data/80b8403f476d5b.csv"
 
