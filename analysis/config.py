@@ -74,7 +74,7 @@ all_disjoint = all(
     set(x).isdisjoint(y) for x, y in itertools.combinations(problem_sets, 2)
 )
 
-print(f"all problem sets are disjoint: {all_disjoint}")
+assert all_disjoint, "Problem sets are not disjoint!"
 
 
 def sat(problem: Problem) -> bool:

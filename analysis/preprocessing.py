@@ -23,6 +23,8 @@ def preprocess(
     solvers=None,
     problems=None,
     implementations=None,
+    with_sessions=False,
+    check_expected=False,
 ):
     df = typify(df)
     df = trim(
@@ -33,7 +35,23 @@ def preprocess(
         problems=problems,
         implementations=implementations,
     )
-    return merge_rows(df, check_num_measurements=False)
+    if not with_sessions:
+        local_setup = [
+            "implementation",
+            "solver",
+            "problem",
+            "num_txn",
+            "num_keys",
+            "num_values",
+        ]
+    else:
+        local_setup = setup
+    return merge_rows(
+        df,
+        check_num_measurements=False,
+        setup=local_setup,
+        check_expected=check_expected,
+    )
 
 
 # Validates a dataframe. A dataframe is valid iff:
@@ -43,7 +61,10 @@ def validate(df, setup=setup, check_num_measurements=False, check_expected=False
 
     if check_expected:
         # Assert that the result of all non-timeout rows is equivalent to the expected result
-        if not ((df["outcome"] == "TIMEOUT") | (df["outcome"] == df["expected"])).all():
+        if not (
+            (df["outcome"].isin(["TIMEOUT", "CRASH"]))
+            | (df["outcome"] == df["expected"])
+        ).all():
             return (False, f"Results do not match expected results.")
 
     grouped = df.groupby(setup)
@@ -102,8 +123,11 @@ def merge_rows(
     df,
     setup=setup,
     check_num_measurements=True,
+    check_expected=False,
 ):
-    validation_result = validate(df, setup, check_num_measurements)
+    validation_result = validate(
+        df, setup, check_num_measurements, check_expected=check_expected
+    )
     assert validation_result[0], validation_result[1]
     df = (
         df.groupby(setup)

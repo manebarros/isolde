@@ -5,6 +5,7 @@ from pathlib import Path
 from sys import implementation
 
 import matplotlib.pyplot as plt
+import numpy as np
 import pandas as pd
 import preprocessing as pre
 from domain import Framework, Problem
@@ -286,7 +287,52 @@ def plot3(df, basedir=None):
     )
 
 
-DATA_FILE = "/home/mane/code/minsolde/isolde-experiments/data/80b8403f476d5b.csv"
+def cactus_plot(df, num_txns=None):
+    # Get unique values for subplot dimensions
+    problem_types = sorted(df["problem_type"].unique())
+    if not num_txns:
+        num_txns = sorted(df["num_txn"].unique())
+    implementations = df["implementation"].unique()
+
+    n_cols = len(problem_types)
+    n_rows = len(num_txns)
+
+    fig, axes = plt.subplots(
+        n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows), squeeze=False
+    )
+
+    for r, txn in enumerate(num_txns):
+        for c, prob in enumerate(problem_types):
+            ax = axes[r][c]
+            subset = df[(df["problem_type"] == prob) & (df["num_txn"] == txn)]
+
+            for impl in implementations:
+                impl_data = subset[subset["implementation"] == impl][
+                    "max_time_ms"
+                ].dropna()
+                if impl_data.empty:
+                    continue
+
+                # Sort runtimes and compute cumulative count
+                sorted_times = np.sort(impl_data.values)
+                cumulative = np.arange(1, len(sorted_times) + 1)
+
+                # Extend line to make it a step function starting from 0
+                sorted_times = np.concatenate([[0], sorted_times])
+                cumulative = np.concatenate([[0], cumulative])
+
+                ax.step(sorted_times, cumulative, where="post", label=impl)
+
+            ax.set_title(f"{prob} | txn={txn}")
+            ax.set_xlabel("Runtime")
+            ax.set_ylabel("Accumulated runs")
+            ax.legend(fontsize="small")
+
+    plt.tight_layout()
+    plt.show()
+
+
+DATA_FILE = "/home/mane/code/isolde/isolde-experiments/data/d8dfd9f4814950.csv"
 
 
 def main():
