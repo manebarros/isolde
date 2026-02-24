@@ -35,8 +35,6 @@ def preprocess(
         implementations=implementations,
     )
     df = merge_rows(df, check_num_measurements=False, check_expected=check_expected)
-    df['timeout'] = df['outcome'].apply(lambda o: o == 'TIMEOUT')
-    df['crash'] = df['outcome'].apply(lambda o: o == 'CRASH')
 
     # remove rows that have "not RA_c" in them
     def has_RA_c(row):
@@ -123,8 +121,11 @@ def merge_rows(
         df, setup, check_num_measurements, check_expected=check_expected
     )
     assert validation_result[0], validation_result[1]
-    assert df['num_sessions'].nunique() == 1, f"Expected all rows to have the same number of sessions, instead there are {df['num_sessions'].unique()}"
-    df = df.drop(columns=['num_sessions'])
+
+    if 'num_sessions' in df:
+        assert df['num_sessions'].nunique() == 1, f"Expected all rows to have the same number of sessions, instead there are {df['num_sessions'].unique()}"
+        df = df.drop(columns=['num_sessions'])
+
     df = (
         df.groupby(setup)
         .agg(

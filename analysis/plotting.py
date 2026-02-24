@@ -60,7 +60,7 @@ def plot(
     n_rows = len(row_vals)
     n_cols = len(col_vals)
 
-    _, axes = plt.subplots(
+    fig, axes = plt.subplots(
         n_rows,
         n_cols,
         figsize=(plotWidth * n_cols, plotHeight * n_rows),
@@ -113,11 +113,8 @@ def plot(
                     "max_time_ms"
                 ].max()
 
-                if max_y >= TIMEOUT:
-                    max_y = 4000000
-
                 min_y = df[(df[row_field] == row_val) & (df[col_field] == col_val)][
-                    "max_time_ms"
+                    "min_time_ms"
                 ].min()
 
             for line_val in line_vals:
@@ -198,8 +195,10 @@ def plot(
     if not paths:
         plt.show()
 
-    for path in paths:
-        if base_dir:
-            plt.savefig(os.path.join(base_dir, path))
-        else:
-            plt.savefig(path)
+    else:
+        for path in paths:
+            if base_dir:
+                plt.savefig(os.path.join(base_dir, path))
+            else:
+                plt.savefig(path)
+    return fig

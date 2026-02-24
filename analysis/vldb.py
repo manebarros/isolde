@@ -11,6 +11,8 @@ import preprocessing as pre
 from domain import Framework, Problem
 from pandas.core import sorting
 from plotting import Style, plot
+import math
+from matplotlib.backends.backend_pdf import PdfPages
 
 Class = tuple[str, int]
 
@@ -20,12 +22,12 @@ Helper = dict[str, dict[str, int]]
 TIMEOUT = 3600000
 
 STYLES = {
-    "all": Style("Isolde", "#E69F00", "D", "-."),  # orange-yellow
-    "no_smart_search": Style("No smart search", "#56B4E9", "v", "--"),  # sky blue
-    "no_fixed_co": Style("No fixed co", "#009E73", "P", "-"),
-    "no_learning": Style("No learning", "#CC79A7", "X", ":"),
-    "no_incremental": Style("No incremental", "#CC79A7", "X", ":"),
-    "brute_force": Style("Brute force", "#CC79A8", "X", "--"),
+    "all":              Style("Isolde",          "#E69F00", "D",  "-"),   # orange,  diamond,   solid
+    "no_smart_search":  Style("No smart search", "#56B4E9", "v",  "--"),  # sky blue, triangle down, dashed
+    "no_fixed_co":      Style("No fixed co",     "#009E73", "s",  "-."),  # green,   square,    dash-dot
+    "no_incremental":   Style("No incremental",  "#CC79A7", "^",  ":"),   # pink,    triangle up, dotted
+    "no_learning":      Style("No learning",     "#0072B2", "o",  "--"),  # blue,    circle,    dashed
+    "brute_force":      Style("Brute force",     "#D55E00", "X",  "-."),  # red-orange, x,     dash-dot
 }
 
 
@@ -120,7 +122,6 @@ table3Header = r"""\toprule
 def prepare(path):
     df = pd.read_csv(path)
     df = pre.preprocess(df, txn_num=(3, 10))
-    df["timeout"] = df["outcome"].apply(lambda o: o == "TIMEOUT")
 
     # remove rows that have not RA_c in them
     def has_RA_c(row):
@@ -137,7 +138,7 @@ def plot1(df, basedir=None):
     df = df[df["implementation"] != "no_incremental"]
 
     # Group and count non-timeout rows
-    filtered = df[df["timeout"] == False]
+    filtered = df[df["terminates"] == True]
 
     # Build the full combination grid
     full_index = pd.MultiIndex.from_product(
@@ -214,81 +215,13 @@ def plot1(df, basedir=None):
     else:
         plt.savefig(os.path.join(basedir, "plot1.pgf"))
         plt.savefig(os.path.join(basedir, "plot1.pdf"))
+    return fig
 
-
-def plot2(df, basedir=None):
-    problems = [
-        Problem.from_str("SI_ax_c UpdateSer__c\tSer_ax_c"),
-        Problem.from_str("SI_ax_c UpdateSer__c\tSer_ax_b"),
-        Problem.from_str("RA_ax_c\tCC_ax_c"),
-    ]
-    local = df[df["implementation"].isin(["all", "no_learning"])]
-    local = local[local["problem"].isin(problems)]
-
-    styles = {
-        "all": Style("Isolde", "#E69F00", "D", "-."),
-        "no_learning": Style("Baseline", "#CC79A7", "X", ":"),
-    }
-
-    paths = ["plot2.pgf", "plot2.pdf"] if basedir else None
-
-    plot(
-        local,
-        "problem",
-        "solver",
-        "implementation",
-        paths=paths,
-        base_dir=basedir,
-        styles=styles,
-        logScaling=True,
-        plotHeight=4,
-        plotWidth=6,
-        legend=True,
-        col_display_fun=lambda p: p.as_latex(),
-        y_unit="ms",
-        sharey=False,
-    )
-
-
-def plot3(df, basedir=None):
-
-    problems = [
-        Problem.from_str("PC_ax_b\tSI_ax_c"),
-        Problem.from_str("PC_ax_c\tCC_ax_c"),
-        Problem.from_str("Ser_ax_c\tSer_ax_b"),
-        Problem.from_str("CC_ax_b\tCC_ax_c"),
-    ]
-
-    local = df[df["implementation"].isin(["all", "no_smart_search", "no_fixed_co"])]
-    local = local[local["problem"].isin(problems)]
-
-    sorting_keys = {val: idx for idx, val in enumerate(problems)}
-
-    paths = ["plot3.pgf", "plot3.pdf"] if basedir else None
-
-    plot(
-        local,
-        "problem",
-        "solver",
-        "implementation",
-        paths=paths,
-        base_dir=basedir,
-        styles=STYLES,
-        logScaling=True,
-        plotHeight=4,
-        plotWidth=5,
-        legend=True,
-        col_display_fun=lambda p: p.as_latex(),
-        y_unit="ms",
-        sharey=False,
-        timeout=3600000,
-        col_order=sorting_keys,
-    )
 
 # For every problem `p` in the df, if there is some row `r` such that `problem(r) == p` and
 # `outcome(r) == TIMEOUT`, remove all rows in df that have `p` as their problem.
 def exclude_problems_that_timeout(df):
-    problems_to_remove = df.loc[df['outcome'] == 'TIMEOUT', 'problem'].unique()
+    problems_to_remove = df.loc[df['terminates'] == False, 'problem'].unique()
     df = df[~df['problem'].isin(problems_to_remove)]
     return df
 
@@ -329,14 +262,12 @@ def fill_with_timeouts(df, txn_lim=10):
         "expected", 	
         "frameworks", 	
         "problem_type", 	
-        "timeout", 	
-        "crash"
     ]
 
     new_rows = []
 
     for _, r in df.iterrows():
-        if r['timeout']:
+        if r['outcome'] == 'TIMEOUT':
             n = r['num_txn']
             for k in range(n + 1, txn_lim + 1):  # n+1 up to and including 10
                 new_row = {}
@@ -357,32 +288,52 @@ def fill_with_timeouts(df, txn_lim=10):
 
 def double_timeout(df):
     df_copy = df.copy()
-    mask = df_copy['timeout'] == True
-    df_copy.loc[mask, ['x', 'y', 'z']] *= 2
+    mask = df_copy['outcome'] == 'TIMEOUT'
+    df_copy.loc[mask, [
+        'avg_time_ms',
+        'min_time_ms',
+        'max_time_ms']] *= 2
     return df_copy
 
-def cactus_plot(df, num_txns=None):
+NUM_PROBS = {
+    ('SAT', 1): 11,
+    ('SAT', 2): 14,
+    ('UNSAT', 1): 10,
+    ('UNSAT', 2): 9,
+} 
+
+def replace_crash_by_timeout(df):
+    df = df.copy()
+    mask = df['outcome'] == 'CRASH'
+    df.loc[mask, ['avg_time_ms', 'max_time_ms', 'min_time_ms']] = TIMEOUT
+    df.loc[mask, 'outcome'] = 'TIMEOUT'
+    return df
+
+def cactus_plot(df, num_txns=None, basedir=None):
     # Get unique values for subplot dimensions
     problem_types = sorted(df["problem_type"].unique())
     if not num_txns:
         num_txns = sorted(df["num_txn"].unique())
     implementations = df["implementation"].unique()
 
-    n_cols = len(problem_types)
-    n_rows = len(num_txns)
+    n_cols = len(num_txns)
+    n_rows = len(problem_types)
 
     fig, axes = plt.subplots(
-        n_rows, n_cols, figsize=(5 * n_cols, 4 * n_rows), squeeze=False
+        n_rows, n_cols, figsize=(3 * n_cols, 4 * n_rows), squeeze=False, sharey=True
     )
 
-    for r, txn in enumerate(num_txns):
-        for c, prob in enumerate(problem_types):
+    for r, prob in enumerate(problem_types):
+        num_probs = NUM_PROBS[prob]
+        for c, txn in enumerate(num_txns):
             ax = axes[r][c]
             subset = df[(df["problem_type"] == prob) & (df["num_txn"] == txn)]
+            max_y = subset["avg_time_ms"].max()
+            min_y = subset["avg_time_ms"].min()
 
             for impl in implementations:
                 impl_data = subset[subset["implementation"] == impl][
-                    "max_time_ms"
+                    "avg_time_ms"
                 ].dropna()
                 if impl_data.empty:
                     continue
@@ -397,16 +348,80 @@ def cactus_plot(df, num_txns=None):
 
                 ax.step(sorted_times, cumulative, where="post", label=impl)
 
-            ax.set_title(f"{prob} | txn={txn}")
+            ax.axhline(
+                y=num_probs,
+                linestyle="--",
+                linewidth=2,
+                color="red",
+            )
+
+            if r == 0:
+                ax.set_title(f"{txn} txn")
             ax.set_xlabel("Runtime")
-            ax.set_ylabel("Accumulated runs")
+            if c==0:
+                ax.set_ylabel(f"{prob}\nAccumulated runs")
             ax.legend(fontsize="small")
+            ax.grid()
+            ax.set_xscale("log")
+            left_limit = 10 ** np.floor(np.log10(min_y))
+            ax.set_xlim(left=left_limit, right=1.15 * max_y)
 
     plt.tight_layout()
-    plt.show()
+    if not basedir:
+        plt.show()
+    else:
+        plt.savefig(os.path.join(basedir, "cactus.pgf"))
+        plt.savefig(os.path.join(basedir, "cactus.pdf"))
+    return fig
 
 
-DATA_FILE = "/home/mane/code/isolde/isolde-experiments/data/d8dfd9f4814950.csv"
+DATA_FILE = "../isolde-experiments/data/d8dfd9f4814950.csv"
+
+def compare_means_isolde_baseline(df, name, basedir=None):
+    df = df[df['implementation'].isin(['all', 'no_learning'])]
+    df = exclude_problems_that_timeout(df)
+    df = compute_means(df)
+    paths = [f"{name}.pgf", f"{name}.pdf"] if basedir else None
+
+    return plot(
+        df,
+        "problem_type",
+        "solver",
+        "implementation",
+        paths=paths,
+        base_dir=basedir,
+        styles=STYLES,
+        logScaling=True,
+        plotHeight=4,
+        plotWidth=6,
+        legend=True,
+        y_unit="ms",
+        sharey=False,
+    )
+
+def compare_means_isolde_optimizations(df, name, basedir=None):
+    df = df[df['implementation'] != 'no_learning']
+    df = replace_crash_by_timeout(df)
+    df = fill_with_timeouts(df)
+    df = double_timeout(df)
+    df = compute_means(df)
+    paths = [f"{name}.pgf", f"{name}.pdf"] if basedir else None
+
+    return plot(
+        df,
+        "problem_type",
+        "solver",
+        "implementation",
+        paths=paths,
+        base_dir=basedir,
+        styles=STYLES,
+        logScaling=True,
+        plotHeight=4,
+        plotWidth=6,
+        legend=True,
+        y_unit="ms",
+        sharey=False,
+    )
 
 
 def main():
@@ -422,10 +437,28 @@ def main():
 
     df = prepare(path)
 
-    plot1(df, dir)
-    plot2(df, dir)
-    plot3(df, dir)
+    with PdfPages(os.path.join(dir, 'version1.pdf')) as pdf:
+        fig = plot1(df)
+        pdf.savefig(fig)
+        plt.close(fig)
 
+        fig = compare_means_isolde_baseline(df, None)
+        pdf.savefig(fig)
+        plt.close(fig)
+
+        fig = compare_means_isolde_optimizations(df, None)
+        pdf.savefig(fig)
+        plt.close(fig)
+
+    with PdfPages(os.path.join(dir, 'version2.pdf')) as pdf:
+        fig = plot1(df)
+        pdf.savefig(fig)
+        plt.close(fig)
+
+        df = df[df['terminates'] == True]
+        fig = cactus_plot(df, num_txns=[5,7,9])
+        pdf.savefig(fig)
+        plt.close(fig)
 
 if __name__ == "__main__":
     main()
