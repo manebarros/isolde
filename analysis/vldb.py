@@ -1,4 +1,5 @@
 import argparse
+import math
 import os
 import time
 from pathlib import Path
@@ -9,10 +10,9 @@ import numpy as np
 import pandas as pd
 import preprocessing as pre
 from domain import Framework, Problem
+from matplotlib.backends.backend_pdf import PdfPages
 from pandas.core import sorting
 from plotting import Style, plot
-import math
-from matplotlib.backends.backend_pdf import PdfPages
 
 Class = tuple[str, int]
 
@@ -22,12 +22,22 @@ Helper = dict[str, dict[str, int]]
 TIMEOUT = 3600000
 
 STYLES = {
-    "all":              Style("Isolde",          "#E69F00", "D",  "-"),   # orange,  diamond,   solid
-    "no_smart_search":  Style("No smart search", "#56B4E9", "v",  "--"),  # sky blue, triangle down, dashed
-    "no_fixed_co":      Style("No fixed co",     "#009E73", "s",  "-."),  # green,   square,    dash-dot
-    "no_incremental":   Style("No incremental",  "#CC79A7", "^",  ":"),   # pink,    triangle up, dotted
-    "no_learning":      Style("No learning",     "#0072B2", "o",  "--"),  # blue,    circle,    dashed
-    "brute_force":      Style("Brute force",     "#D55E00", "X",  "-."),  # red-orange, x,     dash-dot
+    "all": Style("Isolde", "#E69F00", "D", "-"),  # orange,  diamond,   solid
+    "no_smart_search": Style(
+        "No smart search", "#56B4E9", "v", "--"
+    ),  # sky blue, triangle down, dashed
+    "no_fixed_co": Style(
+        "No fixed co", "#009E73", "s", "-."
+    ),  # green,   square,    dash-dot
+    "no_incremental": Style(
+        "No incremental", "#CC79A7", "^", ":"
+    ),  # pink,    triangle up, dotted
+    "no_learning": Style(
+        "No learning", "#0072B2", "o", "--"
+    ),  # blue,    circle,    dashed
+    "brute_force": Style(
+        "Brute force", "#D55E00", "X", "-."
+    ),  # red-orange, x,     dash-dot
 }
 
 
@@ -96,6 +106,7 @@ def formatTable2(data: TableData, num_txn=5) -> str:
 table2Header = r"""\toprule
                     & SAT single fw & SAT diff fws & UNSAT single fw & UNSAT diff fws \\
 """
+
 
 def formatTable3(data: TableData) -> str:
     s = ""
@@ -221,9 +232,10 @@ def plot1(df, basedir=None):
 # For every problem `p` in the df, if there is some row `r` such that `problem(r) == p` and
 # `outcome(r) == TIMEOUT`, remove all rows in df that have `p` as their problem.
 def exclude_problems_that_timeout(df):
-    problems_to_remove = df.loc[df['terminates'] == False, 'problem'].unique()
-    df = df[~df['problem'].isin(problems_to_remove)]
+    problems_to_remove = df.loc[df["terminates"] == False, "problem"].unique()
+    df = df[~df["problem"].isin(problems_to_remove)]
     return df
+
 
 def compute_means(df):
     grouping_cols = [
@@ -250,25 +262,26 @@ def compute_means(df):
     df["avg_time_ms"] = df["avg_time_ms"].round().astype(int)
     return df
 
+
 def fill_with_timeouts(df, txn_lim=10):
     default_vals = {
-        'avg_time_ms' : TIMEOUT,
-        'min_time_ms' : TIMEOUT,
-        'max_time_ms' : TIMEOUT,
+        "avg_time_ms": TIMEOUT,
+        "min_time_ms": TIMEOUT,
+        "max_time_ms": TIMEOUT,
     }
 
-    extra_feats = [ 
-        "outcome", 	
-        "expected", 	
-        "frameworks", 	
-        "problem_type", 	
+    extra_feats = [
+        "outcome",
+        "expected",
+        "frameworks",
+        "problem_type",
     ]
 
     new_rows = []
 
     for _, r in df.iterrows():
-        if r['outcome'] == 'TIMEOUT':
-            n = r['num_txn']
+        if r["outcome"] == "TIMEOUT":
+            n = r["num_txn"]
             for k in range(n + 1, txn_lim + 1):  # n+1 up to and including 10
                 new_row = {}
                 # copy setup from r
@@ -277,7 +290,7 @@ def fill_with_timeouts(df, txn_lim=10):
                 for col in extra_feats:
                     new_row[col] = r[col]
                 # override num_txn
-                new_row['num_txn'] = k
+                new_row["num_txn"] = k
                 # fill remaining cols with defaults
                 for col, val in default_vals.items():
                     new_row[col] = val
@@ -286,28 +299,29 @@ def fill_with_timeouts(df, txn_lim=10):
     df = pd.concat([df, pd.DataFrame(new_rows)], ignore_index=True)
     return df
 
+
 def double_timeout(df):
     df_copy = df.copy()
-    mask = df_copy['outcome'] == 'TIMEOUT'
-    df_copy.loc[mask, [
-        'avg_time_ms',
-        'min_time_ms',
-        'max_time_ms']] *= 2
+    mask = df_copy["outcome"] == "TIMEOUT"
+    df_copy.loc[mask, ["avg_time_ms", "min_time_ms", "max_time_ms"]] *= 2
     return df_copy
 
+
 NUM_PROBS = {
-    ('SAT', 1): 11,
-    ('SAT', 2): 14,
-    ('UNSAT', 1): 10,
-    ('UNSAT', 2): 9,
-} 
+    ("SAT", 1): 11,
+    ("SAT", 2): 14,
+    ("UNSAT", 1): 10,
+    ("UNSAT", 2): 9,
+}
+
 
 def replace_crash_by_timeout(df):
     df = df.copy()
-    mask = df['outcome'] == 'CRASH'
-    df.loc[mask, ['avg_time_ms', 'max_time_ms', 'min_time_ms']] = TIMEOUT
-    df.loc[mask, 'outcome'] = 'TIMEOUT'
+    mask = df["outcome"] == "CRASH"
+    df.loc[mask, ["avg_time_ms", "max_time_ms", "min_time_ms"]] = TIMEOUT
+    df.loc[mask, "outcome"] = "TIMEOUT"
     return df
+
 
 def cactus_plot(df, num_txns=None, basedir=None):
     # Get unique values for subplot dimensions
@@ -346,7 +360,9 @@ def cactus_plot(df, num_txns=None, basedir=None):
                 sorted_times = np.concatenate([[0], sorted_times])
                 cumulative = np.concatenate([[0], cumulative])
 
-                ax.step(sorted_times, cumulative, where="post", label=impl)
+                ax.step(
+                    sorted_times, cumulative, where="post", **(STYLES[impl].as_dict())
+                )
 
             ax.axhline(
                 y=num_probs,
@@ -358,7 +374,7 @@ def cactus_plot(df, num_txns=None, basedir=None):
             if r == 0:
                 ax.set_title(f"{txn} txn")
             ax.set_xlabel("Runtime")
-            if c==0:
+            if c == 0:
                 ax.set_ylabel(f"{prob}\nAccumulated runs")
             ax.legend(fontsize="small")
             ax.grid()
@@ -377,8 +393,9 @@ def cactus_plot(df, num_txns=None, basedir=None):
 
 DATA_FILE = "../isolde-experiments/data/d8dfd9f4814950.csv"
 
+
 def compare_means_isolde_baseline(df, name, basedir=None):
-    df = df[df['implementation'].isin(['all', 'no_learning'])]
+    df = df[df["implementation"].isin(["all", "no_learning"])]
     df = exclude_problems_that_timeout(df)
     df = compute_means(df)
     paths = [f"{name}.pgf", f"{name}.pdf"] if basedir else None
@@ -399,8 +416,9 @@ def compare_means_isolde_baseline(df, name, basedir=None):
         sharey=False,
     )
 
+
 def compare_means_isolde_optimizations(df, name, basedir=None):
-    df = df[df['implementation'] != 'no_learning']
+    df = df[df["implementation"] != "no_learning"]
     df = replace_crash_by_timeout(df)
     df = fill_with_timeouts(df)
     df = double_timeout(df)
@@ -437,7 +455,7 @@ def main():
 
     df = prepare(path)
 
-    with PdfPages(os.path.join(dir, 'version1.pdf')) as pdf:
+    with PdfPages(os.path.join(dir, "version1.pdf")) as pdf:
         fig = plot1(df)
         pdf.savefig(fig)
         plt.close(fig)
@@ -450,15 +468,13 @@ def main():
         pdf.savefig(fig)
         plt.close(fig)
 
-    with PdfPages(os.path.join(dir, 'version2.pdf')) as pdf:
-        fig = plot1(df)
-        pdf.savefig(fig)
-        plt.close(fig)
+    dir = os.path.join(dir, "version2")
+    Path(dir).mkdir(exist_ok=True, parents=True)
+    plot1(df, dir)
 
-        df = df[df['terminates'] == True]
-        fig = cactus_plot(df, num_txns=[5,7,9])
-        pdf.savefig(fig)
-        plt.close(fig)
+    df = df[df["terminates"] == True]
+    cactus_plot(df, num_txns=[5, 7, 9], basedir=dir)
+
 
 if __name__ == "__main__":
     main()
