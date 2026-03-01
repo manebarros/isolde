@@ -1,10 +1,10 @@
+import math
 import os
 from dataclasses import dataclass
 from sys import stdout
 
 import matplotlib.pyplot as plt
 import numpy as np
-import math
 
 TIMEOUT = 3600000
 
@@ -15,6 +15,14 @@ class Style:
     color: str
     marker: str
     linestyle: str
+
+    def as_dict(self, use_labels=True):
+        return {
+            "label": self.name if use_labels else None,
+            "color": self.color,
+            "marker": self.marker,
+            "linestyle": self.linestyle,
+        }
 
 
 def determine_unit(max_val):
@@ -148,7 +156,9 @@ def plot(
 
             if logScaling == True or (logScaling != False and row_val in logScaling):
                 ax.set_yscale("log")
-                ax.set_ylim(bottom=10 ** math.floor(math.log10(min_y)), top=1.15 * max_y)
+                ax.set_ylim(
+                    bottom=10 ** math.floor(math.log10(min_y)), top=1.15 * max_y
+                )
             else:
                 ax.set_ylim(bottom=0, top=1.05 * max_y)
 
