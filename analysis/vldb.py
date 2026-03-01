@@ -30,7 +30,6 @@ STYLES = {
     "brute_force":      Style("Brute force",     "#D55E00", "X",  "-."),  # red-orange, x,     dash-dot
 }
 
-
 def dfToTableData(df, txn_lim=10) -> TableData:
     d = {}
     helper = {}
@@ -267,7 +266,7 @@ def fill_with_timeouts(df, txn_lim=10):
     new_rows = []
 
     for _, r in df.iterrows():
-        if r['outcome'] == 'TIMEOUT':
+        if r['outcome'] in ['TIMEOUT', 'CRASH']:
             n = r['num_txn']
             for k in range(n + 1, txn_lim + 1):  # n+1 up to and including 10
                 new_row = {}

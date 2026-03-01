@@ -22,7 +22,6 @@ def preprocess(
     solvers=None,
     problems=None,
     implementations=None,
-    with_sessions=False,
     check_expected=False,
 ):
     df = typify(df)
