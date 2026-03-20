@@ -4,6 +4,7 @@ import os
 import time
 from pathlib import Path
 from sys import implementation
+from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
@@ -21,24 +22,39 @@ Helper = dict[str, dict[str, int]]
 
 TIMEOUT = 3600000
 
-STYLES = {
-    "all": Style("Isolde", "#E69F00", "D", "-"),  # orange,  diamond,   solid
-    "no_smart_search": Style(
-        "No smart search", "#56B4E9", "v", "--"
-    ),  # sky blue, triangle down, dashed
-    "no_fixed_co": Style(
-        "No fixed co", "#009E73", "s", "-."
-    ),  # green,   square,    dash-dot
-    "no_incremental": Style(
-        "No incremental", "#CC79A7", "^", ":"
-    ),  # pink,    triangle up, dotted
-    "no_learning": Style(
-        "No learning", "#0072B2", "o", "--"
-    ),  # blue,    circle,    dashed
-    "brute_force": Style(
-        "Brute force", "#D55E00", "X", "-."
-    ),  # red-orange, x,     dash-dot
-}
+IMPLEMENTATIONS = [
+    "all",
+    "no_smart_search",
+    "no_fixed_co",
+    "no_incremental",
+    "no_learning",
+    "brute_force",
+]
+
+STYLES = dict(
+    zip(
+        IMPLEMENTATIONS,
+        [
+            Style("Isolde", "#E69F00", "D", "-"),  # orange,  diamond,   solid
+            Style(
+                "Isolde w/o smart search", "#56B4E9", "v", "--"
+            ),  # sky blue, triangle down, dashed
+            Style(
+                "Isolde w/o fixed co", "#009E73", "s", "-."
+            ),  # green,   square,    dash-dot
+            Style(
+                "Isolde w/o incremental solving", "#CC79A7", "^", ":"
+            ),  # pink,    triangle up, dotted
+            Style("No learning", "#0072B2", "o", "--"),  # blue,    circle,    dashed
+            Style("Brute force", "#D55E00", "X", "-."),  # red-orange, x,     dash-dot
+        ],
+    )
+)
+
+
+def ordering_value(l):
+    return {key: idx for idx, key in enumerate(l)}
+
 
 def dfToTableData(df, txn_lim=10) -> TableData:
     d = {}
@@ -185,7 +201,9 @@ def plot1(df, basedir=None):
 
         offsets = {impl: i * 0.08 for i, impl in enumerate(implementations)}
 
-        for impl in implementations:
+        for impl in sorted(
+            implementations, key=lambda impl: ordering_value(IMPLEMENTATIONS)[impl]
+        ):
             if impl != "brute_force":
                 impl_data = subset[subset["implementation"] == impl].sort_values(
                     "num_txn"
@@ -279,8 +297,8 @@ def fill_with_timeouts(df, txn_lim=10):
     new_rows = []
 
     for _, r in df.iterrows():
-        if r['outcome'] in ['TIMEOUT', 'CRASH']:
-            n = r['num_txn']
+        if r["outcome"] in ["TIMEOUT", "CRASH"]:
+            n = r["num_txn"]
             for k in range(n + 1, txn_lim + 1):  # n+1 up to and including 10
                 new_row = {}
                 # copy setup from r
@@ -322,7 +340,12 @@ def replace_crash_by_timeout(df):
     return df
 
 
-def cactus_plot(df, num_txns=None, basedir=None):
+def cactus_plot(
+    df,
+    num_txns: Optional[list[int]] = None,
+    metric: tuple[str, str] = ("avg_time_ms", "Runtime (ms)"),
+    log_scaling=True,
+):
     # Get unique values for subplot dimensions
     problem_types = sorted(df["problem_type"].unique())
     if not num_txns:
@@ -341,13 +364,12 @@ def cactus_plot(df, num_txns=None, basedir=None):
         for c, txn in enumerate(num_txns):
             ax = axes[r][c]
             subset = df[(df["problem_type"] == prob) & (df["num_txn"] == txn)]
-            max_y = subset["avg_time_ms"].max()
-            min_y = subset["avg_time_ms"].min()
+            max_metric_value = subset[metric[0]].max()
+            min_metric_value = subset[metric[0]].min()
 
             for impl in implementations:
-                impl_data = subset[subset["implementation"] == impl][
-                    "avg_time_ms"
-                ].dropna()
+                impl_data = subset[subset["implementation"] == impl][metric[0]].dropna()
+
                 if impl_data.empty:
                     continue
 
@@ -367,26 +389,24 @@ def cactus_plot(df, num_txns=None, basedir=None):
                 y=num_probs,
                 linestyle="--",
                 linewidth=2,
-                color="red",
+                color="blue",
             )
 
             if r == 0:
                 ax.set_title(f"{txn} txn")
-            ax.set_xlabel("Runtime")
+            ax.set_xlabel(metric[1])
             if c == 0:
                 ax.set_ylabel(f"{prob}\nAccumulated runs")
             ax.legend(fontsize="small")
             ax.grid()
-            ax.set_xscale("log")
-            left_limit = 10 ** np.floor(np.log10(min_y))
-            ax.set_xlim(left=left_limit, right=1.15 * max_y)
+            if log_scaling:
+                ax.set_xscale("log")
+                left_limit = 10 ** np.floor(np.log10(min_metric_value))
+                ax.set_xlim(left=left_limit, right=1.15 * max_metric_value)
+            else:
+                ax.set_xlim(left=0.85 * min_metric_value, right=1.15 * max_metric_value)
 
     plt.tight_layout()
-    if not basedir:
-        plt.show()
-    else:
-        plt.savefig(os.path.join(basedir, "cactus.pgf"))
-        plt.savefig(os.path.join(basedir, "cactus.pdf"))
     return fig
 
 
@@ -454,25 +474,34 @@ def main():
 
     df = prepare(path)
 
-    with PdfPages(os.path.join(dir, "version1.pdf")) as pdf:
-        fig = plot1(df)
-        pdf.savefig(fig)
-        plt.close(fig)
+    # with PdfPages(os.path.join(dir, "version1.pdf")) as pdf:
+    #    fig = plot1(df)
+    #    pdf.savefig(fig)
+    #    plt.close(fig)
 
-        fig = compare_means_isolde_baseline(df, None)
-        pdf.savefig(fig)
-        plt.close(fig)
+    #    fig = compare_means_isolde_baseline(df, None)
+    #    pdf.savefig(fig)
+    #    plt.close(fig)
 
-        fig = compare_means_isolde_optimizations(df, None)
-        pdf.savefig(fig)
-        plt.close(fig)
+    #    fig = compare_means_isolde_optimizations(df, None)
+    #    pdf.savefig(fig)
+    #    plt.close(fig)
 
     dir = os.path.join(dir, "version2")
     Path(dir).mkdir(exist_ok=True, parents=True)
     plot1(df, dir)
 
     df = df[df["terminates"] == True]
-    cactus_plot(df, num_txns=[5, 7, 9], basedir=dir)
+
+    plot2 = cactus_plot(df, num_txns=[5, 7, 9], metric=("avg_time_ms", "Runtime (ms)"))
+    plot2.savefig(os.path.join(dir, "cactus_times.pgf"))
+    plot2.savefig(os.path.join(dir, "cactus_times.pdf"))
+
+    plot_cand = cactus_plot(
+        df, num_txns=[5, 7, 9], metric=("candidates", "Candidates"), log_scaling=False
+    )
+    plot_cand.savefig(os.path.join(dir, "cactus_cand.pgf"))
+    plot_cand.savefig(os.path.join(dir, "cactus_cand.pdf"))
 
 
 if __name__ == "__main__":
