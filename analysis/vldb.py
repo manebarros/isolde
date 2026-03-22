@@ -1,18 +1,12 @@
 import argparse
-import math
 import os
-import time
 from pathlib import Path
-from sys import implementation
 from typing import Optional
 
 import matplotlib.pyplot as plt
 import numpy as np
 import pandas as pd
 import preprocessing as pre
-from domain import Framework, Problem
-from matplotlib.backends.backend_pdf import PdfPages
-from pandas.core import sorting
 from plotting import Style, plot
 
 Class = tuple[str, int]
@@ -145,21 +139,7 @@ table3Header = r"""\toprule
 """
 
 
-def prepare(path):
-    df = pd.read_csv(path)
-    df = pre.preprocess(df, txn_num=(3, 10))
-
-    # remove rows that have not RA_c in them
-    def has_RA_c(row):
-        problem = row["problem"]
-        return problem.neg.name == "RA" and problem.neg.framework == Framework.CERONE
-
-    df = df.loc[df.apply(lambda row: not has_RA_c(row), axis=1)]
-    return df
-
-
-def plot1(df, basedir=None):
-
+def plot1(df):
     df = df.copy(deep=True)
     df = df[df["implementation"] != "no_incremental"]
 
@@ -237,13 +217,12 @@ def plot1(df, basedir=None):
             ax.set_ylabel("Number of finished runs")
 
     plt.tight_layout()
-
-    if not basedir:
-        plt.show()
-    else:
-        plt.savefig(os.path.join(basedir, "plot1.pgf"))
-        plt.savefig(os.path.join(basedir, "plot1.pdf"))
     return fig
+
+
+def save_plot(fig, dir, name):
+    fig.savefig(os.path.join(dir, f"{name}.pgf"))
+    fig.savefig(os.path.join(dir, f"{name}.pdf"))
 
 
 # For every problem `p` in the df, if there is some row `r` such that `problem(r) == p` and
@@ -344,8 +323,14 @@ def cactus_plot(
     df,
     num_txns: Optional[list[int]] = None,
     metric: tuple[str, str] = ("avg_time_ms", "Runtime (ms)"),
-    log_scaling=True,
+    scale="log",
 ):
+    # consider only problems that terminate
+    df = df[df["terminates"] == True]
+
+    # assert that we have no timeouts
+    assert (df["candidates"] >= 0).all()
+
     # Get unique values for subplot dimensions
     problem_types = sorted(df["problem_type"].unique())
     if not num_txns:
@@ -360,7 +345,7 @@ def cactus_plot(
     )
 
     for r, prob in enumerate(problem_types):
-        num_probs = NUM_PROBS[prob]
+        num_probs = df[df["problem_type"] == prob]["problem"].nunique()
         for c, txn in enumerate(num_txns):
             ax = axes[r][c]
             subset = df[(df["problem_type"] == prob) & (df["num_txn"] == txn)]
@@ -376,6 +361,13 @@ def cactus_plot(
                 # Sort runtimes and compute cumulative count
                 sorted_times = np.sort(impl_data.values)
                 cumulative = np.arange(1, len(sorted_times) + 1)
+
+                # show only the highest value for each x
+                last_occurrence = np.concatenate(
+                    [sorted_times[:-1] != sorted_times[1:], [True]]
+                )
+                sorted_times = sorted_times[last_occurrence]
+                cumulative = cumulative[last_occurrence]
 
                 # Extend line to make it a step function starting from 0
                 sorted_times = np.concatenate([[0], sorted_times])
@@ -399,12 +391,15 @@ def cactus_plot(
                 ax.set_ylabel(f"{prob}\nAccumulated runs")
             ax.legend(fontsize="small")
             ax.grid()
-            if log_scaling:
+            if scale == "log":
                 ax.set_xscale("log")
                 left_limit = 10 ** np.floor(np.log10(min_metric_value))
-                ax.set_xlim(left=left_limit, right=1.15 * max_metric_value)
+                ax.set_xlim(left=left_limit, right=1.5 * max_metric_value)
+            elif scale == "symlog":
+                ax.set_xscale("symlog", linthresh=1)
+                ax.set_xlim(left=-0.2, right=1.5 * max_metric_value)
             else:
-                ax.set_xlim(left=0.85 * min_metric_value, right=1.15 * max_metric_value)
+                ax.set_xlim(left=0.85 * min_metric_value, right=1.5 * max_metric_value)
 
     plt.tight_layout()
     return fig
@@ -461,47 +456,152 @@ def compare_means_isolde_optimizations(df, name, basedir=None):
     )
 
 
+def compare_metrics_ptypes(df):
+    df = df[df["implementation"] == "all"]
+    df = df[df["solver"] == "glucose"]
+    df = exclude_problems_that_timeout(df)
+    # Group by problem_type and num_txn, then average the metrics
+    grouped = (
+        df.groupby(["problem_type", "num_txn"])
+        .agg(
+            initial_clauses=("initial_clauses", "mean"),
+            avg_time_ms=("avg_time_ms", "mean"),
+            candidates=("candidates", "mean"),
+        )
+        .reset_index()
+    )
+
+    problem_types = grouped["problem_type"].unique()
+
+    fig, axes = plt.subplots(1, 3, figsize=(18, 5))
+
+    metrics = [
+        ("initial_clauses", "Initial Clauses"),
+        ("avg_time_ms", "Avg Time (ms)"),
+        ("candidates", "Candidates"),
+    ]
+
+    for ax, (col, label) in zip(axes, metrics):
+        for pt in problem_types:
+            subset = grouped[grouped["problem_type"] == pt].sort_values("num_txn")
+            ax.plot(subset["num_txn"], subset[col], marker="o", label=str(pt))
+        ax.set_xlabel("Number of Transactions")
+        ax.set_yscale("log")
+        ax.set_ylabel(label)
+        ax.set_title(f"{label} vs. Num Transactions")
+        ax.legend(title="Problem Type")
+        ax.grid(True, linestyle="--", alpha=0.5)
+
+    plt.tight_layout()
+    return fig
+
+
+def compare_metrics_implementations(df):
+    problem_types = [("UNSAT", 1), ("UNSAT", 2)]
+    df = df[df["implementation"].isin(["all", "no_smart_search", "no_fixed_co"])]
+
+    metrics = [
+        ("initial_clauses", "Initial Clauses"),
+        ("avg_time_ms", "Avg Time (ms)"),
+        ("candidates", "Candidates"),
+    ]
+
+    df = df[df["num_txn"] <= 7]
+    df = df[df["solver"] == "glucose"]
+    df = exclude_problems_that_timeout(df)
+
+    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+
+    for row, pt in enumerate(problem_types):
+        df_pt = df[df["problem_type"] == pt]
+
+        grouped = (
+            df_pt.groupby(["implementation", "num_txn"])
+            .agg(
+                initial_clauses=("initial_clauses", "mean"),
+                avg_time_ms=("avg_time_ms", "mean"),
+                candidates=("candidates", "mean"),
+            )
+            .reset_index()
+        )
+
+        implementations = grouped["implementation"].unique()
+
+        for col, (metric, label) in enumerate(metrics):
+            ax = axes[row, col]
+            for impl in implementations:
+                subset = grouped[grouped["implementation"] == impl].sort_values(
+                    "num_txn"
+                )
+                ax.plot(subset["num_txn"], subset[metric], marker="o", label=impl)
+            ax.set_xlabel("Number of Transactions")
+            ax.set_ylabel(label)
+            ax.set_title(f"{label} vs. Num Transactions (Type {pt})")
+            ax.legend(title="Implementation")
+            ax.grid(True, linestyle="--", alpha=0.5)
+
+    plt.tight_layout()
+    return fig
+
+
 def main():
     parser = argparse.ArgumentParser(description="Plot builder")
     parser.add_argument("path", nargs="?", default=None, help="Path to the data file")
-    parser.add_argument("--dest", "-d", default="./plots", help="Dest directory")
+    parser.add_argument("--dest", "-d", default=None, help="Dest directory")
     args = parser.parse_args()
 
     path = args.path if args.path else DATA_FILE
-    commit_id = Path(path).stem
-    dir = os.path.join(args.dest, commit_id)
-    Path(dir).mkdir(exist_ok=True, parents=True)
 
-    df = prepare(path)
+    if not args.dest:
+        commit_id = Path(path).stem
+        dir = os.path.join("./plots", commit_id)
+        Path(dir).mkdir(exist_ok=True, parents=True)
+    else:
+        dir = args.dest
 
-    # with PdfPages(os.path.join(dir, "version1.pdf")) as pdf:
-    #    fig = plot1(df)
-    #    pdf.savefig(fig)
-    #    plt.close(fig)
+    extra_dir = os.path.join(dir, "extra")
+    Path(extra_dir).mkdir(exist_ok=True, parents=True)
 
-    #    fig = compare_means_isolde_baseline(df, None)
-    #    pdf.savefig(fig)
-    #    plt.close(fig)
+    df = pre.preprocess(pd.read_csv(path))
+    df = df[df["num_txn"].between(3, 10)]
 
-    #    fig = compare_means_isolde_optimizations(df, None)
-    #    pdf.savefig(fig)
-    #    plt.close(fig)
-
-    dir = os.path.join(dir, "version2")
-    Path(dir).mkdir(exist_ok=True, parents=True)
-    plot1(df, dir)
-
-    df = df[df["terminates"] == True]
-
-    plot2 = cactus_plot(df, num_txns=[5, 7, 9], metric=("avg_time_ms", "Runtime (ms)"))
-    plot2.savefig(os.path.join(dir, "cactus_times.pgf"))
-    plot2.savefig(os.path.join(dir, "cactus_times.pdf"))
-
-    plot_cand = cactus_plot(
-        df, num_txns=[5, 7, 9], metric=("candidates", "Candidates"), log_scaling=False
+    save_plot(plot1(df), dir, "plot1")
+    save_plot(
+        cactus_plot(df, num_txns=[5, 7, 9], metric=("avg_time_ms", "Runtime (ms)")),
+        dir,
+        "cactus_times",
     )
-    plot_cand.savefig(os.path.join(dir, "cactus_cand.pgf"))
-    plot_cand.savefig(os.path.join(dir, "cactus_cand.pdf"))
+
+    # extras
+    save_plot(
+        cactus_plot(
+            df, num_txns=list(range(5, 11)), metric=("avg_time_ms", "Runtime (ms)")
+        ),
+        extra_dir,
+        "cactus_times",
+    )
+    save_plot(
+        cactus_plot(
+            df,
+            num_txns=list(range(5, 11)),
+            metric=("candidates", "Candidates"),
+            scale="symlog",
+        ),
+        extra_dir,
+        "cactus_cand",
+    )
+    save_plot(
+        cactus_plot(
+            df,
+            num_txns=list(range(5, 11)),
+            metric=("initial_clauses", "Clauses"),
+            scale="symlog",
+        ),
+        extra_dir,
+        "cactus_clauses",
+    )
+    save_plot(compare_metrics_implementations(df), extra_dir, "compare_metrics_impl")
+    save_plot(compare_metrics_ptypes(df), extra_dir, "compare_metrics_ptypes")
 
 
 if __name__ == "__main__":
