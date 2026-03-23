@@ -70,6 +70,10 @@ def preprocess(
         return problem.neg.name == "RA" and problem.neg.framework == Framework.CERONE
 
     df = df.loc[df.apply(lambda row: not has_RA_c(row), axis=1)]
+    df = df[
+        (df["implementation"] != "no_smart_search")
+        | (df["problem_type"] != ("UNSAT", 2))
+    ]
     return df
 
 

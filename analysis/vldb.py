@@ -212,11 +212,19 @@ def plot1(df):
         ax.set_ylim(bottom=-0.5, top=15)
         ax.grid()
         if idx == 0:
-            ax.legend(loc="best")
             ax.set_xlabel("Number of transactions")
             ax.set_ylabel("Number of finished runs")
 
-    plt.tight_layout()
+    handles, labels = axes[0].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        ncol=len(implementations),
+        bbox_to_anchor=(0.5, 1.01),
+    )
+
+    plt.tight_layout(rect=[0.0, 0.0, 1.0, 0.93])
     return fig
 
 
@@ -352,7 +360,9 @@ def cactus_plot(
             max_metric_value = subset[metric[0]].max()
             min_metric_value = subset[metric[0]].min()
 
-            for impl in implementations:
+            for impl in sorted(
+                implementations, key=lambda impl: ordering_value(IMPLEMENTATIONS)[impl]
+            ):
                 impl_data = subset[subset["implementation"] == impl][metric[0]].dropna()
 
                 if impl_data.empty:
@@ -386,10 +396,10 @@ def cactus_plot(
 
             if r == 0:
                 ax.set_title(f"{txn} txn")
-            ax.set_xlabel(metric[1])
+            if r == n_rows - 1:
+                ax.set_xlabel(metric[1])
             if c == 0:
                 ax.set_ylabel(f"{prob}\nAccumulated runs")
-            ax.legend(fontsize="small")
             ax.grid()
             if scale == "log":
                 ax.set_xscale("log")
@@ -398,10 +408,24 @@ def cactus_plot(
             elif scale == "symlog":
                 ax.set_xscale("symlog", linthresh=1)
                 ax.set_xlim(left=-0.2, right=1.5 * max_metric_value)
+            elif scale == "other":
+                ax.set_xlim(
+                    left=-100,
+                    right=1.05 * max_metric_value,
+                )
             else:
                 ax.set_xlim(left=0.85 * min_metric_value, right=1.5 * max_metric_value)
 
-    plt.tight_layout()
+    handles, labels = axes[0][0].get_legend_handles_labels()
+    fig.legend(
+        handles,
+        labels,
+        loc="upper center",
+        ncol=len(implementations),
+        bbox_to_anchor=(0.5, 1),
+    )
+
+    plt.tight_layout(rect=[0.0, 0.0, 1.0, 0.98])
     return fig
 
 
@@ -501,18 +525,18 @@ def compare_metrics_implementations(df):
     df = df[df["implementation"].isin(["all", "no_smart_search", "no_fixed_co"])]
 
     metrics = [
-        ("initial_clauses", "Initial Clauses"),
         ("avg_time_ms", "Avg Time (ms)"),
         ("candidates", "Candidates"),
+        ("initial_clauses", "Initial Clauses"),
     ]
 
     df = df[df["num_txn"] <= 7]
     df = df[df["solver"] == "glucose"]
     df = exclude_problems_that_timeout(df)
 
-    fig, axes = plt.subplots(2, 3, figsize=(18, 10))
+    fig, axes = plt.subplots(3, 2, figsize=(12, 15))
 
-    for row, pt in enumerate(problem_types):
+    for col, pt in enumerate(problem_types):
         df_pt = df[df["problem_type"] == pt]
 
         grouped = (
@@ -527,17 +551,17 @@ def compare_metrics_implementations(df):
 
         implementations = grouped["implementation"].unique()
 
-        for col, (metric, label) in enumerate(metrics):
+        for row, (metric, label) in enumerate(metrics):
             ax = axes[row, col]
             for impl in implementations:
                 subset = grouped[grouped["implementation"] == impl].sort_values(
                     "num_txn"
                 )
-                ax.plot(subset["num_txn"], subset[metric], marker="o", label=impl)
+                ax.plot(subset["num_txn"], subset[metric], **(STYLES[impl].as_dict()))
             ax.set_xlabel("Number of Transactions")
             ax.set_ylabel(label)
+            ax.set_yscale("symlog", linthresh=1)
             ax.set_title(f"{label} vs. Num Transactions (Type {pt})")
-            ax.legend(title="Implementation")
             ax.grid(True, linestyle="--", alpha=0.5)
 
     plt.tight_layout()
@@ -575,15 +599,8 @@ def main():
     # extras
     save_plot(
         cactus_plot(
-            df, num_txns=list(range(5, 11)), metric=("avg_time_ms", "Runtime (ms)")
-        ),
-        extra_dir,
-        "cactus_times",
-    )
-    save_plot(
-        cactus_plot(
             df,
-            num_txns=list(range(5, 11)),
+            num_txns=[5, 7, 9],
             metric=("candidates", "Candidates"),
             scale="symlog",
         ),
@@ -593,9 +610,9 @@ def main():
     save_plot(
         cactus_plot(
             df,
-            num_txns=list(range(5, 11)),
+            num_txns=[5, 7, 9],
             metric=("initial_clauses", "Clauses"),
-            scale="symlog",
+            scale="other",
         ),
         extra_dir,
         "cactus_clauses",
