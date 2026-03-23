@@ -103,11 +103,11 @@ def formatTable2(data: TableData, num_txn=5) -> str:
         s += r"\midrule" + "\n" + r"\multirow{2}{*}{" + impl.replace("_", " ") + r"}"
         for pclass, pclass_data in sorted(impl_data.items()):
             (_, (time, _)) = pclass_data[num_txn]
-            s += f" & {time if time < TIMEOUT else "\\multirow{2}{*}{TO}"}"
+            s += f" & {time if time < TIMEOUT else '\\multirow{2}{*}{TO}'}"
         s += r"\\" + "\n\n"
         for pclass, pclass_data in sorted(impl_data.items()):
             (_, (time, cand)) = pclass_data[num_txn]
-            s += f" & {cand if time < TIMEOUT else ""}"
+            s += f" & {cand if time < TIMEOUT else ''}"
         s += r"\\" + "\n\n"
     return s
 
@@ -123,11 +123,11 @@ def formatTable3(data: TableData) -> str:
         s += r"\midrule" + "\n" + r"\multirow{2}{*}{" + impl.replace("_", " ") + r"}"
         for pclass, pclass_data in sorted(impl_data.items()):
             for num_txn, (_, (time, cand)) in pclass_data.items():
-                s += f" & {time if time < TIMEOUT else "\\multirow{2}{*}{TO}"}"
+                s += f" & {time if time < TIMEOUT else '\\multirow{2}{*}{TO}'}"
         s += r"\\" + "\n"
         for pclass, pclass_data in sorted(impl_data.items()):
             for num_txn, (_, (time, cand)) in pclass_data.items():
-                s += f" & {cand if time < TIMEOUT else ""}"
+                s += f" & {cand if time < TIMEOUT else ''}"
         s += r"\\" + "\n\n"
     return s
 
