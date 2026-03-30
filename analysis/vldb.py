@@ -167,6 +167,10 @@ def plot1(df):
     problem_types = grouped["problem_type"].unique()
     implementations = list(grouped["implementation"].unique())
     implementations.append("brute_force")
+    sorted_impls = sorted(
+        implementations, key=lambda impl: ordering_value(IMPLEMENTATIONS)[impl]
+    )
+    num_impls = len(sorted_impls)
 
     fig, axes = plt.subplots(
         1, len(problem_types), figsize=(3 * len(problem_types), 3), sharey=True
@@ -181,31 +185,23 @@ def plot1(df):
 
         offsets = {impl: i * 0.08 for i, impl in enumerate(implementations)}
 
-        for impl in sorted(
-            implementations, key=lambda impl: ordering_value(IMPLEMENTATIONS)[impl]
-        ):
+        for rank, impl in enumerate(sorted_impls):
+            if problem == ("UNSAT", 2) and impl == "no_smart_search":
+                continue
+            z = 1 + num_impls - rank
             if impl != "brute_force":
                 impl_data = subset[subset["implementation"] == impl].sort_values(
                     "num_txn"
                 )
                 x = impl_data["num_txn"] + offsets[impl]
-                ax.plot(
-                    x,
-                    impl_data["count"],
-                    marker=STYLES[impl].marker,
-                    color=STYLES[impl].color,
-                    label=STYLES[impl].name,
-                    linestyle=STYLES[impl].linestyle,
-                )
+                ax.plot(x, impl_data["count"], zorder=z, **(STYLES[impl].as_dict()))
             else:
                 indexes = [i + offsets[impl] for i in list(range(3, 11))]
                 ax.plot(
                     indexes,
                     list([0] * len(indexes)),
-                    label=STYLES[impl].name,
-                    marker=STYLES[impl].marker,
-                    color=STYLES[impl].color,
-                    linestyle=STYLES[impl].linestyle,
+                    zorder=z,
+                    **(STYLES[impl].as_dict()),
                 )
 
         ax.set_title(problem)
@@ -344,6 +340,10 @@ def cactus_plot(
     if not num_txns:
         num_txns = sorted(df["num_txn"].unique())
     implementations = df["implementation"].unique()
+    sorted_impls = sorted(
+        implementations, key=lambda impl: ordering_value(IMPLEMENTATIONS)[impl]
+    )
+    num_impls = len(sorted_impls)
 
     n_cols = len(num_txns)
     n_rows = len(problem_types)
@@ -360,9 +360,8 @@ def cactus_plot(
             max_metric_value = subset[metric[0]].max()
             min_metric_value = subset[metric[0]].min()
 
-            for impl in sorted(
-                implementations, key=lambda impl: ordering_value(IMPLEMENTATIONS)[impl]
-            ):
+            for rank, impl in enumerate(sorted_impls):
+                z = 2 + num_impls - rank
                 impl_data = subset[subset["implementation"] == impl][metric[0]].dropna()
 
                 if impl_data.empty:
@@ -384,15 +383,14 @@ def cactus_plot(
                 cumulative = np.concatenate([[0], cumulative])
 
                 ax.step(
-                    sorted_times, cumulative, where="post", **(STYLES[impl].as_dict())
+                    sorted_times,
+                    cumulative,
+                    where="post",
+                    zorder=z,
+                    **(STYLES[impl].as_dict()),
                 )
 
-            ax.axhline(
-                y=num_probs,
-                linestyle="--",
-                linewidth=2,
-                color="blue",
-            )
+            ax.axhline(y=num_probs, linestyle="--", linewidth=2, color="blue", zorder=1)
 
             if r == 0:
                 ax.set_title(f"{txn} txn")
