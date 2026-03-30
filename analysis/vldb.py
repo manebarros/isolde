@@ -229,8 +229,8 @@ def plot1(df):
 
 
 def save_plot(fig, dir, name):
-    fig.savefig(os.path.join(dir, f"{name}.pgf"))
-    fig.savefig(os.path.join(dir, f"{name}.pdf"))
+    fig.savefig(os.path.join(dir, f"{name}.pgf"), bbox_inches="tight", pad_inches=0.1)
+    fig.savefig(os.path.join(dir, f"{name}.pdf"), bbox_inches="tight", pad_inches=0.1)
 
 
 # For every problem `p` in the df, if there is some row `r` such that `problem(r) == p` and
