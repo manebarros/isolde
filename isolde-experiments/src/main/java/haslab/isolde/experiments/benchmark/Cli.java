@@ -31,11 +31,17 @@ public class Cli implements Runnable {
       converter = TxnNumConverter.class)
   Pair<Integer> txn_num = new Pair<>(3, 3);
 
-  @Option(names = "--obj", description = "Number of objects")
-  Integer obj_num = 3;
+  @Option(
+      names = "--obj",
+      description = "Number of objects (num | start:end)",
+      converter = TxnNumConverter.class)
+  Pair<Integer> obj_num = new Pair<>(3, 3);
 
-  @Option(names = "--val", description = "Number of values")
-  Integer val_num = 3;
+  @Option(
+      names = "--val",
+      description = "Number of values (num | start:end)",
+      converter = TxnNumConverter.class)
+  Pair<Integer> val_num = new Pair<>(3, 3);
 
   @Option(names = "--timeout", description = "Timeout in ms")
   Integer timeout = 300;
@@ -71,12 +77,12 @@ public class Cli implements Runnable {
       names = "--impl",
       split = ",",
       converter = ImplementationConverter.class,
-      description = "Execution modes")
+      description = "Implementations")
   List<Implementation> implementations = Arrays.asList(Implementation.values());
 
   @Override
   public void run() {
-    List<Scope> scopes = Util.scopesFromRange(obj_num, val_num, txn_num.fst(), txn_num.snd());
+    List<Scope> scopes = Util.scopesFromRange(txn_num, obj_num, val_num);
 
     List<Named<IsoldeSpec>> problems = new ArrayList<>();
     if (this.problems.problem_id != null) {

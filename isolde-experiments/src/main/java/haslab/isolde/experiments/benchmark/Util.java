@@ -7,6 +7,7 @@ import haslab.isolde.IsoldeSpec;
 import haslab.isolde.SynthesizedHistory;
 import haslab.isolde.SynthesizerI;
 import haslab.isolde.core.synth.Scope;
+import haslab.isolde.util.Pair;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
@@ -50,6 +51,19 @@ public final class Util {
     StringBuilder sb = new StringBuilder();
     for (var row : rows) sb.append(row).append("\n");
     return sb.toString();
+  }
+
+  public static List<Scope> scopesFromRange(
+      Pair<Integer> txn, Pair<Integer> objects, Pair<Integer> values) {
+    List<Scope> scopes = new ArrayList<>();
+    for (int txn_num = txn.fst(); txn_num <= txn.snd(); txn_num += 1) {
+      for (int obj_num = objects.fst(); obj_num <= objects.snd(); obj_num += 1) {
+        for (int val_num = values.fst(); val_num <= values.snd(); val_num += 1) {
+          scopes.add(new Scope.Builder().txn(txn_num).obj(obj_num).val(val_num).build());
+        }
+      }
+    }
+    return scopes;
   }
 
   public static List<Scope> scopesFromRange(int keys, int val, int from, int to) {
