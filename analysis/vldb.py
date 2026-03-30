@@ -46,6 +46,10 @@ STYLES = dict(
 )
 
 
+def problem_type_name(ptype):
+    return f"{ptype[0]}, {'single-framework' if ptype[1] == 1 else 'multi-framework'}"
+
+
 def ordering_value(l):
     return {key: idx for idx, key in enumerate(l)}
 
@@ -172,16 +176,21 @@ def plot1(df):
     )
     num_impls = len(sorted_impls)
 
-    fig, axes = plt.subplots(
-        1, len(problem_types), figsize=(3 * len(problem_types), 3), sharey=True
-    )
+    fig, axes = plt.subplots(2, 2, figsize=(6, 4.5), sharey=False)
 
     # Handle case of single problem type
     if len(problem_types) == 1:
         axes = [axes]
 
-    for idx, (ax, problem) in enumerate(zip(axes, sorted(problem_types))):
+    for problem in problem_types:
+        (result, num_fw) = problem
+
+        row = num_fw - 1
+        col = 0 if result == "SAT" else 1
+        ax = axes[row][col]
+
         subset = grouped[grouped["problem_type"] == problem]
+        total_num_probs = subset["count"].max()
 
         offsets = {impl: i * 0.08 for i, impl in enumerate(implementations)}
 
@@ -204,23 +213,32 @@ def plot1(df):
                     **(STYLES[impl].as_dict()),
                 )
 
-        ax.set_title(problem)
-        ax.set_ylim(bottom=-0.5, top=15)
+        ax.set_ylim(bottom=-0.5, top=total_num_probs + 1)
         ax.grid()
-        if idx == 0:
-            ax.set_xlabel("Number of transactions")
-            ax.set_ylabel("Number of finished runs")
+        ax.set_title(
+            f"{result}, {'single-framework' if num_fw == 1 else 'multi-framework'}"
+        )
+        if row == 1:
+            ax.set_xlabel(r"\# of transactions")
+        if col == 0:
+            ax.set_ylabel("\\# of finished runs")
 
-    handles, labels = axes[0].get_legend_handles_labels()
+    handles, labels = axes[0][0].get_legend_handles_labels()
+    order = [0, 3, 1, 4, 2]  # rearranged indices
+
+    handles = [handles[i] for i in order]
+    labels = [labels[i] for i in order]
+
     fig.legend(
         handles,
         labels,
         loc="upper center",
-        ncol=len(implementations),
+        ncol=3,
         bbox_to_anchor=(0.5, 1.01),
+        frameon=False,
     )
 
-    plt.tight_layout(rect=[0.0, 0.0, 1.0, 0.93])
+    plt.tight_layout(rect=[0.0, 0.0, 1.0, 0.91])
     return fig
 
 
@@ -349,7 +367,7 @@ def cactus_plot(
     n_rows = len(problem_types)
 
     fig, axes = plt.subplots(
-        n_rows, n_cols, figsize=(3 * n_cols, 4 * n_rows), squeeze=False, sharey=True
+        n_rows, n_cols, figsize=(2.4 * n_cols, 3.5 * n_rows), squeeze=False
     )
 
     for r, prob in enumerate(problem_types):
@@ -361,7 +379,7 @@ def cactus_plot(
             min_metric_value = subset[metric[0]].min()
 
             for rank, impl in enumerate(sorted_impls):
-                z = 2 + num_impls - rank
+                z = 3 + num_impls - rank
                 impl_data = subset[subset["implementation"] == impl][metric[0]].dropna()
 
                 if impl_data.empty:
@@ -390,14 +408,14 @@ def cactus_plot(
                     **(STYLES[impl].as_dict()),
                 )
 
-            ax.axhline(y=num_probs, linestyle="--", linewidth=2, color="blue", zorder=1)
+            ax.axhline(y=num_probs, linestyle="--", linewidth=2, color="blue", zorder=2)
 
             if r == 0:
                 ax.set_title(f"{txn} txn")
             if r == n_rows - 1:
                 ax.set_xlabel(metric[1])
             if c == 0:
-                ax.set_ylabel(f"{prob}\nAccumulated runs")
+                ax.set_ylabel(f"{problem_type_name(prob)}\nAccumulated runs")
             ax.grid()
             if scale == "log":
                 ax.set_xscale("log")
@@ -414,6 +432,10 @@ def cactus_plot(
             else:
                 ax.set_xlim(left=0.85 * min_metric_value, right=1.5 * max_metric_value)
 
+            if c != 0:
+                ax.set_yticklabels([])  # remove labels
+                # ax.set_yticks([])        # optionally remove ticks
+
     handles, labels = axes[0][0].get_legend_handles_labels()
     fig.legend(
         handles,
@@ -421,9 +443,11 @@ def cactus_plot(
         loc="upper center",
         ncol=len(implementations),
         bbox_to_anchor=(0.5, 1),
+        frameon=False,
     )
 
     plt.tight_layout(rect=[0.0, 0.0, 1.0, 0.98])
+    fig.subplots_adjust(wspace=0.05)  # smaller = less horizontal space
     return fig
 
 
