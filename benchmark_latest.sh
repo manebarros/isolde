@@ -9,13 +9,13 @@ fi
 # Get the commit hash that HEAD points to (14-char short hash)
 COMMIT_HASH=$(git rev-parse --short=14 HEAD)
 
-CSV_PATH="isolde-experiments/data/${COMMIT_HASH}.csv"
+CSV_PATH="experiments/data/${COMMIT_HASH}.csv"
 
 for impl in all no_smart_search no_fixed_co no_learning
 do
     mvn clean package && \
     java -Xms4g -Xmx16g \
-    -jar isolde-experiments/target/isolde-experiments-1.0-SNAPSHOT.jar \
+    -jar experiments/target/isoldebench.jar \
     "$CSV_PATH" \
     --txn 3:10 \
     --obj 5 \

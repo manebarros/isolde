@@ -1,9 +1,25 @@
 # Isolde - from "Verifying Isolation Level Specifications"
 
-This project consists in a multi-module maven project. Isolde is a java library that exposes several methods to synthesize database histories conforming to isolation specifications. 
+This project is a multi-module Maven project structured as follows:
 
-The state of this repository is work in progress. Deprecated code needs to be removed, and relevant code needs to be documented. However, the project can to be tested and used.
+- `core/` — framework-agnostic library for building history synthesis tools. Knows nothing about specific theoretical frameworks (Biswas, Cerone, ...).
+- `cli/` — the Isolde tool: instantiations of specific frameworks (currently Biswas and Cerone) on top of `core`, plus the `isolde` command-line interface.
+- `experiments/` — benchmarking and verification experiments, including the `isoldebench` CLI used to record solving times.
 
-Isolde lives in the `isolde-core` module. For examples on how to specify isolation levels, see, for instance, the `haslab.isolde.cerone.definitions.CeroneDefinitions` and `haslab.isolde.biswas.definitions.AxiomaticDefinitions` classes. 
+The state of this repository is work in progress. Deprecated code needs to be removed, and relevant code needs to be documented. However, the project can be tested and used.
 
-For examples on how to use Isolde, see the `isolde-experiments` module, which contains all the code used to run the experiments mentioned in the paper.
+## Examples
+
+For examples on how to specify isolation levels, see the `haslab.isolde.cerone.definitions.CeroneDefinitions` and `haslab.isolde.biswas.definitions.AxiomaticDefinitions` classes in the `cli` module.
+
+For examples on how to use Isolde programmatically, see the `experiments` module, which contains all the code used to run the experiments mentioned in the paper.
+
+## Building
+
+    mvn package
+
+This produces `cli/target/isolde.jar` (the synthesis CLI) and `experiments/target/isoldebench.jar` (the benchmarking CLI).
+
+## Running the CLI
+
+    java -jar cli/target/isolde.jar --txn 3 --obj 2 --val 2 --require biswas:Ser

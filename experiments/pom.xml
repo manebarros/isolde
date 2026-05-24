@@ -10,38 +10,37 @@
     <version>1.0-SNAPSHOT</version>
 </parent>
 
-<artifactId>isolde-experiments</artifactId>
+<artifactId>experiments</artifactId>
 <name>Isolde Experiments</name>
+<description>
+    Benchmarks and verification experiments for Isolde.
+</description>
 
 <dependencies>
     <dependency>
         <groupId>haslab</groupId>
-        <artifactId>isolde-core</artifactId>
-        <version>${project.version}</version>
+        <artifactId>cli</artifactId>
     </dependency>
     <dependency>
         <groupId>com.github.emina</groupId>
         <artifactId>kodkod</artifactId>
-        <version>1.0</version>
     </dependency>
     <dependency>
         <groupId>org.ow2.sat4j</groupId>
         <artifactId>org.ow2.sat4j.core</artifactId>
-        <version>2.3.4</version>
     </dependency>
     <dependency>
         <groupId>info.picocli</groupId>
         <artifactId>picocli</artifactId>
-        <version>4.7.5</version>
     </dependency>
     <dependency>
         <groupId>org.yaml</groupId>
         <artifactId>snakeyaml</artifactId>
-        <version>2.2</version>
     </dependency>
 </dependencies>
 
 <build>
+    <finalName>isoldebench</finalName>
     <plugins>
         <plugin>
             <groupId>org.apache.maven.plugins</groupId>
