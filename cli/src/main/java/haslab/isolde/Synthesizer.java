@@ -61,7 +61,7 @@ public class Synthesizer {
   }
 
   public Synthesizer(Scope scope, HistoryFormula hf, HistoryDecls decls) {
-    FolSynthesisInput input = new FolSynthesisInput.Builder(scope).formula(hf).delcs(decls).build();
+    FolSynthesisInput input = new FolSynthesisInput.Builder(scope).formula(hf).decls(decls).build();
     this.cegisSynthesizer =
         CegisSynthesizer.withSmartSearchFormula(FolSynthesisProblem.withTotalOrder(input), true);
     this.ceroneExecutions = null;

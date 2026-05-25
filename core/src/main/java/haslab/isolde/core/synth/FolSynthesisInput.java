@@ -25,7 +25,7 @@ public record FolSynthesisInput(
       return this;
     }
 
-    public Builder delcs(HistoryDecls decls) {
+    public Builder decls(HistoryDecls decls) {
       this.decls = decls;
       return this;
     }
