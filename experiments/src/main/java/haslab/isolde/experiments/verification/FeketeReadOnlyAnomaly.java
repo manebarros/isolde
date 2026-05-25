@@ -96,23 +96,6 @@ public final class FeketeReadOnlyAnomaly {
                 oneTransactionPerSession.resolve(synth.getCegisSynthesizer().historyEncoding())));
   }
 
-  // DEBUG
-  public static final void debug() {
-    Scope scope = new Scope.Builder(3).obj(2).val(2).build();
-    SynthesisSpec<BiswasExecution> spec =
-        new SynthesisSpec<>(
-            Arrays.asList(FeketeReadOnlyAnomaly::updateSer, AxiomaticDefinitions.Snapshot),
-            AxiomaticDefinitions.Ser.not());
-    HistoryFormula oneTransactionPerSession =
-        h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
-
-    Synthesizer synth = new Synthesizer(scope, oneTransactionPerSession);
-
-    synth.registerBiswas(spec);
-    var result = synth.debug(SATFactory.MiniSat, readOnlyAnomaly);
-    System.out.println(result);
-  }
-
   public static final void generateAnomalyCerone() {
     Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<CeroneExecution> spec =
