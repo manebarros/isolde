@@ -8,7 +8,7 @@ import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.FolSynthesisProblem;
 import haslab.isolde.core.synth.Scope;
 import haslab.isolde.history.History;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import kodkod.ast.Variable;
 import kodkod.engine.Solution;
 import kodkod.engine.Solver;
@@ -72,7 +72,7 @@ public interface HistorySynthesisEncoderTest {
 
   @Test
   default void sessionOrderIsStrictPartialOrder() {
-    assertFact(h -> KodkodUtil.strictPartialOrder(h.sessionOrder(), h.transactions()));
+    assertFact(h -> Formulas.strictPartialOrder(h.sessionOrder(), h.transactions()));
   }
 
   @Test
@@ -122,7 +122,7 @@ public interface HistorySynthesisEncoderTest {
 
   @Test
   default void soPlusWrIsAcyclic() {
-    assertFact(h -> KodkodUtil.acyclic(h.sessionOrder().union(h.binaryWr())));
+    assertFact(h -> Formulas.acyclic(h.sessionOrder().union(h.binaryWr())));
   }
 
   @Test

@@ -74,9 +74,9 @@ public final class FormulaUtil {
               h.finalWrites().eq(writes),
               h.externalReads().eq(reads),
               h.sessionOrder().eq(so),
-              KodkodUtil.disj(allTxnVariables),
-              KodkodUtil.disj(keyVars.values()),
-              KodkodUtil.disj(valVars.values()))
+              Formulas.disj(allTxnVariables),
+              Formulas.disj(keyVars.values()),
+              Formulas.disj(valVars.values()))
           .forSome(decls);
     };
   }

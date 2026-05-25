@@ -14,7 +14,7 @@ import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
 import haslab.isolde.history.Transaction;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import java.util.Arrays;
 import kodkod.ast.Variable;
 import kodkod.engine.Solution;
@@ -60,7 +60,7 @@ public interface CeroneCheckingEncoderTest {
         histCheckEncoder()
             .check(
                 hist,
-                e -> KodkodUtil.strictTotalOrder(e.ar(), e.history().transactions()).not(),
+                e -> Formulas.strictTotalOrder(e.ar(), e.history().transactions()).not(),
                 new Solver());
     assertTrue(sol.unsat());
   }
@@ -122,7 +122,7 @@ public interface CeroneCheckingEncoderTest {
             .check(
                 hist,
                 e ->
-                    KodkodUtil.min(
+                    Formulas.min(
                             e.history().initialTransaction(), e.ar(), e.history().transactions())
                         .not(),
                 new Solver());

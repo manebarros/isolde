@@ -6,7 +6,7 @@ import haslab.isolde.core.general.ExecutionModuleConstructor;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.HistoryAtoms;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import java.util.Optional;
 import kodkod.instance.TupleSet;
 import org.junit.jupiter.api.Test;
@@ -31,12 +31,12 @@ public interface CeroneSynthesisModuleEncoderTest
 
   @Test
   default void arTotallyOrdersTransactions() {
-    assertFact(e -> KodkodUtil.strictTotalOrder(e.ar(), e.history().transactions()));
+    assertFact(e -> Formulas.strictTotalOrder(e.ar(), e.history().transactions()));
   }
 
   @Test
   default void arTotallyOrdersTransactionsInExtraExecution() {
-    assertFactWoTotalOrder(e -> KodkodUtil.strictTotalOrder(e.ar(), e.history().transactions()));
+    assertFactWoTotalOrder(e -> Formulas.strictTotalOrder(e.ar(), e.history().transactions()));
   }
 
   @Test

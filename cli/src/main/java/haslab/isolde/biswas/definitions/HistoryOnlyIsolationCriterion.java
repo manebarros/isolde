@@ -5,7 +5,7 @@ import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.HistorySchema;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
@@ -51,7 +51,7 @@ public interface HistoryOnlyIsolationCriterion extends IsolationCriterion {
   }
 
   default HistoryFormula historyOnlySpec() {
-    return h -> KodkodUtil.acyclic(mandatoryCommitOrderEdges().resolve(h));
+    return h -> Formulas.acyclic(mandatoryCommitOrderEdges().resolve(h));
   }
 
   public static HistoryOnlyIsolationCriterion ReadAtomic =

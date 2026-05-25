@@ -5,7 +5,7 @@ import haslab.isolde.core.general.ExecutionModuleConstructor;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.HistoryAtoms;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import java.util.Arrays;
 import java.util.Optional;
 import kodkod.ast.Formula;
@@ -33,13 +33,13 @@ public interface BiswasSynthesisModuleEncoderTest
 
   @Test
   default void commitOrderTotallyOrdersTransactions() {
-    assertFact(e -> KodkodUtil.strictTotalOrder(e.co(), e.history().transactions()));
+    assertFact(e -> Formulas.strictTotalOrder(e.co(), e.history().transactions()));
   }
 
   @Test
   default void initialTxnIsFirstInCommitOrder() {
     assertFact(
-        e -> KodkodUtil.min(e.history().initialTransaction(), e.co(), e.history().transactions()));
+        e -> Formulas.min(e.history().initialTransaction(), e.co(), e.history().transactions()));
   }
 
   @Test

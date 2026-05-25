@@ -9,7 +9,7 @@ import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import haslab.isolde.kodkod.Util;
 import java.util.ArrayList;
 import java.util.List;
@@ -72,7 +72,7 @@ public class CeroneHistCheckingModuleEncoder
     var intermediateRepresentation = context.val();
     TupleSet visLowerBound =
         tf.setOf(intermediateRepresentation.getInitialTxnAtom())
-            .product(KodkodUtil.asTupleSet(tf, intermediateRepresentation.normalTxnAtoms()));
+            .product(Formulas.asTupleSet(tf, intermediateRepresentation.normalTxnAtoms()));
     TupleSet visUpperBound = Util.irreflexiveBound(tf, intermediateRepresentation.normalTxnAtoms());
     visUpperBound.addAll(visLowerBound);
 
@@ -82,7 +82,7 @@ public class CeroneHistCheckingModuleEncoder
       var ordering = orderings.get(i);
       b.bound(ordering.vis(), visLowerBound, visUpperBound);
       b.bound(ordering.arTransReduction(), visUpperBound);
-      b.bound(lastTxn, KodkodUtil.asTupleSet(tf, intermediateRepresentation.normalTxnAtoms()));
+      b.bound(lastTxn, Formulas.asTupleSet(tf, intermediateRepresentation.normalTxnAtoms()));
       Expression vis = ordering.vis();
       Relation arTransReduction = ordering.arTransReduction();
       Expression ar = arTransReduction.closure();

@@ -2,7 +2,7 @@ package haslab.isolde.cerone.definitions;
 
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.core.ExecutionFormula;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
@@ -19,7 +19,7 @@ public final class CeroneDefinitions {
             e.vis().join(T).intersection(e.history().txnThatWriteToAnyOf(x));
         Formula first_read =
             wrote_to_x_and_was_seen_by_t.no().and(n.eq(e.history().initialValue(x)));
-        Expression last_txn_to_write_x = KodkodUtil.max(e.ar(), wrote_to_x_and_was_seen_by_t);
+        Expression last_txn_to_write_x = Formulas.max(e.ar(), wrote_to_x_and_was_seen_by_t);
         Formula last_write_to_x_was_n =
             wrote_to_x_and_was_seen_by_t
                 .some()
@@ -57,13 +57,13 @@ public final class CeroneDefinitions {
       };
 
   public static final ExecutionFormula<CeroneExecution> TRANS_VIS =
-      e -> KodkodUtil.transitive(e.vis());
+      e -> Formulas.transitive(e.vis());
 
   public static final ExecutionFormula<CeroneExecution> PREFIX =
       e -> e.ar().join(e.vis()).in(e.vis());
 
   public static final ExecutionFormula<CeroneExecution> TOTAL_VIS =
-      e -> KodkodUtil.total(e.vis(), e.history().transactions());
+      e -> Formulas.total(e.vis(), e.history().transactions());
 
   public static final ExecutionFormula<CeroneExecution> SESSION =
       e -> e.history().sessionOrder().in(e.vis());

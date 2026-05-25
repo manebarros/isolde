@@ -4,7 +4,7 @@ import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistoryFormula;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
 
@@ -224,11 +224,11 @@ public final class TransactionalAnomalousPatterns {
   }
 
   public static HistoryFormula CausalSimpler() {
-    return h -> KodkodUtil.acyclic(h.mandatoryCommitOrderEdgesCC());
+    return h -> Formulas.acyclic(h.mandatoryCommitOrderEdgesCC());
   }
 
   public static HistoryFormula HistBasedRa() {
-    return h -> KodkodUtil.acyclic(h.mandatoryCommitOrderEdgesRA());
+    return h -> Formulas.acyclic(h.mandatoryCommitOrderEdgesRA());
   }
 
   public static ExecutionFormula<BiswasExecution> raAnomaly() {

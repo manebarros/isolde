@@ -3,7 +3,7 @@ package haslab.isolde.core.synth;
 import haslab.isolde.core.*;
 import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.core.synth.FolSynthesisProblem.InputWithTotalOrder;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import kodkod.ast.Formula;
 import kodkod.ast.Relation;
 import kodkod.ast.Variable;
@@ -64,7 +64,7 @@ public final class DefaultHistorySynthesisEncoder implements HistoryEncoder<Inpu
         noEmptyTransactions(),
         transactionsWriteToKeyAtMostOnce(),
         transactionsReadKeyAtMostOnce(),
-        KodkodUtil.transitive(enc.sessionOrder()),
+        Formulas.transitive(enc.sessionOrder()),
         enc.noReadsFromThinAir(),
         uniqueWrites());
   }

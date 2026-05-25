@@ -5,7 +5,7 @@ import static haslab.isolde.biswas.definitions.IsolationCriterion.Prefix;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.EXT;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.TRANS_VIS;
-import static haslab.isolde.kodkod.KodkodUtil.disjoint;
+import static haslab.isolde.kodkod.Formulas.disjoint;
 
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.cerone.CeroneExecution;
@@ -13,7 +13,7 @@ import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.HistorySchema;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
@@ -26,7 +26,7 @@ public final class CustomDefinitions {
         e.history()
             .writes(t, x)
             .and(
-                KodkodUtil.max(
+                Formulas.max(
                         e.ar(), e.ar().join(t).intersection(e.history().txnThatWriteToAnyOf(x)))
                     .in(e.vis().join(t))
                     .not())
@@ -138,7 +138,7 @@ public final class CustomDefinitions {
   private static HistoryExpression knowsAtLeast(Expression t, Expression x) {
     return h -> {
       return x.join(
-          KodkodUtil.maxPartialOrder(
+          Formulas.maxPartialOrder(
                   h.causalOrder().closure(),
                   h.causalOrder().closure().join(t).intersection(h.txnThatWriteToAnyOf(x)))
               .join(h.finalWrites()));
@@ -449,7 +449,7 @@ public final class CustomDefinitions {
       //                        new BiswasExecution(h, Causal.mandatoryCommitOrderEdges(h)))))));
       Expression mandatoryCommitOrderEdges = mandatoryCommitOrderEdgesPrefix(3).resolve(h);
 
-      return KodkodUtil.acyclic(mandatoryCommitOrderEdges)
+      return Formulas.acyclic(mandatoryCommitOrderEdges)
           .and(newLongFork(new BiswasExecution(h, mandatoryCommitOrderEdges)).not())
           .and(tripleFork(h).not());
     };

@@ -2,8 +2,8 @@ package haslab.isolde.cerone;
 
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.EXT;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
-import static haslab.isolde.kodkod.KodkodUtil.total;
-import static haslab.isolde.kodkod.KodkodUtil.transitive;
+import static haslab.isolde.kodkod.Formulas.total;
+import static haslab.isolde.kodkod.Formulas.transitive;
 
 import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;

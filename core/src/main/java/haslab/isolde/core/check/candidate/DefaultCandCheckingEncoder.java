@@ -1,6 +1,6 @@
 package haslab.isolde.core.check.candidate;
 
-import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
+import static haslab.isolde.kodkod.Formulas.asTupleSet;
 import static haslab.isolde.kodkod.Util.unaryTupleSetToAtoms;
 
 import haslab.isolde.core.DirectAbstractHistoryEncoding;

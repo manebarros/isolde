@@ -11,8 +11,8 @@ import haslab.isolde.core.check.external.HistCheckEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
 import haslab.isolde.history.Transaction;
+import haslab.isolde.kodkod.Formulas;
 import haslab.isolde.kodkod.KodkodProblem;
-import haslab.isolde.kodkod.KodkodUtil;
 import java.util.Arrays;
 import kodkod.ast.Variable;
 import kodkod.engine.Solution;
@@ -77,8 +77,7 @@ public interface BiswasCheckingEncoderTest {
                     new Transaction(3, Arrays.asList(readOf(0, 0))))));
     KodkodProblem p =
         encoder()
-            .encode(
-                hist, e -> KodkodUtil.strictTotalOrder(e.co(), e.history().transactions()).not());
+            .encode(hist, e -> Formulas.strictTotalOrder(e.co(), e.history().transactions()).not());
     Solution sol = new Solver().solve(p.formula(), p.bounds());
     assertTrue(sol.unsat());
   }
@@ -97,7 +96,7 @@ public interface BiswasCheckingEncoderTest {
             .encode(
                 hist,
                 e ->
-                    KodkodUtil.min(
+                    Formulas.min(
                             e.history().initialTransaction(), e.co(), e.history().transactions())
                         .not());
     Solution sol = new Solver().solve(p.formula(), p.bounds());

@@ -11,8 +11,8 @@ import kodkod.ast.Variable;
 import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
-public final class KodkodUtil {
-  private KodkodUtil() {}
+public final class Formulas {
+  private Formulas() {}
 
   public static Expression transitiveReduction(Expression exp) {
     Variable x = Variable.unary("x");

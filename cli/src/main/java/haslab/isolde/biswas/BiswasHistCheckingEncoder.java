@@ -1,6 +1,6 @@
 package haslab.isolde.biswas;
 
-import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
+import static haslab.isolde.kodkod.Formulas.asTupleSet;
 
 import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.ExecutionFormula;
@@ -8,7 +8,7 @@ import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import haslab.isolde.kodkod.Util;
 import java.util.ArrayList;
 import java.util.List;
@@ -74,7 +74,7 @@ public class BiswasHistCheckingEncoder
 
     TupleSet initProdNormal =
         tf.setOf(intermediateRepresentation.getInitialTxnAtom())
-            .product(KodkodUtil.asTupleSet(tf, intermediateRepresentation.normalTxnAtoms()));
+            .product(Formulas.asTupleSet(tf, intermediateRepresentation.normalTxnAtoms()));
     TupleSet coUpperBound = Util.irreflexiveBound(tf, intermediateRepresentation.normalTxnAtoms());
     coUpperBound.addAll(initProdNormal);
 

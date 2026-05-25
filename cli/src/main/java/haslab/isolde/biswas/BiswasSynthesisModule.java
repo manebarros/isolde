@@ -7,7 +7,7 @@ import haslab.isolde.core.general.ExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.HistoryAtoms;
-import haslab.isolde.kodkod.KodkodUtil;
+import haslab.isolde.kodkod.Formulas;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -138,8 +138,8 @@ public class BiswasSynthesisModule
 
   private Formula commitOrderSemantics(HistorySchema history, Expression commitOrder) {
     return Formula.and(
-        KodkodUtil.transitive(commitOrder),
-        KodkodUtil.total(commitOrder, history.transactions()),
+        Formulas.transitive(commitOrder),
+        Formulas.total(commitOrder, history.transactions()),
         history.sessionOrder().union(history.binaryWr()).in(commitOrder));
   }
 }

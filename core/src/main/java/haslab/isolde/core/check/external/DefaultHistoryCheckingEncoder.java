@@ -1,6 +1,6 @@
 package haslab.isolde.core.check.external;
 
-import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
+import static haslab.isolde.kodkod.Formulas.asTupleSet;
 
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.general.HistoryEncoder;
