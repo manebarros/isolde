@@ -2,7 +2,7 @@ package haslab.isolde.core;
 
 import kodkod.ast.Relation;
 
-public final class DirectAbstractHistoryEncoding implements AbstractHistoryRel {
+public final class DirectAbstractHistoryEncoding implements BindableHistorySchema {
 
   private static final Relation TRANSACTIONS = Relation.unary("transactions");
   private static final Relation KEYS = Relation.unary("keys");

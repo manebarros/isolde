@@ -3,7 +3,7 @@ package haslab.isolde.cerone;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.EXT;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
@@ -67,7 +67,7 @@ public class CeroneHistCheckingModuleEncoder
       Bounds b,
       List<ExecutionFormula<CeroneExecution>> formulas,
       SimpleContext<CheckingIntermediateRepresentation> context,
-      AbstractHistoryRel historyEncoding) {
+      BindableHistorySchema historyEncoding) {
     TupleFactory tf = b.universe().factory();
     var intermediateRepresentation = context.val();
     TupleSet visLowerBound =

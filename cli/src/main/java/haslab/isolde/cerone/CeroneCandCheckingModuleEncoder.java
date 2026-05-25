@@ -3,7 +3,7 @@ package haslab.isolde.cerone;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.EXT;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistorySchema;
@@ -65,7 +65,7 @@ public class CeroneCandCheckingModuleEncoder
       Bounds b,
       List<ExecutionFormula<CeroneExecution>> formulas,
       SimpleContext<ContextualizedInstance> context,
-      AbstractHistoryRel historyEncoding) {
+      BindableHistorySchema historyEncoding) {
 
     var contextualizedInstance = context.val();
 

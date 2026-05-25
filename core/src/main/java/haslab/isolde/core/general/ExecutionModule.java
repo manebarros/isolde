@@ -1,6 +1,6 @@
 package haslab.isolde.core.general;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistorySchema;
@@ -21,5 +21,5 @@ public interface ExecutionModule<
       List<ExecutionFormula<E>> formulas,
       C context,
       S spec,
-      AbstractHistoryRel history);
+      BindableHistorySchema history);
 }

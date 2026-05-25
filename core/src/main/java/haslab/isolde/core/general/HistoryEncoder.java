@@ -1,11 +1,11 @@
 package haslab.isolde.core.general;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import kodkod.ast.Formula;
 import kodkod.instance.Bounds;
 
 public interface HistoryEncoder<SC> {
-  AbstractHistoryRel encoding();
+  BindableHistorySchema encoding();
 
   Formula encode(SC sharedContext, Bounds bounds);
 }

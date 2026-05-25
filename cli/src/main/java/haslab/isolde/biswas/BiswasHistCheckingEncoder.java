@@ -2,7 +2,7 @@ package haslab.isolde.biswas;
 
 import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
@@ -66,7 +66,7 @@ public class BiswasHistCheckingEncoder
       Bounds b,
       List<ExecutionFormula<BiswasExecution>> formulas,
       SimpleContext<CheckingIntermediateRepresentation> context,
-      AbstractHistoryRel historyEncoding) {
+      BindableHistorySchema historyEncoding) {
 
     TupleFactory tf = b.universe().factory();
 

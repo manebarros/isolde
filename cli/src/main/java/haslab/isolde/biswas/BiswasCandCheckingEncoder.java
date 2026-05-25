@@ -1,6 +1,6 @@
 package haslab.isolde.biswas;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistorySchema;
@@ -62,7 +62,7 @@ public class BiswasCandCheckingEncoder
       Bounds bounds,
       List<ExecutionFormula<BiswasExecution>> formulas,
       SimpleContext<ContextualizedInstance> context,
-      AbstractHistoryRel historyEncoding) {
+      BindableHistorySchema historyEncoding) {
     TupleFactory f = bounds.universe().factory();
     ContextualizedInstance instance = context.val();
     Evaluator ev = new Evaluator(instance.instance());

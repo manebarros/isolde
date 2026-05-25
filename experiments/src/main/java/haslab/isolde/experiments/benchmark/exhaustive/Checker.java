@@ -1,7 +1,7 @@
 package haslab.isolde.experiments.benchmark.exhaustive;
 
 import haslab.isolde.biswas.BiswasExecution;
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.Atom;
@@ -50,8 +50,8 @@ public class Checker {
     this.solver = new Solver(options);
   }
 
-  private static final AbstractHistoryRel encoding() {
-    return new AbstractHistoryRel() {
+  private static final BindableHistorySchema encoding() {
+    return new BindableHistorySchema() {
 
       @Override
       public Expression keys() {

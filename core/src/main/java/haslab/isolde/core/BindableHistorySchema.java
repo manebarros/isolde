@@ -2,7 +2,7 @@ package haslab.isolde.core;
 
 import kodkod.ast.Relation;
 
-public interface AbstractHistoryRel extends HistorySchema {
+public interface BindableHistorySchema extends HistorySchema {
   @Override
   Relation transactions();
 

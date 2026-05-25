@@ -1,6 +1,6 @@
 package haslab.isolde.biswas;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.general.ExecutionModule;
@@ -56,7 +56,7 @@ public class BiswasSynthesisModule
       List<ExecutionFormula<BiswasExecution>> formulas,
       SimpleContext<HistoryAtoms> context,
       Optional<TupleSet> totalOrderInfo,
-      AbstractHistoryRel history) {
+      BindableHistorySchema history) {
     return totalOrderInfo.isPresent()
         ? encode(b, formulas, context.val(), totalOrderInfo.get(), history)
         : encode(b, formulas, context.val(), history);

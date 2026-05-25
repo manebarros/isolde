@@ -1,6 +1,6 @@
 package haslab.isolde.core.general;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import java.util.List;
@@ -12,7 +12,7 @@ public interface DirectExecutionModule<
     extends ExecutionModule<E, I, Void, C> {
 
   Formula encode(
-      Bounds bounds, List<ExecutionFormula<E>> formulas, C context, AbstractHistoryRel history);
+      Bounds bounds, List<ExecutionFormula<E>> formulas, C context, BindableHistorySchema history);
 
   @Override
   default Formula encode(
@@ -20,7 +20,7 @@ public interface DirectExecutionModule<
       List<ExecutionFormula<E>> formulas,
       C context,
       Void spec,
-      AbstractHistoryRel history) {
+      BindableHistorySchema history) {
     return encode(bounds, formulas, context, history);
   }
 }

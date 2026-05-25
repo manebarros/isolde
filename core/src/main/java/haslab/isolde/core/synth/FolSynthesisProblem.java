@@ -1,6 +1,6 @@
 package haslab.isolde.core.synth;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.HistoryDecls;
 import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.general.ExecutionModuleInstance;
@@ -49,7 +49,7 @@ public class FolSynthesisProblem
       Formula formula,
       Bounds b,
       InputWithTotalOrder extra,
-      AbstractHistoryRel history,
+      BindableHistorySchema history,
       List<? extends ExecutionModuleInstance<?, ?, Optional<TupleSet>, ?>> extenders) {
     if (!extenders.isEmpty()) {
       formula = formula.and(extenders.get(0).encode(b, Optional.of(extra.totalOrder()), history));
@@ -70,7 +70,7 @@ public class FolSynthesisProblem
       Formula formula,
       Bounds b,
       InputWithTotalOrder extra,
-      AbstractHistoryRel history,
+      BindableHistorySchema history,
       List<? extends ExecutionModuleInstance<?, ?, Optional<TupleSet>, ?>> extenders) {
     for (var extender : extenders) {
       formula = formula.and(extender.encode(b, Optional.empty(), history));

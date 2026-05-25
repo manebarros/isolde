@@ -1,6 +1,6 @@
 package haslab.isolde.core.general;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import java.util.List;
@@ -20,7 +20,7 @@ public class ExecutionModuleInstance<
     this.formulas = formulas;
   }
 
-  public Formula encode(Bounds bounds, S spec, AbstractHistoryRel history) {
+  public Formula encode(Bounds bounds, S spec, BindableHistorySchema history) {
     return module.encode(bounds, this.formulas, this.context, spec, history);
   }
 

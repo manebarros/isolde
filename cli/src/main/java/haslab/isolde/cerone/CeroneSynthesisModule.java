@@ -5,7 +5,7 @@ import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
 import static haslab.isolde.kodkod.KodkodUtil.total;
 import static haslab.isolde.kodkod.KodkodUtil.transitive;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistorySchema;
@@ -61,7 +61,7 @@ public class CeroneSynthesisModule
       List<ExecutionFormula<CeroneExecution>> formulas,
       SimpleContext<HistoryAtoms> context,
       Optional<TupleSet> spec,
-      AbstractHistoryRel history) {
+      BindableHistorySchema history) {
     return spec.isPresent()
         ? encode(bounds, formulas, context.val(), spec.get(), history)
         : encode(bounds, formulas, context.val(), history);

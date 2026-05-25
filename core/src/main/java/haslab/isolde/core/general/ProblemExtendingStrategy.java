@@ -1,6 +1,6 @@
 package haslab.isolde.core.general;
 
-import haslab.isolde.core.AbstractHistoryRel;
+import haslab.isolde.core.BindableHistorySchema;
 import java.util.List;
 import kodkod.ast.Formula;
 import kodkod.instance.Bounds;
@@ -12,6 +12,6 @@ public interface ProblemExtendingStrategy<T, S> {
       Formula formula,
       Bounds bounds,
       T helper,
-      AbstractHistoryRel history,
+      BindableHistorySchema history,
       List<? extends ExecutionModuleInstance<?, ?, S, ?>> extenders);
 }
