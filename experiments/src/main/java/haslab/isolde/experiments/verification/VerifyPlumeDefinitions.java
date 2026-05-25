@@ -47,8 +47,8 @@ public final class VerifyPlumeDefinitions {
   public static History historyAllowedByPlumeRaButNotByBiswasRa() {
     Synthesizer synth = new Synthesizer(new Scope.Builder(2).txn(3).obj(1).build());
     synth.registerBiswas(
-        new SynthesisSpec<>(
-            TransactionalAnomalousPatterns.ReadAtomicV1, AxiomaticDefinitions.ReadAtomic.not()));
+        SynthesisSpec.allowedBy(TransactionalAnomalousPatterns.ReadAtomicV1)
+            .andDisallowedBy(AxiomaticDefinitions.ReadAtomic));
     return synth.synthesize().history();
   }
 }

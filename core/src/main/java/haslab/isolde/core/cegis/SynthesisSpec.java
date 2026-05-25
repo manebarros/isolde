@@ -2,40 +2,33 @@ package haslab.isolde.core.cegis;
 
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
-public class SynthesisSpec<E extends Execution> {
+public final class SynthesisSpec<E extends Execution> {
   private final List<ExecutionFormula<E>> existentialFormulas;
   private final Optional<ExecutionFormula<E>> universalFormula;
 
   public SynthesisSpec(
-      List<ExecutionFormula<E>> existentialConstraints, ExecutionFormula<E> universalFormula) {
-    this.existentialFormulas = existentialConstraints;
-    this.universalFormula = Optional.ofNullable(universalFormula);
+      List<ExecutionFormula<E>> existentials, ExecutionFormula<E> universal) {
+    this.existentialFormulas = List.copyOf(existentials);
+    this.universalFormula = Optional.ofNullable(universal);
   }
 
-  public SynthesisSpec(List<ExecutionFormula<E>> existentialConstraints) {
-    this(existentialConstraints, null);
+  @SafeVarargs
+  public static <E extends Execution> SynthesisSpec<E> allowedBy(ExecutionFormula<E>... formulas) {
+    return new SynthesisSpec<>(List.of(formulas), null);
   }
 
-  public SynthesisSpec(ExecutionFormula<E> existentialConstraint) {
-    this(Collections.singletonList(existentialConstraint));
+  public static <E extends Execution> SynthesisSpec<E> disallowedBy(ExecutionFormula<E> level) {
+    return new SynthesisSpec<>(List.of(), level.not());
   }
 
-  public SynthesisSpec(ExecutionFormula<E> existFormula, ExecutionFormula<E> univFormula) {
-    this(Collections.singletonList(existFormula), univFormula);
-  }
-
-  public static <E extends Execution> SynthesisSpec<E> fromUniversal(
-      ExecutionFormula<E> universalConstraint) {
-    return new SynthesisSpec<>(new ArrayList<>(), universalConstraint);
-  }
-
-  public static <E extends Execution> SynthesisSpec<E> not(ExecutionFormula<E> formula) {
-    return fromUniversal(formula.not());
+  public SynthesisSpec<E> andDisallowedBy(ExecutionFormula<E> level) {
+    if (this.universalFormula.isPresent()) {
+      throw new IllegalStateException("SynthesisSpec already has a universal formula");
+    }
+    return new SynthesisSpec<>(this.existentialFormulas, level.not());
   }
 
   public List<ExecutionFormula<E>> existentialFormulas() {

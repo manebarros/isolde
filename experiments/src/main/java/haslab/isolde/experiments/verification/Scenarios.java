@@ -13,7 +13,6 @@ import haslab.isolde.core.HistoryDecls;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;
-import java.util.Arrays;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
 
@@ -54,8 +53,8 @@ public class Scenarios {
   public static final Scenario simpleCausalityViolationCeroneBiswas =
       new Scenario(
           new Scope.Builder(2).txn(3).build(),
-          new SynthesisSpec<>(CeroneDefinitions.RA),
-          SynthesisSpec.not(AxiomaticDefinitions.Causal));
+          SynthesisSpec.allowedBy(CeroneDefinitions.RA),
+          SynthesisSpec.disallowedBy(AxiomaticDefinitions.Causal));
 
   public static final Scenario greenRedItems() {
     Variable greenKeys = Variable.unary("green keys");
@@ -77,7 +76,7 @@ public class Scenarios {
         new Scope(2),
         hf,
         decls,
-        new SynthesisSpec<>(Arrays.asList(serAtRed, serAtGreen), CeroneDefinitions.Ser.not()));
+        SynthesisSpec.allowedBy(serAtRed, serAtGreen).andDisallowedBy(CeroneDefinitions.Ser));
   }
 
   public static SynthesizedHistory runScenario(Scenario scenario) {

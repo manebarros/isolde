@@ -76,9 +76,8 @@ public final class FeketeReadOnlyAnomaly {
   public static final void generateAnomalyBiswas() {
     Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<BiswasExecution> spec =
-        new SynthesisSpec<>(
-            Arrays.asList(AxiomaticDefinitions.Snapshot, FeketeReadOnlyAnomaly::updateSer),
-            AxiomaticDefinitions.Ser.not());
+        SynthesisSpec.allowedBy(AxiomaticDefinitions.Snapshot, FeketeReadOnlyAnomaly::updateSer)
+            .andDisallowedBy(AxiomaticDefinitions.Ser);
 
     Synthesizer synth = new Synthesizer(scope);
 
@@ -99,9 +98,8 @@ public final class FeketeReadOnlyAnomaly {
   public static final void generateAnomalyCerone() {
     Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<CeroneExecution> spec =
-        new SynthesisSpec<>(
-            Arrays.asList(CeroneDefinitions.SI, FeketeReadOnlyAnomaly::updateSer),
-            CeroneDefinitions.Ser.not());
+        SynthesisSpec.allowedBy(CeroneDefinitions.SI, FeketeReadOnlyAnomaly::updateSer)
+            .andDisallowedBy(CeroneDefinitions.Ser);
     HistoryFormula oneTransactionPerSession =
         h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
     Synthesizer synth = new Synthesizer(scope, oneTransactionPerSession);
