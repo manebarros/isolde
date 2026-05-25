@@ -33,9 +33,7 @@ public class HistCheckEncoder<E extends Execution> implements HistCheckerI<E> {
   @Override
   public KodkodProblem encode(History history, ExecutionFormula<E> formula) {
     HistCheckProblem problem =
-        (HistCheckProblem)
-            new HistCheckProblem(new CheckingIntermediateRepresentation(history))
-                .histEncoder(historyEncoder);
+        new HistCheckProblem(new CheckingIntermediateRepresentation(history), historyEncoder);
     problem.register(this.moduleEncoder, Collections.singletonList(formula));
     return problem.encode();
   }

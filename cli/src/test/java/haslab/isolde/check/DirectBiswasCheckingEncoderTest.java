@@ -1,18 +1,12 @@
 package haslab.isolde.check;
 
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.initialTransaction;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.keys;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.reads;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessionOrder;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.transactions;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.values;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.writes;
 import static haslab.isolde.history.Operation.readOf;
 import static haslab.isolde.history.Operation.writeOf;
 import static org.junit.jupiter.api.Assertions.assertEquals;
 
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.BiswasHistCheckingEncoder;
+import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.check.external.HistCheckEncoder;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
@@ -38,6 +32,7 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
 
   @Test
   public void historyWithOneTxnGetsWellEncoded() {
+    var enc = DirectAbstractHistoryEncoding.INSTANCE;
     History hist =
         new History(
             Arrays.asList(
@@ -56,16 +51,16 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
     TupleFactory f = u.factory();
     Map<Relation, TupleSet> expectedTupleSets =
         Map.of(
-            transactions, f.setOf(initTxnAtom, txnAtom),
-            keys, f.setOf(keyAtom),
-            values, f.setOf(initialValueAtom, valAtom),
-            initialTransaction, f.setOf(initTxnAtom),
-            reads, f.setOf(f.tuple(txnAtom, keyAtom, initialValueAtom)),
-            writes,
+            enc.transactions(), f.setOf(initTxnAtom, txnAtom),
+            enc.keys(), f.setOf(keyAtom),
+            enc.values(), f.setOf(initialValueAtom, valAtom),
+            enc.initialTransaction(), f.setOf(initTxnAtom),
+            enc.externalReads(), f.setOf(f.tuple(txnAtom, keyAtom, initialValueAtom)),
+            enc.finalWrites(),
                 f.setOf(
                     f.tuple(initTxnAtom, keyAtom, initialValueAtom),
                     f.tuple(txnAtom, keyAtom, valAtom)),
-            sessionOrder, f.setOf(f.tuple(initTxnAtom, txnAtom)));
+            enc.sessionOrder(), f.setOf(f.tuple(initTxnAtom, txnAtom)));
 
     for (Relation rel : expectedTupleSets.keySet()) {
       assertEquals(expectedTupleSets.get(rel), b.lowerBound(rel));
@@ -81,6 +76,7 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
 
   @Test
   public void historyWithTwoTxnGetsWellEncoded() {
+    var enc = DirectAbstractHistoryEncoding.INSTANCE;
     History hist =
         new History(
             Arrays.asList(
@@ -99,20 +95,20 @@ public class DirectBiswasCheckingEncoderTest implements BiswasCheckingEncoderTes
     TupleFactory f = u.factory();
     Map<Relation, TupleSet> expectedTupleSets =
         Map.of(
-            transactions, f.setOf(txnAtoms.toArray()),
-            keys, f.setOf(keyAtom),
-            values, f.setOf(valAtoms.toArray()),
-            initialTransaction, f.setOf(txnAtoms.get(0)),
-            reads,
+            enc.transactions(), f.setOf(txnAtoms.toArray()),
+            enc.keys(), f.setOf(keyAtom),
+            enc.values(), f.setOf(valAtoms.toArray()),
+            enc.initialTransaction(), f.setOf(txnAtoms.get(0)),
+            enc.externalReads(),
                 f.setOf(
                     f.tuple(txnAtoms.get(1), keyAtom, valAtoms.get(0)),
                     f.tuple(txnAtoms.get(2), keyAtom, valAtoms.get(1))),
-            writes,
+            enc.finalWrites(),
                 f.setOf(
                     f.tuple(txnAtoms.get(0), keyAtom, valAtoms.get(0)),
                     f.tuple(txnAtoms.get(1), keyAtom, valAtoms.get(1)),
                     f.tuple(txnAtoms.get(2), keyAtom, valAtoms.get(2))),
-            sessionOrder,
+            enc.sessionOrder(),
                 f.setOf(
                     f.tuple(txnAtoms.get(0), txnAtoms.get(1)),
                     f.tuple(txnAtoms.get(0), txnAtoms.get(2))));

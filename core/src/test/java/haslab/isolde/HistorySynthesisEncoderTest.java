@@ -23,27 +23,21 @@ public interface HistorySynthesisEncoderTest {
 
   default void assertSat(HistoryFormula formula) {
     FolSynthesisInput input = new FolSynthesisInput.Builder(scope()).formula(formula).build();
-    Solution sol =
-        ((FolSynthesisProblem) FolSynthesisProblem.withTotalOrder(input).histEncoder(encoder()))
-            .solve(new Solver());
+    Solution sol = FolSynthesisProblem.withTotalOrder(input, encoder()).solve(new Solver());
 
     assertTrue(sol.sat());
   }
 
   default void assertUnsat(HistoryFormula formula) {
     FolSynthesisInput input = new FolSynthesisInput.Builder(scope()).formula(formula).build();
-    Solution sol =
-        ((FolSynthesisProblem) FolSynthesisProblem.withTotalOrder(input).histEncoder(encoder()))
-            .solve(new Solver());
+    Solution sol = FolSynthesisProblem.withTotalOrder(input, encoder()).solve(new Solver());
 
     assertTrue(sol.unsat());
   }
 
   default void assertFact(HistoryFormula fact) {
     FolSynthesisInput input = new FolSynthesisInput.Builder(scope()).formula(fact.not()).build();
-    Solution sol =
-        ((FolSynthesisProblem) FolSynthesisProblem.withTotalOrder(input).histEncoder(encoder()))
-            .solve(new Solver());
+    Solution sol = FolSynthesisProblem.withTotalOrder(input, encoder()).solve(new Solver());
 
     if (sol.sat()) {
       System.out.println(new History(this.encoder().encoding(), sol.instance()));

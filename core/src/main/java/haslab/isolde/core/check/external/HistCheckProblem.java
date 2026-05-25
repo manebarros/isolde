@@ -1,11 +1,18 @@
 package haslab.isolde.core.check.external;
 
 import haslab.isolde.core.general.DirectHistoryConstraintProblem;
+import haslab.isolde.core.general.HistoryEncoder;
 
 public class HistCheckProblem
     extends DirectHistoryConstraintProblem<CheckingIntermediateRepresentation> {
 
   public HistCheckProblem(CheckingIntermediateRepresentation input) {
-    super(input, DefaultHistoryCheckingEncoder.instance());
+    this(input, DefaultHistoryCheckingEncoder.instance());
+  }
+
+  public HistCheckProblem(
+      CheckingIntermediateRepresentation input,
+      HistoryEncoder<CheckingIntermediateRepresentation> encoder) {
+    super(input, encoder);
   }
 }

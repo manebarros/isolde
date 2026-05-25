@@ -88,7 +88,7 @@ public class CeroneSynthesisModule
     commitOrderTs.addAll(visAndArLowerBound);
     Formula formula = Formula.TRUE;
 
-    var enc = DirectAbstractHistoryEncoding.instance();
+    var enc = DirectAbstractHistoryEncoding.INSTANCE;
 
     for (int i = 0; i < formulas.size(); i++) {
       var rels = relations.get(i);
@@ -134,7 +134,7 @@ public class CeroneSynthesisModule
             .and(EXT.resolve(execution))
             .and(SESSION.resolve(execution));
 
-    var enc = DirectAbstractHistoryEncoding.instance();
+    var enc = DirectAbstractHistoryEncoding.INSTANCE;
 
     TupleSet commitOrderTs = Util.irreflexiveBound(tf, historyAtoms.normalTxns());
     commitOrderTs.addAll(visLb);

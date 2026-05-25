@@ -92,19 +92,23 @@ public class FolSynthesisProblem
   }
 
   public static FolSynthesisProblem withoutTotalOrder(FolSynthesisInput input) {
+    return withoutTotalOrder(input, new DefaultHistorySynthesisEncoder());
+  }
+
+  public static FolSynthesisProblem withoutTotalOrder(
+      FolSynthesisInput input, HistoryEncoder<InputWithTotalOrder> encoder) {
     return new FolSynthesisProblem(
-        input,
-        new DefaultHistorySynthesisEncoder(),
-        InputWithTotalOrder::new,
-        FolSynthesisProblem::extendWithoutTotalOrder);
+        input, encoder, InputWithTotalOrder::new, FolSynthesisProblem::extendWithoutTotalOrder);
   }
 
   public static FolSynthesisProblem withTotalOrder(FolSynthesisInput input) {
+    return withTotalOrder(input, new DefaultHistorySynthesisEncoder());
+  }
+
+  public static FolSynthesisProblem withTotalOrder(
+      FolSynthesisInput input, HistoryEncoder<InputWithTotalOrder> encoder) {
     return new FolSynthesisProblem(
-        input,
-        new DefaultHistorySynthesisEncoder(),
-        InputWithTotalOrder::new,
-        FolSynthesisProblem::extend);
+        input, encoder, InputWithTotalOrder::new, FolSynthesisProblem::extend);
   }
 
   public static FolSynthesisProblem withTotalOrder(Scope scope) {

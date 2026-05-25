@@ -1,15 +1,7 @@
 package haslab.isolde.core.check.external;
 
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.initialTransaction;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.keys;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.reads;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.sessionOrder;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.transactions;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.values;
-import static haslab.isolde.core.DirectAbstractHistoryEncoding.writes;
 import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
 
-import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.history.AbstractTransaction;
@@ -36,20 +28,21 @@ public class DefaultHistoryCheckingEncoder
   }
 
   @Override
-  public AbstractHistoryRel encoding() {
-    return DirectAbstractHistoryEncoding.instance();
+  public DirectAbstractHistoryEncoding encoding() {
+    return DirectAbstractHistoryEncoding.INSTANCE;
   }
 
   @Override
   public Formula encode(CheckingIntermediateRepresentation history, Bounds b) {
     TupleFactory f = b.universe().factory();
+    DirectAbstractHistoryEncoding enc = encoding();
     TupleSet txnTs = asTupleSet(f, history.normalTxnAtoms());
     txnTs.add(f.tuple(history.getInitialTxnAtom()));
 
-    b.boundExactly(transactions, txnTs);
-    b.boundExactly(keys, asTupleSet(f, history.getKeyAtoms().values()));
-    b.boundExactly(values, asTupleSet(f, history.getValAtoms().values()));
-    b.boundExactly(initialTransaction, f.setOf(history.getInitialTxnAtom()));
+    b.boundExactly(enc.transactions(), txnTs);
+    b.boundExactly(enc.keys(), asTupleSet(f, history.getKeyAtoms().values()));
+    b.boundExactly(enc.values(), asTupleSet(f, history.getValAtoms().values()));
+    b.boundExactly(enc.initialTransaction(), f.setOf(history.getInitialTxnAtom()));
 
     TupleSet writesTs = f.noneOf(3);
     writesTs.addAll(
@@ -87,9 +80,9 @@ public class DefaultHistoryCheckingEncoder
         }
       }
     }
-    b.boundExactly(writes, writesTs);
-    b.boundExactly(reads, readsTs);
-    b.boundExactly(sessionOrder, soTs);
+    b.boundExactly(enc.finalWrites(), writesTs);
+    b.boundExactly(enc.externalReads(), readsTs);
+    b.boundExactly(enc.sessionOrder(), soTs);
 
     return Formula.TRUE;
   }

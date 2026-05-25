@@ -17,9 +17,9 @@ public class HistoryConstraintProblem<I extends AtomsContainer, T, S> {
   private final I input;
   private final List<ExecutionModuleInstance<?, I, S, ?>> extenders;
 
-  private SharedContextProducer<I, T> helperStructureProducer;
-  private HistoryEncoder<T> histEncoder;
-  private ProblemExtendingStrategy<T, S> problemExtendingStrategy;
+  private final SharedContextProducer<I, T> helperStructureProducer;
+  private final HistoryEncoder<T> histEncoder;
+  private final ProblemExtendingStrategy<T, S> problemExtendingStrategy;
 
   public HistoryConstraintProblem(
       I input,
@@ -75,23 +75,6 @@ public class HistoryConstraintProblem<I extends AtomsContainer, T, S> {
 
   public Solution solve(Solver solver) {
     return encode().solve(solver);
-  }
-
-  public HistoryConstraintProblem<I, T, S> histEncoder(HistoryEncoder<T> historyEncoder) {
-    this.histEncoder = historyEncoder;
-    return this;
-  }
-
-  public HistoryConstraintProblem<I, T, S> helperStructureProducer(
-      SharedContextProducer<I, T> val) {
-    this.helperStructureProducer = val;
-    return this;
-  }
-
-  public HistoryConstraintProblem<I, T, S> problemExtendingStrategy(
-      ProblemExtendingStrategy<T, S> val) {
-    this.problemExtendingStrategy = val;
-    return this;
   }
 
   public AbstractHistoryK historyEncoding() {

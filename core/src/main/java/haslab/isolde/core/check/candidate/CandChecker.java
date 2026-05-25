@@ -34,9 +34,7 @@ public class CandChecker<E extends Execution> implements CandCheckerI<E> {
   public KodkodProblem encode(
       Instance instance, AbstractHistoryK context, ExecutionFormula<E> formula) {
     CandCheckProblem problem =
-        (CandCheckProblem)
-            new CandCheckProblem(new ContextualizedInstance(context, instance))
-                .histEncoder(this.historyEncoder);
+        new CandCheckProblem(new ContextualizedInstance(context, instance), this.historyEncoder);
     problem.register(this.moduleEncoder, Arrays.asList(formula));
     return problem.encode();
   }

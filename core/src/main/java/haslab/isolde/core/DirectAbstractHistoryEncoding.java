@@ -1,63 +1,53 @@
 package haslab.isolde.core;
 
-import kodkod.ast.Expression;
 import kodkod.ast.Relation;
 
 public final class DirectAbstractHistoryEncoding implements AbstractHistoryRel {
-  public static final Relation transactions = Relation.unary("transactions");
-  public static final Relation keys = Relation.unary("keys");
-  public static final Relation values = Relation.unary("values");
 
-  public static final Relation initialTransaction = Relation.unary("initialTransaction");
+  private static final Relation TRANSACTIONS = Relation.unary("transactions");
+  private static final Relation KEYS = Relation.unary("keys");
+  private static final Relation VALUES = Relation.unary("values");
+  private static final Relation INITIAL_TRANSACTION = Relation.unary("initialTransaction");
+  private static final Relation READS = Relation.ternary("external reads");
+  private static final Relation WRITES = Relation.ternary("final writes");
+  private static final Relation SESSION_ORDER = Relation.binary("session order");
 
-  public static final Relation reads = Relation.ternary("external reads");
-  public static final Relation writes = Relation.ternary("final writes");
-
-  public static final Relation sessionOrder = Relation.binary("session order");
-
-  private static DirectAbstractHistoryEncoding instance = null;
+  public static final DirectAbstractHistoryEncoding INSTANCE = new DirectAbstractHistoryEncoding();
 
   private DirectAbstractHistoryEncoding() {}
 
-  public static DirectAbstractHistoryEncoding instance() {
-    if (instance == null) {
-      instance = new DirectAbstractHistoryEncoding();
-    }
-    return instance;
-  }
-
   @Override
   public Relation transactions() {
-    return transactions;
+    return TRANSACTIONS;
   }
 
   @Override
-  public Expression keys() {
-    return keys;
+  public Relation keys() {
+    return KEYS;
   }
 
   @Override
-  public Expression values() {
-    return values;
+  public Relation values() {
+    return VALUES;
   }
 
   @Override
   public Relation initialTransaction() {
-    return initialTransaction;
+    return INITIAL_TRANSACTION;
   }
 
   @Override
-  public Expression externalReads() {
-    return reads;
+  public Relation externalReads() {
+    return READS;
   }
 
   @Override
-  public Expression finalWrites() {
-    return writes;
+  public Relation finalWrites() {
+    return WRITES;
   }
 
   @Override
-  public Expression sessionOrder() {
-    return sessionOrder;
+  public Relation sessionOrder() {
+    return SESSION_ORDER;
   }
 }
