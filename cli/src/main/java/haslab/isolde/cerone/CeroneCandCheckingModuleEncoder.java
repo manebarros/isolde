@@ -11,7 +11,6 @@ import haslab.isolde.core.check.candidate.ContextualizedInstance;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.kodkod.Util;
-import haslab.isolde.util.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import kodkod.ast.Expression;
@@ -26,11 +25,11 @@ public class CeroneCandCheckingModuleEncoder
     implements DirectExecutionModule<
         CeroneExecution, ContextualizedInstance, SimpleContext<ContextualizedInstance>> {
 
-  private List<Pair<Relation>> orderings;
+  private List<VisArTransReduction> orderings;
 
   public CeroneCandCheckingModuleEncoder(Relation vis, Relation arTransReduction) {
     this.orderings = new ArrayList<>();
-    this.orderings.add(new Pair<>(vis, arTransReduction));
+    this.orderings.add(new VisArTransReduction(vis, arTransReduction));
   }
 
   public CeroneCandCheckingModuleEncoder(int executions) {
@@ -38,7 +37,7 @@ public class CeroneCandCheckingModuleEncoder
     for (int i = 0; i < executions; i++) {
       Relation vis = Relation.binary("vis #" + i);
       Relation arTransReduction = Relation.binary("ar's transitive reduction #" + i);
-      orderings.add(new Pair<>(vis, arTransReduction));
+      orderings.add(new VisArTransReduction(vis, arTransReduction));
     }
   }
 
@@ -46,7 +45,7 @@ public class CeroneCandCheckingModuleEncoder
   public List<CeroneExecution> executions(AbstractHistoryK historyEncoding) {
     List<CeroneExecution> r = new ArrayList<>();
     for (var p : orderings) {
-      r.add(new CeroneExecution(historyEncoding, p.fst(), p.snd().closure()));
+      r.add(new CeroneExecution(historyEncoding, p.vis(), p.arTransReduction().closure()));
     }
     return r;
   }
@@ -86,11 +85,12 @@ public class CeroneCandCheckingModuleEncoder
 
     for (int i = 0; i < formulas.size(); i++) {
       Relation lastTxn = Relation.unary("Last Txn #" + i);
-      b.bound(orderings.get(i).fst(), visLowerBound, visUpperBound);
-      b.bound(orderings.get(i).snd(), visUpperBound);
+      var ordering = orderings.get(i);
+      b.bound(ordering.vis(), visLowerBound, visUpperBound);
+      b.bound(ordering.arTransReduction(), visUpperBound);
       b.bound(lastTxn, convert(contextualizedInstance, tf, AbstractHistoryK::normalTxns, 1));
-      Expression vis = orderings.get(i).fst();
-      Relation arTransReduction = orderings.get(i).snd();
+      Expression vis = ordering.vis();
+      Relation arTransReduction = ordering.arTransReduction();
       Expression ar = arTransReduction.closure();
       var execution = new CeroneExecution(historyEncoding, vis, ar);
 

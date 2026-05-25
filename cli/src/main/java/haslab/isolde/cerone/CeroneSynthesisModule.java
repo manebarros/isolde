@@ -14,7 +14,6 @@ import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.HistoryAtoms;
 import haslab.isolde.kodkod.Util;
-import haslab.isolde.util.Pair;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -28,20 +27,12 @@ public class CeroneSynthesisModule
     implements ExecutionModule<
         CeroneExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>> {
 
-  private List<Pair<Relation>> relations;
-
-  private Relation vis(Pair<Relation> relations) {
-    return relations.fst();
-  }
-
-  private Relation ar(Pair<Relation> relations) {
-    return relations.snd();
-  }
+  private List<VisAr> relations;
 
   public CeroneSynthesisModule(int executions) {
     this.relations = new ArrayList<>();
     for (int i = 0; i < executions; i++) {
-      relations.add(new Pair<>(Relation.binary("vis#" + i), Relation.binary("ar#" + i)));
+      relations.add(new VisAr(Relation.binary("vis#" + i), Relation.binary("ar#" + i)));
     }
   }
 
@@ -49,7 +40,7 @@ public class CeroneSynthesisModule
   public List<CeroneExecution> executions(AbstractHistoryK history) {
     List<CeroneExecution> r = new ArrayList<>();
     for (var p : this.relations) {
-      r.add(new CeroneExecution(history, vis(p), ar(p)));
+      r.add(new CeroneExecution(history, p.vis(), p.ar()));
     }
     return r;
   }
@@ -92,8 +83,8 @@ public class CeroneSynthesisModule
 
     for (int i = 0; i < formulas.size(); i++) {
       var rels = relations.get(i);
-      Relation vis = vis(rels);
-      Relation ar = ar(rels);
+      Relation vis = rels.vis();
+      Relation ar = rels.ar();
       b.bound(vis, visAndArLowerBound, commitOrderTs);
       b.bound(ar, visAndArLowerBound, commitOrderTs);
 
@@ -121,8 +112,8 @@ public class CeroneSynthesisModule
         tf.setOf(historyAtoms.initialTxn()).product(tf.setOf(historyAtoms.normalTxns().toArray()));
 
     var rels = relations.get(0);
-    Relation vis = vis(rels);
-    Relation ar = ar(rels);
+    Relation vis = rels.vis();
+    Relation ar = rels.ar();
     var execution = new CeroneExecution(history, vis, ar);
     b.boundExactly(ar, txnTotalOrderTs);
     b.bound(vis, visLb, txnTotalOrderTs);
@@ -140,8 +131,8 @@ public class CeroneSynthesisModule
     commitOrderTs.addAll(visLb);
     for (int i = 1; i < formulas.size(); i++) {
       rels = relations.get(i);
-      vis = vis(rels);
-      ar = ar(rels);
+      vis = rels.vis();
+      ar = rels.ar();
       execution = new CeroneExecution(history, vis, ar);
       b.bound(vis, visLb, commitOrderTs);
       b.bound(ar, visLb, commitOrderTs);

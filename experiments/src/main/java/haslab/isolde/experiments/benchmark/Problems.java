@@ -9,7 +9,6 @@ import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.biswas.definitions.TransactionalAnomalousPatterns;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.experiments.verification.FeketeReadOnlyAnomaly;
-import haslab.isolde.util.Pair;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -97,12 +96,12 @@ public class Problems {
 
   private static final List<String> levels = Arrays.asList("RA", "CC", "PC", "SI", "Ser");
 
-  private static final List<Pair<String>> edges =
+  private static final List<LevelPair> edges =
       Arrays.asList(
-          new Pair<>("RA", "CC"),
-          new Pair<>("CC", "PC"),
-          new Pair<>("PC", "SI"),
-          new Pair<>("SI", "Ser"));
+          new LevelPair("RA", "CC"),
+          new LevelPair("CC", "PC"),
+          new LevelPair("PC", "SI"),
+          new LevelPair("SI", "Ser"));
 
   public static Named<IsoldeSpec> resolve(DefinitionId pos, DefinitionId neg) {
     return resolve(Collections.singletonList(pos), neg);
@@ -128,8 +127,8 @@ public class Problems {
   public static List<Named<IsoldeSpec>> satSameFramework() {
     List<Named<IsoldeSpec>> problems = new ArrayList<>();
     for (var edge : edges) {
-      var pos = edge.fst();
-      var neg = edge.snd();
+      var pos = edge.pos();
+      var neg = edge.neg();
 
       // Biswas
       problems.add(
@@ -164,8 +163,8 @@ public class Problems {
   public static List<Named<IsoldeSpec>> satDiffFramework() {
     List<Named<IsoldeSpec>> problems = new ArrayList<>();
     for (var edge : edges) {
-      var pos = edge.fst();
-      var neg = edge.snd();
+      var pos = edge.pos();
+      var neg = edge.neg();
 
       problems.add(resolve(DefinitionId.bis(pos, "ax"), DefinitionId.cer(neg, "ax")));
       problems.add(resolve(DefinitionId.cer(pos, "ax"), DefinitionId.bis(neg, "ax")));
@@ -202,8 +201,8 @@ public class Problems {
   public static List<Named<IsoldeSpec>> unsatSameFramework() {
     List<Named<IsoldeSpec>> problems = new ArrayList<>();
     for (var level : edges) {
-      var pos = level.fst();
-      var neg = level.snd();
+      var pos = level.pos();
+      var neg = level.neg();
 
       problems.add(resolve(DefinitionId.bis(neg, "ax"), DefinitionId.bis(pos, "ax")));
       problems.add(resolve(DefinitionId.cer(neg, "ax"), DefinitionId.cer(pos, "ax")));

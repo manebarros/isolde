@@ -4,7 +4,6 @@ import haslab.isolde.IsoldeSpec;
 import haslab.isolde.SynthesizerI;
 import haslab.isolde.core.synth.Scope;
 import haslab.isolde.experiments.benchmark.Problems.SpecClass;
-import haslab.isolde.util.Pair;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -29,19 +28,19 @@ public class Cli implements Runnable {
       names = "--txn",
       description = "Number of transactions (num | start:end)",
       converter = TxnNumConverter.class)
-  Pair<Integer> txn_num = new Pair<>(3, 3);
+  Range txn_num = new Range(3, 3);
 
   @Option(
       names = "--obj",
       description = "Number of objects (num | start:end)",
       converter = TxnNumConverter.class)
-  Pair<Integer> obj_num = new Pair<>(3, 3);
+  Range obj_num = new Range(3, 3);
 
   @Option(
       names = "--val",
       description = "Number of values (num | start:end)",
       converter = TxnNumConverter.class)
-  Pair<Integer> val_num = new Pair<>(3, 3);
+  Range val_num = new Range(3, 3);
 
   @Option(names = "--timeout", description = "Timeout in ms")
   Integer timeout = 300;
@@ -109,19 +108,19 @@ public class Cli implements Runnable {
     }
   }
 
-  static class TxnNumConverter implements ITypeConverter<Pair<Integer>> {
+  static class TxnNumConverter implements ITypeConverter<Range> {
 
     @Override
-    public Pair<Integer> convert(String value) throws Exception {
+    public Range convert(String value) throws Exception {
       if (value.contains(":")) {
         String[] parts = value.split(":");
         if (parts.length != 2) {
           throw new IllegalArgumentException("Range must be start:end");
         }
-        return new Pair<>(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
+        return new Range(Integer.parseInt(parts[0]), Integer.parseInt(parts[1]));
       } else {
         int val = Integer.parseInt(value);
-        return new Pair<>(val, val);
+        return new Range(val, val);
       }
     }
   }
