@@ -10,7 +10,7 @@ import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.check.candidate.ContextualizedInstance;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import java.util.ArrayList;
 import java.util.List;
 import kodkod.ast.Expression;
@@ -76,9 +76,10 @@ public class CeroneCandCheckingModuleEncoder
         convert(contextualizedInstance, tf, h -> h.initialTransaction().product(h.normalTxns()), 2);
 
     TupleSet visUpperBound =
-        Util.irreflexiveBound(
+        Translations.irreflexiveBound(
             tf,
-            Util.unaryTupleSetToAtoms(ev.evaluate(contextualizedInstance.context().normalTxns())));
+            Translations.unaryTupleSetToAtoms(
+                ev.evaluate(contextualizedInstance.context().normalTxns())));
     visUpperBound.addAll(visLowerBound);
 
     Formula formula = Formula.TRUE;
@@ -113,6 +114,6 @@ public class CeroneCandCheckingModuleEncoder
   private TupleSet convert(
       ContextualizedInstance instance, TupleFactory tf, HistoryExpression expression, int arity) {
     Evaluator ev = new Evaluator(instance.instance());
-    return Util.convert(ev, instance.context(), expression, tf, arity);
+    return Translations.convert(ev, instance.context(), expression, tf, arity);
   }
 }

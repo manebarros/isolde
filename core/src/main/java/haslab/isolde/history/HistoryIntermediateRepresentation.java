@@ -1,6 +1,6 @@
 package haslab.isolde.history;
 
-import static haslab.isolde.kodkod.Util.readBinaryExpression;
+import static haslab.isolde.kodkod.Translations.readBinaryExpression;
 
 import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.Atom;

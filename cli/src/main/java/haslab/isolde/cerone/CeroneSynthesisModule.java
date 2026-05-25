@@ -13,7 +13,7 @@ import haslab.isolde.core.general.ExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
 import haslab.isolde.core.synth.HistoryAtoms;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
@@ -73,7 +73,7 @@ public class CeroneSynthesisModule
       HistoryAtoms historyAtoms,
       HistorySchema history) {
     TupleFactory f = b.universe().factory();
-    TupleSet commitOrderTs = Util.irreflexiveBound(f, historyAtoms.normalTxns());
+    TupleSet commitOrderTs = Translations.irreflexiveBound(f, historyAtoms.normalTxns());
     TupleSet visAndArLowerBound =
         f.setOf(historyAtoms.initialTxn()).product(f.setOf(historyAtoms.normalTxns().toArray()));
     commitOrderTs.addAll(visAndArLowerBound);
@@ -127,7 +127,7 @@ public class CeroneSynthesisModule
 
     var enc = DirectAbstractHistoryEncoding.INSTANCE;
 
-    TupleSet commitOrderTs = Util.irreflexiveBound(tf, historyAtoms.normalTxns());
+    TupleSet commitOrderTs = Translations.irreflexiveBound(tf, historyAtoms.normalTxns());
     commitOrderTs.addAll(visLb);
     for (int i = 1; i < formulas.size(); i++) {
       rels = relations.get(i);

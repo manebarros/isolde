@@ -10,7 +10,7 @@ import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.kodkod.Formulas;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import java.util.ArrayList;
 import java.util.List;
 import kodkod.ast.Expression;
@@ -73,7 +73,8 @@ public class CeroneHistCheckingModuleEncoder
     TupleSet visLowerBound =
         tf.setOf(intermediateRepresentation.getInitialTxnAtom())
             .product(Formulas.asTupleSet(tf, intermediateRepresentation.normalTxnAtoms()));
-    TupleSet visUpperBound = Util.irreflexiveBound(tf, intermediateRepresentation.normalTxnAtoms());
+    TupleSet visUpperBound =
+        Translations.irreflexiveBound(tf, intermediateRepresentation.normalTxnAtoms());
     visUpperBound.addAll(visLowerBound);
 
     Formula formula = Formula.TRUE;

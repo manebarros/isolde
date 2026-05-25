@@ -2,7 +2,7 @@ package haslab.isolde.biswas;
 
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.HistorySchema;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -28,7 +28,7 @@ public record BiswasExecution(HistorySchema history, Expression co) implements E
             .comprehension(t.oneOf(history.normalTxns()).and(s.oneOf(history.normalTxns())));
 
     Map<Integer, Set<Integer>> coMap =
-        Util.readBinaryExpression(eval, coWithoutInitialTxn, Integer.class, Integer.class);
+        Translations.readBinaryExpression(eval, coWithoutInitialTxn, Integer.class, Integer.class);
     return String.format("Commit Order:\n%s", drawCo(coMap));
   }
 

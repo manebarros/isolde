@@ -2,7 +2,7 @@ package haslab.isolde.cerone;
 
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.HistorySchema;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import java.util.HashSet;
 import java.util.List;
 import java.util.ListIterator;
@@ -34,9 +34,9 @@ public record CeroneExecution(HistorySchema history, Expression vis, Expression 
             .comprehension(t.oneOf(history.normalTxns()).and(s.oneOf(history.normalTxns())));
 
     Map<Integer, Set<Integer>> visMap =
-        Util.readBinaryExpression(eval, visWithoutInitialTxn, Integer.class, Integer.class);
+        Translations.readBinaryExpression(eval, visWithoutInitialTxn, Integer.class, Integer.class);
     Map<Integer, Set<Integer>> arMap =
-        Util.readBinaryExpression(eval, arWithoutInitialTxn, Integer.class, Integer.class);
+        Translations.readBinaryExpression(eval, arWithoutInitialTxn, Integer.class, Integer.class);
 
     return String.format("Vis:\n%s\nAr:\n%s", drawVis(visMap), drawAR(arMap));
   }

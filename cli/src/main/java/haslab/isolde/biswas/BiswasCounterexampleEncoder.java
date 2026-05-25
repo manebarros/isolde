@@ -4,7 +4,7 @@ import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.cegis.CounterexampleEncoder;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import kodkod.ast.Formula;
 import kodkod.ast.Relation;
 import kodkod.engine.Evaluator;
@@ -44,7 +44,7 @@ public class BiswasCounterexampleEncoder implements CounterexampleEncoder<Biswas
                         e)); // We should only enforce the formula on well-formed executions!
     var eval = new Evaluator(instance);
     TupleSet commitOrderVal =
-        Util.convert(eval, execution, BiswasExecution::co, bounds.universe().factory(), 2);
+        Translations.convert(eval, execution, BiswasExecution::co, bounds.universe().factory(), 2);
     Relation cexCommitOrderRel = Relation.binary("cexCommitOrder");
     bounds.boundExactly(cexCommitOrderRel, commitOrderVal);
     return h -> feedbackFormula.resolve(new BiswasExecution(h, cexCommitOrderRel));

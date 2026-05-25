@@ -7,7 +7,7 @@ import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.check.candidate.ContextualizedInstance;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import java.util.ArrayList;
 import java.util.List;
 import kodkod.ast.Expression;
@@ -71,8 +71,8 @@ public class BiswasCandCheckingEncoder
         convert(instance, f, h -> h.initialTransaction().product(h.normalTxns()), 2);
 
     TupleSet commitOrderUpperBound =
-        Util.irreflexiveBound(
-            f, Util.unaryTupleSetToAtoms(ev.evaluate(instance.context().normalTxns())));
+        Translations.irreflexiveBound(
+            f, Translations.unaryTupleSetToAtoms(ev.evaluate(instance.context().normalTxns())));
     commitOrderUpperBound.addAll(initialProdNormal);
 
     Formula formula = Formula.TRUE;
@@ -103,6 +103,6 @@ public class BiswasCandCheckingEncoder
       HistoryExpression expression,
       int arity) {
     Evaluator ev = new Evaluator(contextualizedInstance.instance());
-    return Util.convert(ev, contextualizedInstance.context(), expression, tf, arity);
+    return Translations.convert(ev, contextualizedInstance.context(), expression, tf, arity);
   }
 }

@@ -1,12 +1,12 @@
 package haslab.isolde.core.check.candidate;
 
 import static haslab.isolde.kodkod.Formulas.asTupleSet;
-import static haslab.isolde.kodkod.Util.unaryTupleSetToAtoms;
+import static haslab.isolde.kodkod.Translations.unaryTupleSetToAtoms;
 
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.general.HistoryEncoder;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import kodkod.ast.Formula;
 import kodkod.engine.Evaluator;
 import kodkod.instance.Bounds;
@@ -49,11 +49,12 @@ public class DefaultCandCheckingEncoder implements HistoryEncoder<Contextualized
         enc.initialTransaction(),
         asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.initialTransaction()))));
 
-    b.boundExactly(enc.finalWrites(), Util.convert(ev, context, HistorySchema::finalWrites, f, 3));
     b.boundExactly(
-        enc.externalReads(), Util.convert(ev, context, HistorySchema::externalReads, f, 3));
+        enc.finalWrites(), Translations.convert(ev, context, HistorySchema::finalWrites, f, 3));
     b.boundExactly(
-        enc.sessionOrder(), Util.convert(ev, context, HistorySchema::sessionOrder, f, 2));
+        enc.externalReads(), Translations.convert(ev, context, HistorySchema::externalReads, f, 3));
+    b.boundExactly(
+        enc.sessionOrder(), Translations.convert(ev, context, HistorySchema::sessionOrder, f, 2));
 
     return Formula.TRUE;
   }

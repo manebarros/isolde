@@ -19,8 +19,8 @@ import kodkod.instance.Tuple;
 import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
-public final class Util {
-  private Util() {}
+public final class Translations {
+  private Translations() {}
 
   public static <A> TupleSet irreflexiveBound(TupleFactory f, Collection<A> atoms) {
     var tuples =

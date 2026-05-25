@@ -6,7 +6,7 @@ import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.cegis.CounterexampleEncoder;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import kodkod.ast.Relation;
 import kodkod.engine.Evaluator;
 import kodkod.instance.Bounds;
@@ -34,9 +34,9 @@ public class CeroneCounterexampleEncoder implements CounterexampleEncoder<Cerone
       Bounds bounds) {
     var eval = new Evaluator(instance);
     TupleSet visVal =
-        Util.convert(eval, execution, CeroneExecution::vis, bounds.universe().factory(), 2);
+        Translations.convert(eval, execution, CeroneExecution::vis, bounds.universe().factory(), 2);
     TupleSet arVal =
-        Util.convert(eval, execution, CeroneExecution::ar, bounds.universe().factory(), 2);
+        Translations.convert(eval, execution, CeroneExecution::ar, bounds.universe().factory(), 2);
     Relation cexVisRel = Relation.binary("cex vis");
     Relation cexArRel = Relation.binary("cex ar");
     bounds.boundExactly(cexVisRel, visVal);

@@ -9,7 +9,7 @@ import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.kodkod.Formulas;
-import haslab.isolde.kodkod.Util;
+import haslab.isolde.kodkod.Translations;
 import java.util.ArrayList;
 import java.util.List;
 import kodkod.ast.Expression;
@@ -75,7 +75,8 @@ public class BiswasHistCheckingEncoder
     TupleSet initProdNormal =
         tf.setOf(intermediateRepresentation.getInitialTxnAtom())
             .product(Formulas.asTupleSet(tf, intermediateRepresentation.normalTxnAtoms()));
-    TupleSet coUpperBound = Util.irreflexiveBound(tf, intermediateRepresentation.normalTxnAtoms());
+    TupleSet coUpperBound =
+        Translations.irreflexiveBound(tf, intermediateRepresentation.normalTxnAtoms());
     coUpperBound.addAll(initProdNormal);
 
     Formula formula = Formula.TRUE;
