@@ -1,8 +1,8 @@
 package haslab.isolde.core.naive;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.cegis.CegisResult;
 import haslab.isolde.core.cegis.CegisResult.Counterexample;
 import haslab.isolde.core.cegis.CegisResult.FailedCandidate;
@@ -39,7 +39,7 @@ public class NaiveSynthesizer<T, S> {
       CandCheckerI<E> checkingEncoder, ExecutionFormula<E> universalFormula) {
 
     public Optional<Counterexample<E>> verify(
-        AbstractHistoryK history, Instance instance, Solver solver) {
+        HistorySchema history, Instance instance, Solver solver) {
       Solution candCheckSol =
           checkingEncoder.check(instance, history, universalFormula.not(), solver);
 
@@ -55,7 +55,7 @@ public class NaiveSynthesizer<T, S> {
   }
 
   private List<? extends Counterexample<? extends Execution>> verify(
-      AbstractHistoryK history, Instance instance, Solver solver) {
+      HistorySchema history, Instance instance, Solver solver) {
 
     for (var verifier : this.checkingEncoders) {
       var maybeCounterexample = verifier.verify(history, instance, solver);
@@ -158,7 +158,7 @@ public class NaiveSynthesizer<T, S> {
     return synthesize(options, options);
   }
 
-  public AbstractHistoryK historyEncoding() {
+  public HistorySchema historyEncoding() {
     return this.synthesisEncoder.historyEncoding();
   }
 }

@@ -1,8 +1,8 @@
 package haslab.isolde.core.check.candidate;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.kodkod.KodkodProblem;
@@ -32,7 +32,7 @@ public class CandChecker<E extends Execution> implements CandCheckerI<E> {
 
   @Override
   public KodkodProblem encode(
-      Instance instance, AbstractHistoryK context, ExecutionFormula<E> formula) {
+      Instance instance, HistorySchema context, ExecutionFormula<E> formula) {
     CandCheckProblem problem =
         new CandCheckProblem(new ContextualizedInstance(context, instance), this.historyEncoder);
     problem.register(this.moduleEncoder, Arrays.asList(formula));

@@ -1,6 +1,6 @@
 package haslab.isolde.core.check.candidate;
 
-import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.general.AtomsContainer;
 import haslab.isolde.kodkod.Util;
 import java.util.ArrayList;
@@ -9,7 +9,7 @@ import java.util.List;
 import kodkod.engine.Evaluator;
 import kodkod.instance.Instance;
 
-public record ContextualizedInstance(AbstractHistoryK context, Instance instance)
+public record ContextualizedInstance(HistorySchema context, Instance instance)
     implements AtomsContainer {
 
   @Override

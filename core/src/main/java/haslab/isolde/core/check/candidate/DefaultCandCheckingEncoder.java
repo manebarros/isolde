@@ -3,8 +3,8 @@ package haslab.isolde.core.check.candidate;
 import static haslab.isolde.kodkod.KodkodUtil.asTupleSet;
 import static haslab.isolde.kodkod.Util.unaryTupleSetToAtoms;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.kodkod.Util;
 import kodkod.ast.Formula;
@@ -34,22 +34,26 @@ public class DefaultCandCheckingEncoder implements HistoryEncoder<Contextualized
   @Override
   public Formula encode(ContextualizedInstance contextualizedInstance, Bounds b) {
     Instance instance = contextualizedInstance.instance();
-    AbstractHistoryK context = contextualizedInstance.context();
+    HistorySchema context = contextualizedInstance.context();
     Evaluator ev = new Evaluator(instance);
     TupleFactory f = b.universe().factory();
     DirectAbstractHistoryEncoding enc = encoding();
 
     b.boundExactly(
-        enc.transactions(), asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.transactions()))));
+        enc.transactions(),
+        asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.transactions()))));
     b.boundExactly(enc.keys(), asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.keys()))));
-    b.boundExactly(enc.values(), asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.values()))));
+    b.boundExactly(
+        enc.values(), asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.values()))));
     b.boundExactly(
         enc.initialTransaction(),
         asTupleSet(f, unaryTupleSetToAtoms(ev.evaluate(context.initialTransaction()))));
 
-    b.boundExactly(enc.finalWrites(), Util.convert(ev, context, AbstractHistoryK::finalWrites, f, 3));
-    b.boundExactly(enc.externalReads(), Util.convert(ev, context, AbstractHistoryK::externalReads, f, 3));
-    b.boundExactly(enc.sessionOrder(), Util.convert(ev, context, AbstractHistoryK::sessionOrder, f, 2));
+    b.boundExactly(enc.finalWrites(), Util.convert(ev, context, HistorySchema::finalWrites, f, 3));
+    b.boundExactly(
+        enc.externalReads(), Util.convert(ev, context, HistorySchema::externalReads, f, 3));
+    b.boundExactly(
+        enc.sessionOrder(), Util.convert(ev, context, HistorySchema::sessionOrder, f, 2));
 
     return Formula.TRUE;
   }

@@ -1,8 +1,8 @@
 package haslab.isolde.biswas;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.general.ExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
@@ -34,7 +34,7 @@ public class BiswasSynthesisModule
   }
 
   @Override
-  public List<BiswasExecution> executions(AbstractHistoryK historyEncoding) {
+  public List<BiswasExecution> executions(HistorySchema historyEncoding) {
     return this.commitOrders.stream()
         .map(co -> new BiswasExecution(historyEncoding, co))
         .collect(Collectors.toList());
@@ -66,7 +66,7 @@ public class BiswasSynthesisModule
       Bounds b,
       List<ExecutionFormula<BiswasExecution>> formulas,
       HistoryAtoms historyAtoms,
-      AbstractHistoryK history) {
+      HistorySchema history) {
     TupleFactory f = b.universe().factory();
 
     TupleSet sessionOrderLowerBound =
@@ -100,7 +100,7 @@ public class BiswasSynthesisModule
       List<ExecutionFormula<BiswasExecution>> formulas,
       HistoryAtoms historyAtoms,
       TupleSet txnTotalOrderTs,
-      AbstractHistoryK history) {
+      HistorySchema history) {
 
     TupleFactory f = b.universe().factory();
     Relation mainCommitOrder = this.commitOrders.get(0);
@@ -136,7 +136,7 @@ public class BiswasSynthesisModule
     return formula;
   }
 
-  private Formula commitOrderSemantics(AbstractHistoryK history, Expression commitOrder) {
+  private Formula commitOrderSemantics(HistorySchema history, Expression commitOrder) {
     return Formula.and(
         KodkodUtil.transitive(commitOrder),
         KodkodUtil.total(commitOrder, history.transactions()),

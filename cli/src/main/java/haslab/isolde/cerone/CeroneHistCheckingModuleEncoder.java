@@ -3,9 +3,9 @@ package haslab.isolde.cerone;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.EXT;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
@@ -43,7 +43,7 @@ public class CeroneHistCheckingModuleEncoder
   }
 
   @Override
-  public List<CeroneExecution> executions(AbstractHistoryK historyEncoding) {
+  public List<CeroneExecution> executions(HistorySchema historyEncoding) {
     List<CeroneExecution> r = new ArrayList<>();
     for (var p : orderings) {
       r.add(new CeroneExecution(historyEncoding, p.vis(), p.arTransReduction().closure()));

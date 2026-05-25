@@ -1,7 +1,7 @@
 package haslab.isolde.biswas;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.Util;
 import java.util.HashSet;
 import java.util.List;
@@ -14,7 +14,7 @@ import kodkod.ast.Variable;
 import kodkod.engine.Evaluator;
 import kodkod.instance.Instance;
 
-public record BiswasExecution(AbstractHistoryK history, Expression co) implements Execution {
+public record BiswasExecution(HistorySchema history, Expression co) implements Execution {
 
   @Override
   public String showAdditionalStructures(Instance instance) {

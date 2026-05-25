@@ -1,9 +1,9 @@
 package haslab.isolde.kodkod;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionExpression;
 import haslab.isolde.core.HistoryExpression;
+import haslab.isolde.core.HistorySchema;
 import java.util.Collection;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
@@ -80,7 +80,7 @@ public final class Util {
 
   public static TupleSet convert(
       Evaluator ev,
-      AbstractHistoryK context,
+      HistorySchema context,
       HistoryExpression expression,
       TupleFactory tf,
       int arity) {

@@ -3,10 +3,10 @@ package haslab.isolde.cerone;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.EXT;
 import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.check.candidate.ContextualizedInstance;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
@@ -42,7 +42,7 @@ public class CeroneCandCheckingModuleEncoder
   }
 
   @Override
-  public List<CeroneExecution> executions(AbstractHistoryK historyEncoding) {
+  public List<CeroneExecution> executions(HistorySchema historyEncoding) {
     List<CeroneExecution> r = new ArrayList<>();
     for (var p : orderings) {
       r.add(new CeroneExecution(historyEncoding, p.vis(), p.arTransReduction().closure()));
@@ -88,7 +88,7 @@ public class CeroneCandCheckingModuleEncoder
       var ordering = orderings.get(i);
       b.bound(ordering.vis(), visLowerBound, visUpperBound);
       b.bound(ordering.arTransReduction(), visUpperBound);
-      b.bound(lastTxn, convert(contextualizedInstance, tf, AbstractHistoryK::normalTxns, 1));
+      b.bound(lastTxn, convert(contextualizedInstance, tf, HistorySchema::normalTxns, 1));
       Expression vis = ordering.vis();
       Relation arTransReduction = ordering.arTransReduction();
       Expression ar = arTransReduction.closure();

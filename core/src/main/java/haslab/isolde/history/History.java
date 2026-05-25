@@ -1,6 +1,6 @@
 package haslab.isolde.history;
 
-import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.HistorySchema;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
@@ -28,7 +28,7 @@ public class History {
     this(new ArrayList<>(h.getSessions()));
   }
 
-  public History(AbstractHistoryK encoding, Instance instance) {
+  public History(HistorySchema encoding, Instance instance) {
     this(new HistoryIntermediateRepresentation(encoding, instance).buildHistory());
   }
 

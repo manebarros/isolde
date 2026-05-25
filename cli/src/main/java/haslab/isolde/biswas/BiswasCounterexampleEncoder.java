@@ -1,8 +1,8 @@
 package haslab.isolde.biswas;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.cegis.CounterexampleEncoder;
 import haslab.isolde.kodkod.Util;
 import kodkod.ast.Formula;
@@ -26,7 +26,7 @@ public class BiswasCounterexampleEncoder implements CounterexampleEncoder<Biswas
   }
 
   private static Formula wellFormed(BiswasExecution execution) {
-    AbstractHistoryK h = execution.history();
+    HistorySchema h = execution.history();
     return h.sessionOrder().union(h.binaryWr()).in(execution.co());
   }
 

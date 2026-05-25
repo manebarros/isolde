@@ -2,7 +2,7 @@ package haslab.isolde.history;
 
 import static haslab.isolde.kodkod.Util.readBinaryExpression;
 
-import haslab.isolde.core.AbstractHistoryK;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.Atom;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -22,7 +22,7 @@ public class HistoryIntermediateRepresentation {
   private TupleSet writesTs;
   private Map<Integer, Set<Integer>> so;
 
-  public HistoryIntermediateRepresentation(AbstractHistoryK encoding, Instance instance) {
+  public HistoryIntermediateRepresentation(HistorySchema encoding, Instance instance) {
     Evaluator evaluator = new Evaluator(instance);
     this.readsTs = evaluator.evaluate(encoding.externalReads());
     this.writesTs = evaluator.evaluate(encoding.finalWrites());

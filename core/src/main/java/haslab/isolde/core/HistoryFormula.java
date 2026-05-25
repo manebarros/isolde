@@ -4,7 +4,7 @@ import kodkod.ast.Formula;
 
 @FunctionalInterface
 public interface HistoryFormula {
-  Formula resolve(AbstractHistoryK history);
+  Formula resolve(HistorySchema history);
 
   default HistoryFormula not() {
     return h -> this.resolve(h).not();

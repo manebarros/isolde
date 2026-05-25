@@ -4,7 +4,7 @@ import kodkod.ast.Expression;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
 
-public interface AbstractHistoryK {
+public interface HistorySchema {
   Expression transactions();
 
   Expression keys();
@@ -171,10 +171,10 @@ public interface AbstractHistoryK {
     return x.join(transactions().join(finalWrites()));
   }
 
-  default AbstractHistoryK projectionOverKeys(Expression keySubset) {
-    AbstractHistoryK og = this;
+  default HistorySchema projectionOverKeys(Expression keySubset) {
+    HistorySchema og = this;
 
-    return new AbstractHistoryK() {
+    return new HistorySchema() {
 
       @Override
       public Expression transactions() {
@@ -213,10 +213,10 @@ public interface AbstractHistoryK {
     };
   }
 
-  default AbstractHistoryK subHistory(Expression txnSubset) {
-    AbstractHistoryK og = this;
+  default HistorySchema subHistory(Expression txnSubset) {
+    HistorySchema og = this;
 
-    return new AbstractHistoryK() {
+    return new HistorySchema() {
 
       @Override
       public Expression transactions() {
@@ -255,7 +255,7 @@ public interface AbstractHistoryK {
     };
   }
 
-  default AbstractHistoryK subHistory(HistoryExpression txnSubset) {
+  default HistorySchema subHistory(HistoryExpression txnSubset) {
     return subHistory(txnSubset.resolve(this));
   }
 }

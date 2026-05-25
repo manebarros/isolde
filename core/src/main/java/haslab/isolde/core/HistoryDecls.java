@@ -4,5 +4,5 @@ import kodkod.ast.Decls;
 
 @FunctionalInterface
 public interface HistoryDecls {
-  Decls resolve(AbstractHistoryK historyEncoding);
+  Decls resolve(HistorySchema historyEncoding);
 }

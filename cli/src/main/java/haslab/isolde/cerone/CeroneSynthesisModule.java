@@ -5,10 +5,10 @@ import static haslab.isolde.cerone.definitions.CeroneDefinitions.SESSION;
 import static haslab.isolde.kodkod.KodkodUtil.total;
 import static haslab.isolde.kodkod.KodkodUtil.transitive;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.general.ExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
@@ -37,7 +37,7 @@ public class CeroneSynthesisModule
   }
 
   @Override
-  public List<CeroneExecution> executions(AbstractHistoryK history) {
+  public List<CeroneExecution> executions(HistorySchema history) {
     List<CeroneExecution> r = new ArrayList<>();
     for (var p : this.relations) {
       r.add(new CeroneExecution(history, p.vis(), p.ar()));
@@ -71,7 +71,7 @@ public class CeroneSynthesisModule
       Bounds b,
       List<ExecutionFormula<CeroneExecution>> formulas,
       HistoryAtoms historyAtoms,
-      AbstractHistoryK history) {
+      HistorySchema history) {
     TupleFactory f = b.universe().factory();
     TupleSet commitOrderTs = Util.irreflexiveBound(f, historyAtoms.normalTxns());
     TupleSet visAndArLowerBound =
@@ -106,7 +106,7 @@ public class CeroneSynthesisModule
       List<ExecutionFormula<CeroneExecution>> formulas,
       HistoryAtoms historyAtoms,
       TupleSet txnTotalOrderTs,
-      AbstractHistoryK history) {
+      HistorySchema history) {
     TupleFactory tf = b.universe().factory();
     TupleSet visLb =
         tf.setOf(historyAtoms.initialTxn()).product(tf.setOf(historyAtoms.normalTxns().toArray()));

@@ -1,10 +1,10 @@
 package haslab.isolde.biswas.definitions;
 
 import haslab.isolde.biswas.BiswasExecution;
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistoryFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.KodkodUtil;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
@@ -29,7 +29,7 @@ public interface HistoryOnlyIsolationCriterion extends IsolationCriterion {
             .and(historyOnlyCommitEdgeCriteria(t1, t2, t3, x));
   }
 
-  default Expression mandatoryCommitOrderEdges(AbstractHistoryK h) {
+  default Expression mandatoryCommitOrderEdges(HistorySchema h) {
     Variable t1 = Variable.unary("t1");
     Variable t2 = Variable.unary("t2");
     Variable t3 = Variable.unary("t3");

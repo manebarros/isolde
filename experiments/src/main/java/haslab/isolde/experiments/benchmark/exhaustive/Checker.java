@@ -1,9 +1,9 @@
 package haslab.isolde.experiments.benchmark.exhaustive;
 
 import haslab.isolde.biswas.BiswasExecution;
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.Atom;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -98,7 +98,7 @@ public class Checker {
   }
 
   private static final Formula formula(ExecutionFormula<BiswasExecution> formula) {
-    AbstractHistoryK encoding = encoding();
+    HistorySchema encoding = encoding();
     return Formula.and(
         uniqueWrites(),
         encoding.sessionOrder().union(encoding.binaryWr()).in(co),

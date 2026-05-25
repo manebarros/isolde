@@ -9,10 +9,10 @@ import static haslab.isolde.kodkod.KodkodUtil.disjoint;
 
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.cerone.CeroneExecution;
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistoryFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.KodkodUtil;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
@@ -105,7 +105,7 @@ public final class CustomDefinitions {
     Variable m, n;
     m = Variable.unary("m");
     n = Variable.unary("n");
-    AbstractHistoryK h = e.history();
+    HistorySchema h = e.history();
     return h.writerOf(x, m)
         .product(h.writerOf(x, n))
         .in(e.co())
@@ -234,7 +234,7 @@ public final class CustomDefinitions {
                             .and(yf.oneOf(h.values()))));
   }
 
-  public static Formula tripleFork(AbstractHistoryK h) {
+  public static Formula tripleFork(HistorySchema h) {
     Variable t1 = Variable.unary("t1");
     Variable t2 = Variable.unary("t2");
     Variable t3 = Variable.unary("t3");

@@ -1,7 +1,7 @@
 package haslab.isolde.cerone;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.Util;
 import java.util.HashSet;
 import java.util.List;
@@ -14,7 +14,7 @@ import kodkod.ast.Variable;
 import kodkod.engine.Evaluator;
 import kodkod.instance.Instance;
 
-public record CeroneExecution(AbstractHistoryK history, Expression vis, Expression ar)
+public record CeroneExecution(HistorySchema history, Expression vis, Expression ar)
     implements Execution {
 
   @Override

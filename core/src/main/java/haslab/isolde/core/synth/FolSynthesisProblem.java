@@ -1,8 +1,8 @@
 package haslab.isolde.core.synth;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.HistoryDecls;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.general.ExecutionModuleInstance;
 import haslab.isolde.core.general.HistoryConstraintProblem;
 import haslab.isolde.core.general.HistoryEncoder;
@@ -41,7 +41,7 @@ public class FolSynthesisProblem
   }
 
   private static Formula applyExistentialQuantifier(
-      Formula formula, HistoryDecls decls, AbstractHistoryK encoding) {
+      Formula formula, HistoryDecls decls, HistorySchema encoding) {
     return formula.forSome(decls.resolve(encoding));
   }
 

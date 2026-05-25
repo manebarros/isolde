@@ -1,8 +1,8 @@
 package haslab.isolde.core.cegis;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.history.History;
 import java.util.Collections;
 import java.util.List;
@@ -11,7 +11,7 @@ import kodkod.ast.Formula;
 import kodkod.instance.Instance;
 
 public class CegisResult {
-  private final AbstractHistoryK historyEncoding;
+  private final HistorySchema historyEncoding;
   private final Optional<Instance> solution;
   private final List<FailedCandidate> failedCandidates;
   private final int initialSynthClauses;
@@ -39,7 +39,7 @@ public class CegisResult {
   }
 
   private CegisResult(
-      AbstractHistoryK historyEncoding,
+      HistorySchema historyEncoding,
       Instance solution,
       List<FailedCandidate> failedCandidates,
       int initialSynthClauses,
@@ -58,7 +58,7 @@ public class CegisResult {
   }
 
   public static CegisResult success(
-      AbstractHistoryK historyEncoding,
+      HistorySchema historyEncoding,
       Instance instance,
       List<FailedCandidate> failedCandidates,
       int initialSynthClauses,
@@ -79,7 +79,7 @@ public class CegisResult {
   }
 
   public static CegisResult fail(
-      AbstractHistoryK historyEncoding,
+      HistorySchema historyEncoding,
       List<FailedCandidate> failedCandidates,
       int initialSynthClauses,
       int finalSynthClauses,
@@ -109,7 +109,7 @@ public class CegisResult {
     return failedCandidates;
   }
 
-  public AbstractHistoryK getHistoryEncoding() {
+  public HistorySchema getHistoryEncoding() {
     return historyEncoding;
   }
 

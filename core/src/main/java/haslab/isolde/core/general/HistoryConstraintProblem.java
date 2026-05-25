@@ -1,8 +1,8 @@
 package haslab.isolde.core.general;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.KodkodProblem;
 import java.util.ArrayList;
 import java.util.Collections;
@@ -77,7 +77,7 @@ public class HistoryConstraintProblem<I extends AtomsContainer, T, S> {
     return encode().solve(solver);
   }
 
-  public AbstractHistoryK historyEncoding() {
+  public HistorySchema historyEncoding() {
     return this.histEncoder.encoding();
   }
 }

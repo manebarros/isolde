@@ -4,5 +4,5 @@ import kodkod.ast.Expression;
 
 @FunctionalInterface
 public interface HistoryExpression {
-  Expression resolve(AbstractHistoryK history);
+  Expression resolve(HistorySchema history);
 }

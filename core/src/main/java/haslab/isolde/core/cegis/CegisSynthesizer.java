@@ -1,9 +1,9 @@
 package haslab.isolde.core.cegis;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.Execution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.cegis.CegisResult.Counterexample;
 import haslab.isolde.core.cegis.CegisResult.FailedCandidate;
 import haslab.isolde.core.check.candidate.CandCheckerI;
@@ -73,7 +73,7 @@ public class CegisSynthesizer<T, S> {
       ExecutionFormula<E> universalFormula) {
 
     Optional<CegisFeedback<E>> verify(
-        AbstractHistoryK history, Instance instance, Bounds bounds, Solver solver) {
+        HistorySchema history, Instance instance, Bounds bounds, Solver solver) {
 
       Solution candCheckSol =
           checkingEncoder.check(instance, history, universalFormula.not(), solver);
@@ -138,7 +138,7 @@ public class CegisSynthesizer<T, S> {
   }
 
   private CegisAggregatedFeedback guide(
-      Instance instance, AbstractHistoryK encoding, Bounds bounds, Solver solver) {
+      Instance instance, HistorySchema encoding, Bounds bounds, Solver solver) {
     List<Counterexample<?>> counterexamples = new ArrayList<>();
     HistoryFormula formula = h -> Formula.TRUE;
     for (var verifier : this.checkingEncoders) {
@@ -317,7 +317,7 @@ public class CegisSynthesizer<T, S> {
     return synthesize(options, options);
   }
 
-  public AbstractHistoryK historyEncoding() {
+  public HistorySchema historyEncoding() {
     return this.synthesisEncoder.historyEncoding();
   }
 }

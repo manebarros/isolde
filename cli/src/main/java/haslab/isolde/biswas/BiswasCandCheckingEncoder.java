@@ -1,9 +1,9 @@
 package haslab.isolde.biswas;
 
-import haslab.isolde.core.AbstractHistoryK;
 import haslab.isolde.core.AbstractHistoryRel;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.check.candidate.ContextualizedInstance;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
@@ -35,7 +35,7 @@ public class BiswasCandCheckingEncoder
   }
 
   @Override
-  public List<BiswasExecution> executions(AbstractHistoryK historyEncoding) {
+  public List<BiswasExecution> executions(HistorySchema historyEncoding) {
     List<BiswasExecution> executions = new ArrayList<>();
     for (var rel : coTransReduction) {
       executions.add(new BiswasExecution(historyEncoding, rel.closure()));
@@ -53,7 +53,7 @@ public class BiswasCandCheckingEncoder
     return new SimpleContext<>(input);
   }
 
-  public BiswasExecution execution(AbstractHistoryK historyEncoding) {
+  public BiswasExecution execution(HistorySchema historyEncoding) {
     return executions(historyEncoding).get(0);
   }
 
@@ -79,7 +79,7 @@ public class BiswasCandCheckingEncoder
     for (int i = 0; i < formulas.size(); i++) {
       Relation lastTxn = Relation.unary("last txn #" + i);
       bounds.bound(coTransReduction.get(i), commitOrderUpperBound);
-      bounds.bound(lastTxn, convert(instance, f, AbstractHistoryK::normalTxns, 1));
+      bounds.bound(lastTxn, convert(instance, f, HistorySchema::normalTxns, 1));
       Expression commitOrder = coTransReduction.get(i).closure();
       formula =
           formula.and(

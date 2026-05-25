@@ -3,7 +3,7 @@ package haslab.isolde.core;
 import kodkod.instance.Instance;
 
 public interface Execution {
-  AbstractHistoryK history();
+  HistorySchema history();
 
   String showAdditionalStructures(Instance instance);
 }
