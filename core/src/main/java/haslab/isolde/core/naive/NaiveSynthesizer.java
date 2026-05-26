@@ -28,20 +28,19 @@ import kodkod.instance.Instance;
 public class NaiveSynthesizer<T, S> {
 
   private final HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder;
-  private final List<Verifier<?>> checkingEncoders;
+  private final List<Verifier<?>> verifiers;
 
   public NaiveSynthesizer(HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder) {
     this.synthesisEncoder = synthesisEncoder;
-    this.checkingEncoders = new ArrayList<>();
+    this.verifiers = new ArrayList<>();
   }
 
   private record Verifier<E extends Execution>(
-      CandidateChecker<E> checkingEncoder, ExecutionFormula<E> universalFormula) {
+      CandidateChecker<E> checker, ExecutionFormula<E> universalFormula) {
 
     public Optional<Counterexample<E>> verify(
         HistorySchema history, Instance instance, Solver solver) {
-      Solution candCheckSol =
-          checkingEncoder.check(instance, history, universalFormula.not(), solver);
+      Solution candCheckSol = checker.check(instance, history, universalFormula.not(), solver);
 
       if (candCheckSol.unsat()) {
         // No counterexample
@@ -49,15 +48,14 @@ public class NaiveSynthesizer<T, S> {
       }
 
       return Optional.of(
-          new Counterexample<>(
-              candCheckSol.instance(), checkingEncoder.execution(), universalFormula));
+          new Counterexample<>(candCheckSol.instance(), checker.execution(), universalFormula));
     }
   }
 
   private List<? extends Counterexample<? extends Execution>> verify(
       HistorySchema history, Instance instance, Solver solver) {
 
-    for (var verifier : this.checkingEncoders) {
+    for (var verifier : this.verifiers) {
       var maybeCounterexample = verifier.verify(history, instance, solver);
 
       if (maybeCounterexample.isPresent()) {
@@ -79,10 +77,10 @@ public class NaiveSynthesizer<T, S> {
   public <E extends Execution> List<E> register(
       SynthesisSpec<E> spec,
       ExecutionModuleConstructor<E, FolSynthesisInput, S, ?> encoderConstructor,
-      CandidateChecker<E> checkingEncoder) {
+      CandidateChecker<E> checker) {
 
     if (spec.hasUniversal()) {
-      this.checkingEncoders.add(new Verifier<>(checkingEncoder, spec.universalFormula().get()));
+      this.verifiers.add(new Verifier<>(checker, spec.universalFormula().get()));
     }
     return this.synthesisEncoder.register(encoderConstructor, searchFormulas(spec));
   }

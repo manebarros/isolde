@@ -33,7 +33,7 @@ public class CegisSynthesizer<T, S> {
   }
 
   private final HistoryConstraintProblem<FolSynthesisInput, T, S> synthesisEncoder;
-  private final List<CegisVerifier<?>> checkingEncoders;
+  private final List<CegisVerifier<?>> verifiers;
   private final CandidateSearchFormulaConstructor candidateSearchFormulaConstructor;
   private final boolean useIncrementalSolving;
 
@@ -42,7 +42,7 @@ public class CegisSynthesizer<T, S> {
       CandidateSearchFormulaConstructor searchFormulaConstructor,
       boolean useIncrementalSolving) {
     this.synthesisEncoder = synthesisEncoder;
-    this.checkingEncoders = new ArrayList<>();
+    this.verifiers = new ArrayList<>();
     this.candidateSearchFormulaConstructor = searchFormulaConstructor;
     this.useIncrementalSolving = useIncrementalSolving;
   }
@@ -68,15 +68,14 @@ public class CegisSynthesizer<T, S> {
       List<Counterexample<?>> counterexamples, HistoryFormula guidingFormula) {}
 
   private record CegisVerifier<E extends Execution>(
-      CandidateChecker<E> checkingEncoder,
+      CandidateChecker<E> checker,
       CounterexampleEncoder<E> cexEncoder,
       ExecutionFormula<E> universalFormula) {
 
     Optional<CegisFeedback<E>> verify(
         HistorySchema history, Instance instance, Bounds bounds, Solver solver) {
 
-      Solution candCheckSol =
-          checkingEncoder.check(instance, history, universalFormula.not(), solver);
+      Solution candCheckSol = checker.check(instance, history, universalFormula.not(), solver);
 
       if (candCheckSol.unsat()) {
         // No counterexample
@@ -86,11 +85,11 @@ public class CegisSynthesizer<T, S> {
       Instance cexInstance = candCheckSol.instance();
 
       HistoryFormula guidingFormula =
-          this.cexEncoder.guide(cexInstance, checkingEncoder.execution(), universalFormula, bounds);
+          this.cexEncoder.guide(cexInstance, checker.execution(), universalFormula, bounds);
 
       return Optional.of(
           new CegisFeedback<>(
-              new Counterexample<>(cexInstance, checkingEncoder.execution(), universalFormula),
+              new Counterexample<>(cexInstance, checker.execution(), universalFormula),
               guidingFormula));
     }
   }
@@ -125,13 +124,12 @@ public class CegisSynthesizer<T, S> {
   public <E extends Execution> List<E> register(
       SynthesisSpec<E> spec,
       ExecutionModuleConstructor<E, FolSynthesisInput, S, ?> encoderConstructor,
-      CandidateChecker<E> checkingEncoder,
+      CandidateChecker<E> checker,
       CounterexampleEncoder<E> counterexampleEncoder) {
 
     if (spec.hasUniversal()) {
-      this.checkingEncoders.add(
-          new CegisVerifier<>(
-              checkingEncoder, counterexampleEncoder, spec.universalFormula().get()));
+      this.verifiers.add(
+          new CegisVerifier<>(checker, counterexampleEncoder, spec.universalFormula().get()));
     }
     return this.synthesisEncoder.register(
         encoderConstructor, this.candidateSearchFormulaConstructor.construct(spec));
@@ -141,7 +139,7 @@ public class CegisSynthesizer<T, S> {
       Instance instance, HistorySchema encoding, Bounds bounds, Solver solver) {
     List<Counterexample<?>> counterexamples = new ArrayList<>();
     HistoryFormula formula = h -> Formula.TRUE;
-    for (var verifier : this.checkingEncoders) {
+    for (var verifier : this.verifiers) {
       var maybeFeedback = verifier.verify(encoding, instance, bounds, solver);
       if (maybeFeedback.isPresent()) {
         var feedback = maybeFeedback.get();
