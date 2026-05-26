@@ -13,15 +13,15 @@ import kodkod.instance.Bounds;
 import kodkod.instance.Instance;
 import kodkod.instance.TupleFactory;
 
-public class DefaultCandCheckingEncoder implements HistoryEncoder<Candidate> {
+public class CandidateHistoryEncoder implements HistoryEncoder<Candidate> {
 
-  private DefaultCandCheckingEncoder() {}
+  private CandidateHistoryEncoder() {}
 
-  private static DefaultCandCheckingEncoder instance = null;
+  private static CandidateHistoryEncoder instance = null;
 
-  public static DefaultCandCheckingEncoder instance() {
+  public static CandidateHistoryEncoder instance() {
     if (instance == null) {
-      instance = new DefaultCandCheckingEncoder();
+      instance = new CandidateHistoryEncoder();
     }
     return instance;
   }

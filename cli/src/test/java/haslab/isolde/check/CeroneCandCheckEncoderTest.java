@@ -6,7 +6,7 @@ import haslab.isolde.cerone.CeroneCandCheckingModuleEncoder;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
-import haslab.isolde.core.check.candidate.DefaultCandCheckingEncoder;
+import haslab.isolde.core.check.candidate.CandidateHistoryEncoder;
 import haslab.isolde.core.check.candidate.DefaultCandidateChecker;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -24,7 +24,7 @@ public interface CeroneCandCheckEncoderTest {
 
   default DefaultCandidateChecker<CeroneExecution> candCheckEncoder() {
     return new DefaultCandidateChecker<>(
-        DefaultCandCheckingEncoder.instance(), candCheckModuleEncoder());
+        CandidateHistoryEncoder.instance(), candCheckModuleEncoder());
   }
 
   @Test
