@@ -13,7 +13,7 @@ import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.cegis.CegisResult;
 import haslab.isolde.core.cegis.CegisSynthesizer;
 import haslab.isolde.core.cegis.SynthesisSpec;
-import haslab.isolde.core.check.candidate.CandChecker;
+import haslab.isolde.core.check.candidate.DefaultCandidateChecker;
 import haslab.isolde.core.general.ExecutionModuleConstructor;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
@@ -77,7 +77,7 @@ public class Synthesizer {
         this.cegisSynthesizer.register(
             spec,
             ceroneSynthModuleConstructor,
-            new CandChecker<>(new CeroneCandCheckingModuleEncoder(1)),
+            new DefaultCandidateChecker<>(new CeroneCandCheckingModuleEncoder(1)),
             CeroneCounterexampleEncoder.instance());
   }
 
@@ -90,7 +90,7 @@ public class Synthesizer {
         this.cegisSynthesizer.register(
             spec,
             biswasSynthModuleConstructor,
-            new CandChecker<>(new BiswasCandCheckingEncoder(1)),
+            new DefaultCandidateChecker<>(new BiswasCandCheckingEncoder(1)),
             BiswasCounterexampleEncoder.instance());
   }
 

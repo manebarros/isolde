@@ -9,16 +9,17 @@ import haslab.isolde.kodkod.KodkodProblem;
 import java.util.Arrays;
 import kodkod.instance.Instance;
 
-public class CandChecker<E extends Execution> implements CandidateChecker<E> {
+public class DefaultCandidateChecker<E extends Execution> implements CandidateChecker<E> {
   private final HistoryEncoder<ContextualizedInstance> historyEncoder;
   private final DirectExecutionModule<E, ContextualizedInstance, ?> moduleEncoder;
 
-  public CandChecker(DirectExecutionModule<E, ContextualizedInstance, ?> moduleEncoder) {
+  public DefaultCandidateChecker(
+      DirectExecutionModule<E, ContextualizedInstance, ?> moduleEncoder) {
     this.historyEncoder = DefaultCandCheckingEncoder.instance();
     this.moduleEncoder = moduleEncoder;
   }
 
-  public CandChecker(
+  public DefaultCandidateChecker(
       HistoryEncoder<ContextualizedInstance> historyEncoder,
       DirectExecutionModule<E, ContextualizedInstance, ?> moduleEncoder) {
     this.historyEncoder = historyEncoder;

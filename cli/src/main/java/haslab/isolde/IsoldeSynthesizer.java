@@ -9,7 +9,7 @@ import haslab.isolde.cerone.CeroneCounterexampleEncoder;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.CeroneSynthesisModule;
 import haslab.isolde.core.cegis.CegisSynthesizer;
-import haslab.isolde.core.check.candidate.CandChecker;
+import haslab.isolde.core.check.candidate.DefaultCandidateChecker;
 import haslab.isolde.core.general.ExecutionModuleConstructor;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.FolSynthesisInput;
@@ -124,8 +124,8 @@ public class IsoldeSynthesizer implements SynthesizerI {
               CeroneExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>>
           ceroneSynthModuleConstructor = CeroneSynthesisModule::new;
 
-      CandChecker<CeroneExecution> ceroneChecker =
-          new CandChecker<>(new CeroneCandCheckingModuleEncoder(1));
+      DefaultCandidateChecker<CeroneExecution> ceroneChecker =
+          new DefaultCandidateChecker<>(new CeroneCandCheckingModuleEncoder(1));
 
       ceroneExecutions =
           synthesizer.register(
@@ -141,8 +141,8 @@ public class IsoldeSynthesizer implements SynthesizerI {
               BiswasExecution, FolSynthesisInput, Optional<TupleSet>, SimpleContext<HistoryAtoms>>
           biswasSynthModuleConstructor = BiswasSynthesisModule::new;
 
-      CandChecker<BiswasExecution> biswasChecker =
-          new CandChecker<>(new BiswasCandCheckingEncoder(1));
+      DefaultCandidateChecker<BiswasExecution> biswasChecker =
+          new DefaultCandidateChecker<>(new BiswasCandCheckingEncoder(1));
 
       biswasExecutions =
           synthesizer.register(

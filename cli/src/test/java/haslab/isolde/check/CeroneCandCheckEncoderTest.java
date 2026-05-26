@@ -6,8 +6,8 @@ import haslab.isolde.cerone.CeroneCandCheckingModuleEncoder;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.DirectAbstractHistoryEncoding;
-import haslab.isolde.core.check.candidate.CandChecker;
 import haslab.isolde.core.check.candidate.DefaultCandCheckingEncoder;
+import haslab.isolde.core.check.candidate.DefaultCandidateChecker;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
@@ -22,8 +22,9 @@ public interface CeroneCandCheckEncoderTest {
 
   CeroneCandCheckingModuleEncoder candCheckModuleEncoder();
 
-  default CandChecker<CeroneExecution> candCheckEncoder() {
-    return new CandChecker<>(DefaultCandCheckingEncoder.instance(), candCheckModuleEncoder());
+  default DefaultCandidateChecker<CeroneExecution> candCheckEncoder() {
+    return new DefaultCandidateChecker<>(
+        DefaultCandCheckingEncoder.instance(), candCheckModuleEncoder());
   }
 
   @Test
@@ -46,10 +47,7 @@ public interface CeroneCandCheckEncoderTest {
     Solution sol =
         candCheckEncoder()
             .check(
-                instance,
-                enc,
-                CeroneDefinitions.EXT.and(CeroneDefinitions.SESSION),
-                new Solver());
+                instance, enc, CeroneDefinitions.EXT.and(CeroneDefinitions.SESSION), new Solver());
     assertTrue(sol.unsat());
   }
 }
