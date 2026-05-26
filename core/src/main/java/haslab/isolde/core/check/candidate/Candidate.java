@@ -9,8 +9,7 @@ import java.util.List;
 import kodkod.engine.Evaluator;
 import kodkod.instance.Instance;
 
-public record ContextualizedInstance(HistorySchema context, Instance instance)
-    implements AtomsContainer {
+public record Candidate(HistorySchema context, Instance instance) implements AtomsContainer {
 
   @Override
   public Collection<Object> atoms() {

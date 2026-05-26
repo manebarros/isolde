@@ -13,7 +13,7 @@ import kodkod.instance.Bounds;
 import kodkod.instance.Instance;
 import kodkod.instance.TupleFactory;
 
-public class DefaultCandCheckingEncoder implements HistoryEncoder<ContextualizedInstance> {
+public class DefaultCandCheckingEncoder implements HistoryEncoder<Candidate> {
 
   private DefaultCandCheckingEncoder() {}
 
@@ -32,7 +32,7 @@ public class DefaultCandCheckingEncoder implements HistoryEncoder<Contextualized
   }
 
   @Override
-  public Formula encode(ContextualizedInstance contextualizedInstance, Bounds b) {
+  public Formula encode(Candidate contextualizedInstance, Bounds b) {
     Instance instance = contextualizedInstance.instance();
     HistorySchema context = contextualizedInstance.context();
     Evaluator ev = new Evaluator(instance);

@@ -7,7 +7,7 @@ import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistorySchema;
-import haslab.isolde.core.check.candidate.ContextualizedInstance;
+import haslab.isolde.core.check.candidate.Candidate;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.kodkod.Translations;
@@ -22,8 +22,7 @@ import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
 public class CeroneCandCheckingModuleEncoder
-    implements DirectExecutionModule<
-        CeroneExecution, ContextualizedInstance, SimpleContext<ContextualizedInstance>> {
+    implements DirectExecutionModule<CeroneExecution, Candidate, SimpleContext<Candidate>> {
 
   private List<VisArTransReduction> orderings;
 
@@ -56,7 +55,7 @@ public class CeroneCandCheckingModuleEncoder
   }
 
   @Override
-  public SimpleContext<ContextualizedInstance> createContext(ContextualizedInstance input) {
+  public SimpleContext<Candidate> createContext(Candidate input) {
     return new SimpleContext<>(input);
   }
 
@@ -64,7 +63,7 @@ public class CeroneCandCheckingModuleEncoder
   public Formula encode(
       Bounds b,
       List<ExecutionFormula<CeroneExecution>> formulas,
-      SimpleContext<ContextualizedInstance> context,
+      SimpleContext<Candidate> context,
       BindableHistorySchema historyEncoding) {
 
     var contextualizedInstance = context.val();
@@ -112,7 +111,7 @@ public class CeroneCandCheckingModuleEncoder
   }
 
   private TupleSet convert(
-      ContextualizedInstance instance, TupleFactory tf, HistoryExpression expression, int arity) {
+      Candidate instance, TupleFactory tf, HistoryExpression expression, int arity) {
     Evaluator ev = new Evaluator(instance.instance());
     return Translations.convert(ev, instance.context(), expression, tf, arity);
   }

@@ -3,14 +3,13 @@ package haslab.isolde.core.check.candidate;
 import haslab.isolde.core.general.DirectHistoryConstraintProblem;
 import haslab.isolde.core.general.HistoryEncoder;
 
-public class CandidateCheckProblem extends DirectHistoryConstraintProblem<ContextualizedInstance> {
+public class CandidateCheckProblem extends DirectHistoryConstraintProblem<Candidate> {
 
-  public CandidateCheckProblem(ContextualizedInstance input) {
+  public CandidateCheckProblem(Candidate input) {
     this(input, DefaultCandCheckingEncoder.instance());
   }
 
-  public CandidateCheckProblem(
-      ContextualizedInstance input, HistoryEncoder<ContextualizedInstance> encoder) {
+  public CandidateCheckProblem(Candidate input, HistoryEncoder<Candidate> encoder) {
     super(input, encoder);
   }
 }

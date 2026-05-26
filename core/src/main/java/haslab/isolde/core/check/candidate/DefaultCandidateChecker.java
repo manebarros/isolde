@@ -10,18 +10,17 @@ import java.util.Arrays;
 import kodkod.instance.Instance;
 
 public class DefaultCandidateChecker<E extends Execution> implements CandidateChecker<E> {
-  private final HistoryEncoder<ContextualizedInstance> historyEncoder;
-  private final DirectExecutionModule<E, ContextualizedInstance, ?> moduleEncoder;
+  private final HistoryEncoder<Candidate> historyEncoder;
+  private final DirectExecutionModule<E, Candidate, ?> moduleEncoder;
 
-  public DefaultCandidateChecker(
-      DirectExecutionModule<E, ContextualizedInstance, ?> moduleEncoder) {
+  public DefaultCandidateChecker(DirectExecutionModule<E, Candidate, ?> moduleEncoder) {
     this.historyEncoder = DefaultCandCheckingEncoder.instance();
     this.moduleEncoder = moduleEncoder;
   }
 
   public DefaultCandidateChecker(
-      HistoryEncoder<ContextualizedInstance> historyEncoder,
-      DirectExecutionModule<E, ContextualizedInstance, ?> moduleEncoder) {
+      HistoryEncoder<Candidate> historyEncoder,
+      DirectExecutionModule<E, Candidate, ?> moduleEncoder) {
     this.historyEncoder = historyEncoder;
     this.moduleEncoder = moduleEncoder;
   }
@@ -35,8 +34,7 @@ public class DefaultCandidateChecker<E extends Execution> implements CandidateCh
   public KodkodProblem encode(
       Instance instance, HistorySchema context, ExecutionFormula<E> formula) {
     CandidateCheckProblem problem =
-        new CandidateCheckProblem(
-            new ContextualizedInstance(context, instance), this.historyEncoder);
+        new CandidateCheckProblem(new Candidate(context, instance), this.historyEncoder);
     problem.register(this.moduleEncoder, Arrays.asList(formula));
     return problem.encode();
   }

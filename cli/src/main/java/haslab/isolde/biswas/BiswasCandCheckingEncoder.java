@@ -4,7 +4,7 @@ import haslab.isolde.core.BindableHistorySchema;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistorySchema;
-import haslab.isolde.core.check.candidate.ContextualizedInstance;
+import haslab.isolde.core.check.candidate.Candidate;
 import haslab.isolde.core.general.DirectExecutionModule;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.kodkod.Translations;
@@ -19,8 +19,7 @@ import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
 public class BiswasCandCheckingEncoder
-    implements DirectExecutionModule<
-        BiswasExecution, ContextualizedInstance, SimpleContext<ContextualizedInstance>> {
+    implements DirectExecutionModule<BiswasExecution, Candidate, SimpleContext<Candidate>> {
 
   private final List<Relation> coTransReduction = new ArrayList<>();
 
@@ -49,7 +48,7 @@ public class BiswasCandCheckingEncoder
   }
 
   @Override
-  public SimpleContext<ContextualizedInstance> createContext(ContextualizedInstance input) {
+  public SimpleContext<Candidate> createContext(Candidate input) {
     return new SimpleContext<>(input);
   }
 
@@ -61,10 +60,10 @@ public class BiswasCandCheckingEncoder
   public Formula encode(
       Bounds bounds,
       List<ExecutionFormula<BiswasExecution>> formulas,
-      SimpleContext<ContextualizedInstance> context,
+      SimpleContext<Candidate> context,
       BindableHistorySchema historyEncoding) {
     TupleFactory f = bounds.universe().factory();
-    ContextualizedInstance instance = context.val();
+    Candidate instance = context.val();
     Evaluator ev = new Evaluator(instance.instance());
 
     TupleSet initialProdNormal =
@@ -98,10 +97,7 @@ public class BiswasCandCheckingEncoder
   }
 
   private TupleSet convert(
-      ContextualizedInstance contextualizedInstance,
-      TupleFactory tf,
-      HistoryExpression expression,
-      int arity) {
+      Candidate contextualizedInstance, TupleFactory tf, HistoryExpression expression, int arity) {
     Evaluator ev = new Evaluator(contextualizedInstance.instance());
     return Translations.convert(ev, contextualizedInstance.context(), expression, tf, arity);
   }
