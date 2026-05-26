@@ -13,18 +13,15 @@ import kodkod.instance.Bounds;
 import kodkod.instance.Instance;
 import kodkod.instance.TupleFactory;
 
-public class CandidateHistoryEncoder implements HistoryEncoder<Candidate> {
+/**
+ * Encodes a {@link Candidate}'s history by binding the relations of {@link
+ * DirectAbstractHistoryEncoding} to the tuple sets read from the candidate's Instance.
+ */
+public final class CandidateHistoryEncoder implements HistoryEncoder<Candidate> {
+
+  public static final CandidateHistoryEncoder INSTANCE = new CandidateHistoryEncoder();
 
   private CandidateHistoryEncoder() {}
-
-  private static CandidateHistoryEncoder instance = null;
-
-  public static CandidateHistoryEncoder instance() {
-    if (instance == null) {
-      instance = new CandidateHistoryEncoder();
-    }
-    return instance;
-  }
 
   @Override
   public DirectAbstractHistoryEncoding encoding() {
@@ -32,9 +29,9 @@ public class CandidateHistoryEncoder implements HistoryEncoder<Candidate> {
   }
 
   @Override
-  public Formula encode(Candidate contextualizedInstance, Bounds b) {
-    Instance instance = contextualizedInstance.instance();
-    HistorySchema context = contextualizedInstance.context();
+  public Formula encode(Candidate candidate, Bounds b) {
+    Instance instance = candidate.instance();
+    HistorySchema context = candidate.context();
     Evaluator ev = new Evaluator(instance);
     TupleFactory f = b.universe().factory();
     DirectAbstractHistoryEncoding enc = encoding();

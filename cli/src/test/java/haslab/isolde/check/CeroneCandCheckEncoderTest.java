@@ -24,7 +24,7 @@ public interface CeroneCandCheckEncoderTest {
 
   default DefaultCandidateChecker<CeroneExecution> candCheckEncoder() {
     return new DefaultCandidateChecker<>(
-        CandidateHistoryEncoder.instance(), candCheckModuleEncoder());
+        CandidateHistoryEncoder.INSTANCE, candCheckModuleEncoder());
   }
 
   @Test

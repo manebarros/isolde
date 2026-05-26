@@ -6,7 +6,7 @@ import haslab.isolde.core.general.HistoryEncoder;
 public class CandidateCheckProblem extends DirectHistoryConstraintProblem<Candidate> {
 
   public CandidateCheckProblem(Candidate input) {
-    this(input, CandidateHistoryEncoder.instance());
+    this(input, CandidateHistoryEncoder.INSTANCE);
   }
 
   public CandidateCheckProblem(Candidate input, HistoryEncoder<Candidate> encoder) {

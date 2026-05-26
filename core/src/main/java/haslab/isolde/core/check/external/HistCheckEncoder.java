@@ -14,14 +14,14 @@ public class HistCheckEncoder<E extends Execution> implements HistCheckerI<E> {
   private final DirectExecutionModule<E, CheckingIntermediateRepresentation, ?> moduleEncoder;
 
   public HistCheckEncoder(DirectExecutionModule<E, CheckingIntermediateRepresentation, ?> module) {
-    this.historyEncoder = DefaultHistoryCheckingEncoder.instance();
+    this.historyEncoder = DefaultHistoryCheckingEncoder.INSTANCE;
     this.moduleEncoder = module;
   }
 
   public HistCheckEncoder(
       DirectExecutionModuleConstructor<E, CheckingIntermediateRepresentation, ?>
           moduleConstructor) {
-    this.historyEncoder = DefaultHistoryCheckingEncoder.instance();
+    this.historyEncoder = DefaultHistoryCheckingEncoder.INSTANCE;
     this.moduleEncoder = moduleConstructor.build(1);
   }
 

@@ -13,19 +13,12 @@ import kodkod.instance.Bounds;
 import kodkod.instance.TupleFactory;
 import kodkod.instance.TupleSet;
 
-public class DefaultHistoryCheckingEncoder
+public final class DefaultHistoryCheckingEncoder
     implements HistoryEncoder<CheckingIntermediateRepresentation> {
 
+  public static final DefaultHistoryCheckingEncoder INSTANCE = new DefaultHistoryCheckingEncoder();
+
   private DefaultHistoryCheckingEncoder() {}
-
-  private static DefaultHistoryCheckingEncoder instance = null;
-
-  public static DefaultHistoryCheckingEncoder instance() {
-    if (instance == null) {
-      instance = new DefaultHistoryCheckingEncoder();
-    }
-    return instance;
-  }
 
   @Override
   public DirectAbstractHistoryEncoding encoding() {

@@ -7,7 +7,7 @@ public class HistCheckProblem
     extends DirectHistoryConstraintProblem<CheckingIntermediateRepresentation> {
 
   public HistCheckProblem(CheckingIntermediateRepresentation input) {
-    this(input, DefaultHistoryCheckingEncoder.instance());
+    this(input, DefaultHistoryCheckingEncoder.INSTANCE);
   }
 
   public HistCheckProblem(

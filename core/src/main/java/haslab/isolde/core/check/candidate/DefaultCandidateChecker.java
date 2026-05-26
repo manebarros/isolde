@@ -14,7 +14,7 @@ public class DefaultCandidateChecker<E extends Execution> implements CandidateCh
   private final DirectExecutionModule<E, Candidate, ?> moduleEncoder;
 
   public DefaultCandidateChecker(DirectExecutionModule<E, Candidate, ?> moduleEncoder) {
-    this.historyEncoder = CandidateHistoryEncoder.instance();
+    this.historyEncoder = CandidateHistoryEncoder.INSTANCE;
     this.moduleEncoder = moduleEncoder;
   }
 
