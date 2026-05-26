@@ -34,8 +34,9 @@ public class DefaultCandidateChecker<E extends Execution> implements CandidateCh
   @Override
   public KodkodProblem encode(
       Instance instance, HistorySchema context, ExecutionFormula<E> formula) {
-    CandCheckProblem problem =
-        new CandCheckProblem(new ContextualizedInstance(context, instance), this.historyEncoder);
+    CandidateCheckProblem problem =
+        new CandidateCheckProblem(
+            new ContextualizedInstance(context, instance), this.historyEncoder);
     problem.register(this.moduleEncoder, Arrays.asList(formula));
     return problem.encode();
   }
