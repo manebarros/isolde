@@ -8,7 +8,7 @@ import kodkod.engine.KodkodSolver;
 import kodkod.engine.Solution;
 import kodkod.instance.Instance;
 
-public interface CandCheckerI<E extends Execution> {
+public interface CandidateChecker<E extends Execution> {
   E execution();
 
   KodkodProblem encode(Instance instance, HistorySchema context, ExecutionFormula<E> formula);

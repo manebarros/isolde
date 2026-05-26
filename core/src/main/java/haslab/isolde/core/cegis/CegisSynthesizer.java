@@ -6,7 +6,7 @@ import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.cegis.CegisResult.Counterexample;
 import haslab.isolde.core.cegis.CegisResult.FailedCandidate;
-import haslab.isolde.core.check.candidate.CandCheckerI;
+import haslab.isolde.core.check.candidate.CandidateChecker;
 import haslab.isolde.core.general.ExecutionModuleConstructor;
 import haslab.isolde.core.general.HistoryConstraintProblem;
 import haslab.isolde.core.synth.FolSynthesisInput;
@@ -68,7 +68,7 @@ public class CegisSynthesizer<T, S> {
       List<Counterexample<?>> counterexamples, HistoryFormula guidingFormula) {}
 
   private record CegisVerifier<E extends Execution>(
-      CandCheckerI<E> checkingEncoder,
+      CandidateChecker<E> checkingEncoder,
       CounterexampleEncoder<E> cexEncoder,
       ExecutionFormula<E> universalFormula) {
 
@@ -125,7 +125,7 @@ public class CegisSynthesizer<T, S> {
   public <E extends Execution> List<E> register(
       SynthesisSpec<E> spec,
       ExecutionModuleConstructor<E, FolSynthesisInput, S, ?> encoderConstructor,
-      CandCheckerI<E> checkingEncoder,
+      CandidateChecker<E> checkingEncoder,
       CounterexampleEncoder<E> counterexampleEncoder) {
 
     if (spec.hasUniversal()) {

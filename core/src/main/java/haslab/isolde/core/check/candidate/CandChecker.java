@@ -9,7 +9,7 @@ import haslab.isolde.kodkod.KodkodProblem;
 import java.util.Arrays;
 import kodkod.instance.Instance;
 
-public class CandChecker<E extends Execution> implements CandCheckerI<E> {
+public class CandChecker<E extends Execution> implements CandidateChecker<E> {
   private final HistoryEncoder<ContextualizedInstance> historyEncoder;
   private final DirectExecutionModule<E, ContextualizedInstance, ?> moduleEncoder;
 
