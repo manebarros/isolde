@@ -16,6 +16,7 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import kodkod.ast.Formula;
 import kodkod.engine.IncrementalSolver;
 import kodkod.engine.Solution;
@@ -190,6 +191,11 @@ public class CegisSynthesizer<T, S> {
     long checkTime = Duration.between(checkStart, Instant.now()).toMillis();
 
     while (!feedback.counterexamples().isEmpty()) {
+      // Cooperative cancellation: bail between solves if interrupted. Best-effort — a native SAT
+      // solve already in progress cannot be interrupted and will run to completion.
+      if (Thread.interrupted()) {
+        throw new CancellationException("CEGIS synthesis interrupted");
+      }
       failedCandidates.add(new FailedCandidate(candSol.instance(), feedback.counterexamples()));
 
       synthStart = Instant.now();
@@ -261,6 +267,11 @@ public class CegisSynthesizer<T, S> {
     long checkTime = Duration.between(checkStart, Instant.now()).toMillis();
 
     while (!feedback.counterexamples().isEmpty()) {
+      // Cooperative cancellation: bail between solves if interrupted. Best-effort — a native SAT
+      // solve already in progress cannot be interrupted and will run to completion.
+      if (Thread.interrupted()) {
+        throw new CancellationException("CEGIS synthesis interrupted");
+      }
       failedCandidates.add(new FailedCandidate(candSol.instance(), feedback.counterexamples()));
 
       searchProblem = searchProblem.and(feedback.guidingFormula().resolve(historyEncoding()));

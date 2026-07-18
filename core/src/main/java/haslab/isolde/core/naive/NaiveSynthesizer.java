@@ -19,6 +19,7 @@ import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CancellationException;
 import kodkod.engine.Solution;
 import kodkod.engine.Solver;
 import kodkod.engine.config.Options;
@@ -108,6 +109,11 @@ public class NaiveSynthesizer<T, S> {
     Instant checkStart = Instant.now();
     while (sol.sat()
         && !(counterexamples = verify(historyEncoding(), sol.instance(), checker)).isEmpty()) {
+      // Cooperative cancellation: bail between solves if interrupted. Best-effort — a native SAT
+      // solve already in progress cannot be interrupted and will run to completion.
+      if (Thread.interrupted()) {
+        throw new CancellationException("naive synthesis interrupted");
+      }
       checkTime += Duration.between(checkStart, Instant.now()).toMillis();
       failedCandidates.add(
           new FailedCandidate(
