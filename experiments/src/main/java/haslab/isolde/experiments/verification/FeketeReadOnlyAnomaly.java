@@ -10,7 +10,6 @@ import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.CeroneHistCheckingModuleEncoder;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
-import haslab.isolde.core.HistoryExpression;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
@@ -18,6 +17,7 @@ import haslab.isolde.core.check.external.HistCheckEncoder;
 import haslab.isolde.core.general.DirectExecutionModuleConstructor;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.Scope;
+import haslab.isolde.experiments.benchmark.UpdateSerDefinitions;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
 import haslab.isolde.history.Transaction;
@@ -31,14 +31,6 @@ import kodkod.engine.Solver;
 import kodkod.engine.satlab.SATFactory;
 
 public final class FeketeReadOnlyAnomaly {
-  public static final HistoryExpression updateTransactions =
-      h -> h.finalWrites().join(h.values()).join(h.keys());
-
-  public static final Formula updateSer(BiswasExecution e) {
-    return AxiomaticDefinitions.Serializability(
-        new BiswasExecution(e.history().subHistory(updateTransactions), e.co()));
-  }
-
   public static final Formula updateSerExplicit(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
     Variable t2 = Variable.unary("t2");
@@ -56,17 +48,10 @@ public final class FeketeReadOnlyAnomaly {
                                 .and(t3.oneOf(e.history().updateTransactions())))));
   }
 
-  public static final Formula updateSer(CeroneExecution e) {
-    return CeroneDefinitions.EXT
-        .resolve(e)
-        .and(
-            CeroneDefinitions.TOTAL_VIS.resolve(
-                new CeroneExecution(e.history().subHistory(updateTransactions), e.vis(), e.ar())));
-  }
-
   public static final Formula updateSerCeroneWrong(CeroneExecution e) {
     return CeroneDefinitions.Ser.resolve(
-        new CeroneExecution(e.history().subHistory(updateTransactions), e.vis(), e.ar()));
+        new CeroneExecution(
+            e.history().subHistory(UpdateSerDefinitions.updateTransactions), e.vis(), e.ar()));
   }
 
   public static final HistoryFormula oneTransactionPerSession =
@@ -76,7 +61,7 @@ public final class FeketeReadOnlyAnomaly {
   public static final void generateAnomalyBiswas() {
     Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<BiswasExecution> spec =
-        SynthesisSpec.allowedBy(AxiomaticDefinitions.Snapshot, FeketeReadOnlyAnomaly::updateSer)
+        SynthesisSpec.allowedBy(AxiomaticDefinitions.Snapshot, UpdateSerDefinitions::updateSer)
             .andDisallowedBy(AxiomaticDefinitions.Ser);
 
     Synthesizer synth = new Synthesizer(scope);
@@ -98,7 +83,7 @@ public final class FeketeReadOnlyAnomaly {
   public static final void generateAnomalyCerone() {
     Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<CeroneExecution> spec =
-        SynthesisSpec.allowedBy(CeroneDefinitions.SI, FeketeReadOnlyAnomaly::updateSer)
+        SynthesisSpec.allowedBy(CeroneDefinitions.SI, UpdateSerDefinitions::updateSer)
             .andDisallowedBy(CeroneDefinitions.Ser);
     HistoryFormula oneTransactionPerSession =
         h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
@@ -138,7 +123,7 @@ public final class FeketeReadOnlyAnomaly {
     System.out.println("allowed under Biswas SI: " + sol.sat());
     System.out.println(sol.instance());
 
-    p = encoder().encode(readOnlyAnomaly, FeketeReadOnlyAnomaly::updateSer);
+    p = encoder().encode(readOnlyAnomaly, UpdateSerDefinitions::updateSer);
     sol = new Solver().solve(p.formula(), p.bounds());
     System.out.println("allowed under Biswas UpdateSer: " + sol.sat());
     System.out.println(sol.instance());
@@ -154,7 +139,7 @@ public final class FeketeReadOnlyAnomaly {
     System.out.println("allowed under Cerone's SI: " + sol.sat());
     System.out.println(sol.instance());
 
-    p = ceroneEncoder().encode(readOnlyAnomaly, FeketeReadOnlyAnomaly::updateSer);
+    p = ceroneEncoder().encode(readOnlyAnomaly, UpdateSerDefinitions::updateSer);
     sol = p.solve(new Solver());
     System.out.println("allowed under Cerone's UpdateSer: " + sol.sat());
     System.out.println(sol.instance());

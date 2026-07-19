@@ -1,12 +1,12 @@
 package haslab.isolde.experiments.benchmark;
 
 import haslab.isolde.core.cegis.CegisResult;
-import java.text.DateFormat;
-import java.text.SimpleDateFormat;
-import java.util.Arrays;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Collection;
 import java.util.Date;
 import java.util.List;
+import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public record Measurement(
@@ -25,7 +25,7 @@ public record Measurement(
     SAT,
     UNSAT,
     TIMEOUT,
-    CRASH
+    CRASH,
   }
 
   public static Measurement finished(
@@ -51,52 +51,44 @@ public record Measurement(
     return new Measurement(input, -1, -1, time_ms, -1, -1, Outcome.CRASH, -1, runId, startTime);
   }
 
+  private record Column(String name, Function<Measurement, String> value) {}
+
+  private static final List<Column> COLUMNS =
+      List.of(
+          new Column("implementation", m -> m.input().implementationName()),
+          new Column("solver", m -> m.input().solver().getId()),
+          new Column("problem", m -> m.input().problemName()),
+          new Column("num_txn", m -> Integer.toString(m.input().scope().getTransactions())),
+          new Column("num_keys", m -> Integer.toString(m.input().scope().getObjects())),
+          new Column("num_values", m -> Integer.toString(m.input().scope().getValues())),
+          new Column("synth_time_ms", m -> num(m.synthTime())),
+          new Column("check_time_ms", m -> num(m.checkTime())),
+          new Column("total_time_ms", m -> num(m.totalTime())),
+          new Column("initial_synth_clauses", m -> num(m.initialSynthClauses())),
+          new Column("total_synth_clauses", m -> num(m.totalSynthClauses())),
+          new Column("outcome", m -> m.outcome().toString()),
+          new Column("candidates", m -> num(m.candidates())),
+          new Column("runId", m -> formatDate(m.runId())),
+          new Column("endTime", m -> formatDate(m.endTime())));
+
   public static String header() {
-    List<String> columns =
-        Arrays.asList(
-            "implementation",
-            "solver",
-            "problem",
-            "num_txn",
-            "num_keys",
-            "num_values",
-            "synth_time_ms",
-            "check_time_ms",
-            "total_time_ms",
-            "initial_synth_clauses",
-            "total_synth_clauses",
-            "outcome",
-            "candidates",
-            "runId",
-            "endTime");
-    StringBuilder sb = new StringBuilder();
-    sb.append(columns.get(0));
-    for (int i = 1; i < columns.size(); i++) {
-      sb.append("," + columns.get(i));
-    }
-    return sb.toString();
+    return COLUMNS.stream().map(Column::name).collect(Collectors.joining(","));
   }
 
   public String asCsvRow() {
-    DateFormat dateFormat = new SimpleDateFormat("dd/MM/yyyy hh:mm:ss");
+    return COLUMNS.stream().map(c -> c.value().apply(this)).collect(Collectors.joining(","));
+  }
 
-    return String.format(
-        "%s,%s,%s,%d,%d,%d,%d,%d,%d,%d,%d,%s,%d,%s,%s",
-        input.implementationName(),
-        input.solver(),
-        input.problemName(),
-        input.scope().getTransactions(),
-        input.scope().getObjects(),
-        input.scope().getValues(),
-        synthTime,
-        checkTime,
-        totalTime,
-        initialSynthClauses,
-        totalSynthClauses,
-        outcome,
-        candidates,
-        dateFormat.format(runId),
-        dateFormat.format(endTime));
+  /** Renders a numeric cell, using an empty cell for the -1 "not applicable" sentinel. */
+  private static String num(long value) {
+    return value < 0 ? "" : Long.toString(value);
+  }
+
+  private static final DateTimeFormatter DATE_FORMAT =
+      DateTimeFormatter.ofPattern("dd/MM/yyyy HH:mm:ss").withZone(ZoneId.systemDefault());
+
+  private static String formatDate(Date date) {
+    return DATE_FORMAT.format(date.toInstant());
   }
 
   public static String asCsv(Collection<Measurement> measurements) {

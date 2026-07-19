@@ -8,13 +8,13 @@ import haslab.isolde.IsoldeSpec;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.biswas.definitions.TransactionalAnomalousPatterns;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
-import haslab.isolde.experiments.verification.FeketeReadOnlyAnomaly;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 public class Problems {
 
@@ -73,7 +73,7 @@ public class Problems {
     m.put(new DefinitionId("SI", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Snapshot));
     m.put(new DefinitionId("Ser", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Ser));
     m.put(
-        new DefinitionId("UpdateSer", Framework.BISWAS), biswas(FeketeReadOnlyAnomaly::updateSer));
+        new DefinitionId("UpdateSer", Framework.BISWAS), biswas(UpdateSerDefinitions::updateSer));
 
     // cerone axiomatic
     m.put(new DefinitionId("RA", "ax", Framework.CERONE), cerone(CeroneDefinitions.RA));
@@ -82,7 +82,7 @@ public class Problems {
     m.put(new DefinitionId("SI", "ax", Framework.CERONE), cerone(CeroneDefinitions.SI));
     m.put(new DefinitionId("Ser", "ax", Framework.CERONE), cerone(CeroneDefinitions.Ser));
     m.put(
-        new DefinitionId("UpdateSer", Framework.CERONE), cerone(FeketeReadOnlyAnomaly::updateSer));
+        new DefinitionId("UpdateSer", Framework.CERONE), cerone(UpdateSerDefinitions::updateSer));
 
     // biswas tap
     m.put(
@@ -103,6 +103,11 @@ public class Problems {
           new LevelPair("PC", "SI"),
           new LevelPair("SI", "Ser"));
 
+  private static IsoldeConstraint lookup(DefinitionId id) {
+    return Objects.requireNonNull(
+        definitions.get(id), () -> "No definition registered for id: " + id);
+  }
+
   public static Named<IsoldeSpec> resolve(DefinitionId pos, DefinitionId neg) {
     return resolve(Collections.singletonList(pos), neg);
   }
@@ -110,17 +115,17 @@ public class Problems {
   public static Named<IsoldeSpec> resolve(List<DefinitionId> pos, DefinitionId neg) {
     assert !pos.isEmpty();
     StringBuilder name = new StringBuilder();
-    IsoldeSpec.Builder specBuilder = new IsoldeSpec.Builder(definitions.get(pos.get(0)));
+    IsoldeSpec.Builder specBuilder = new IsoldeSpec.Builder(lookup(pos.get(0)));
     name.append(pos.get(0));
 
     for (int i = 1; i < pos.size(); i++) {
       var id = pos.get(i);
       name.append(' ').append(id);
-      specBuilder.and(definitions.get(id));
+      specBuilder.and(lookup(id));
     }
 
     name.append('\t').append(neg);
-    specBuilder.andNot(definitions.get(neg));
+    specBuilder.andNot(lookup(neg));
     return new Named<IsoldeSpec>(name.toString(), specBuilder.build());
   }
 

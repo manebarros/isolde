@@ -8,8 +8,10 @@ import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.concurrent.Callable;
 import picocli.CommandLine.ArgGroup;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.ExitCode;
 import picocli.CommandLine.ITypeConverter;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
@@ -19,7 +21,7 @@ import picocli.CommandLine.TypeConversionException;
     name = "isoldebench",
     mixinStandardHelpOptions = true,
     description = "Record isolde's solving times.")
-public class Cli implements Runnable {
+public class Cli implements Callable<Integer> {
 
   @Parameters(index = "0", description = "Input file name")
   Path destFile;
@@ -42,8 +44,8 @@ public class Cli implements Runnable {
       converter = TxnNumConverter.class)
   Range val_num = new Range(3, 3);
 
-  @Option(names = "--timeout", description = "Timeout in ms")
-  Integer timeout = 300;
+  @Option(names = "--timeout", description = "Timeout in seconds")
+  Integer timeout_s = 300;
 
   @Option(
       names = {"-s", "--single"},
@@ -80,13 +82,13 @@ public class Cli implements Runnable {
   List<Implementation> implementations = Arrays.asList(Implementation.values());
 
   @Override
-  public void run() {
+  public Integer call() {
     List<Scope> scopes = Util.scopesFromRange(txn_num, obj_num, val_num);
 
     List<Named<IsoldeSpec>> problems = new ArrayList<>();
     if (this.problems.problem_id != null) {
       System.out.println("not implemented yet");
-      return;
+      return ExitCode.USAGE;
     }
     for (var specClass : this.problems.specClasses) {
       if (this.single) {
@@ -102,10 +104,12 @@ public class Cli implements Runnable {
         this.implementations.stream().map(s -> new Named<>(s.getId(), s.getSynthesizer())).toList();
 
     try {
-      Util.measureAndAppend(scopes, problems, solvers, implementations, 3, this.timeout, destFile);
+      Util.measureAndAppend(scopes, problems, solvers, implementations, 3, this.timeout_s, destFile);
     } catch (Exception e) {
       e.printStackTrace();
+      return ExitCode.SOFTWARE;
     }
+    return ExitCode.OK;
   }
 
   static class TxnNumConverter implements ITypeConverter<Range> {

@@ -15,8 +15,10 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
-import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ExecutionException;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
+import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
 import java.util.concurrent.TimeoutException;
 import kodkod.engine.config.Options;
@@ -106,23 +108,33 @@ public final class Util {
 
               Instant start = Instant.now();
 
-              CompletableFuture<SynthesizedHistory> future =
-                  CompletableFuture.supplyAsync(
+              // Run each measurement on a dedicated single-thread executor so that, on timeout, we
+              // can shutdownNow() + awaitTermination() before starting the next run. This is BEST
+              // EFFORT: cancellation is cooperative (the CEGIS/naive loops check
+              // Thread.interrupted()
+              // between solves), but a kodkod SAT solve is a native call that cannot be interrupted
+              // mid-solve. A timeout that lands inside a long solve will not stop until that solve
+              // returns; awaitTermination below bounds how long we wait and warns if the abandoned
+              // run is still going, in which case later timings on this JVM may be skewed. The
+              // fully
+              // correct fix is to run each solve in its own OS process and destroyForcibly() it on
+              // timeout; that is deferred as future work.
+              ExecutorService executor = Executors.newSingleThreadExecutor();
+              Future<SynthesizedHistory> future =
+                  executor.submit(
                       () -> implementation.value().synthesize(scope, problem.value(), options));
+
+              String config =
+                  String.format(
+                      "(%s, [%s], %s, %s)",
+                      implementation.name(), scope, solver.getId(), problem.name());
+              String tag = String.format("[%3d/%d] %s", ++count, uniqueRuns, config);
 
               try {
                 SynthesizedHistory hist = future.get(timeout_s, TimeUnit.SECONDS);
                 System.out.printf(
-                    "[%3d/%d] (%s, [%s], %s, %s) : %d ms, %d candidates (%s)\n",
-                    ++count,
-                    uniqueRuns,
-                    implementation.name(),
-                    scope,
-                    solver.getId(),
-                    problem.name(),
-                    hist.time(),
-                    hist.candidates(),
-                    hist.sat() ? "SAT" : "UNSAT");
+                    "%s : %d ms, %d candidates (%s)\n",
+                    tag, hist.time(), hist.candidates(), hist.sat() ? "SAT" : "UNSAT");
 
                 if (hist.sat()) {
                   success++;
@@ -133,37 +145,30 @@ public final class Util {
                 rows.add(
                     Measurement.finished(input, hist.cegisResult(), run, Date.from(Instant.now())));
               } catch (TimeoutException e) {
-                future.cancel(true);
                 timedOut = true;
                 timeouts++;
-                System.out.printf(
-                    "[%3d/%d] (%s, [%s], %s, %s) : TIMED OUT (%d s)\n",
-                    ++count,
-                    uniqueRuns,
-                    implementation.name(),
-                    scope,
-                    solver.getId(),
-                    problem.name(),
-                    timeout_s);
+                System.out.printf("%s : TIMED OUT (%d s)\n", tag, timeout_s);
 
                 rows.add(
                     Measurement.timeout(input, timeout_s * 1000, run, Date.from(Instant.now())));
               } catch (ExecutionException e) {
-                assert e.getCause() instanceof OutOfMemoryError;
                 long time = Duration.between(start, Instant.now()).toMillis();
-                future.cancel(true);
                 timedOut = true;
+                Throwable cause = e.getCause() != null ? e.getCause() : e;
+                assert cause instanceof OutOfMemoryError;
                 crashes++;
-                System.out.printf(
-                    "[%3d/%d] (%s, [%s], %s, %s) : OOM CRASH\n",
-                    ++count,
-                    uniqueRuns,
-                    implementation.name(),
-                    scope,
-                    solver.getId(),
-                    problem.name());
-
+                System.out.printf("%s : OOM CRASH\n", tag);
                 rows.add(Measurement.crash(input, time, run, Date.from(Instant.now())));
+              } finally {
+                // Best-effort stop of an abandoned run before the next measurement (see the note
+                // above the executor: a native solve in progress may not observe the interrupt).
+                executor.shutdownNow();
+                if (!executor.awaitTermination(timeout_s, TimeUnit.SECONDS)) {
+                  System.err.printf(
+                      "WARNING: abandoned synthesis for %s did not stop within %d s;"
+                          + " later measurements may be affected%n",
+                      config, timeout_s);
+                }
               }
             }
           }
@@ -171,7 +176,7 @@ public final class Util {
       }
     }
     System.out.printf(
-        "SAT: %d\nUNSAT: %d\nTIMEOUT: %d\nOOM CRASHES: %d", success, failed, timeouts, crashes);
+        "SAT: %d\nUNSAT: %d\nTIMEOUT: %d\nOOM CRASHES: %d\n", success, failed, timeouts, crashes);
     return rows;
   }
 

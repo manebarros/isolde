@@ -1,6 +1,7 @@
 package haslab.isolde.experiments.verification;
 
 import haslab.isolde.core.synth.Scope;
+import haslab.isolde.experiments.benchmark.UpdateSerDefinitions;
 
 public final class VerifyUpdateSerDefinitions {
   private VerifyUpdateSerDefinitions() {}
@@ -16,16 +17,16 @@ public final class VerifyUpdateSerDefinitions {
             "Explicit UpdateSer Biswas",
             FeketeReadOnlyAnomaly::updateSerExplicit,
             "Implicit UpdateSer Biswas",
-            FeketeReadOnlyAnomaly::updateSer);
+            UpdateSerDefinitions::updateSer);
     System.out.println(result);
 
     ComparisonResult result2 =
         ComparisonMethods.compareBiswasCerone(
             s,
             "Right UpdateSer Cerone",
-            FeketeReadOnlyAnomaly::updateSer,
+            UpdateSerDefinitions::updateSer,
             "Implicit UpdateSer Biswas",
-            FeketeReadOnlyAnomaly::updateSer);
+            UpdateSerDefinitions::updateSer);
     System.out.println(result2);
   }
 }
