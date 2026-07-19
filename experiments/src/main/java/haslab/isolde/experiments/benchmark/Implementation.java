@@ -1,10 +1,13 @@
 package haslab.isolde.experiments.benchmark;
 
+import haslab.isolde.IsoldeSpec;
 import haslab.isolde.IsoldeSynthesizer;
 import haslab.isolde.NaiveIsoldeSynthesizer;
 import haslab.isolde.SynthesizerI;
+import haslab.isolde.core.synth.Scope;
+import kodkod.engine.config.Options;
 
-public enum Implementation {
+public enum Implementation implements SynthesisRunner {
   CEGIS_ALL("all", new IsoldeSynthesizer.Builder().build()),
 
   CEGIS_NO_SMART_SEARCH(
@@ -40,5 +43,20 @@ public enum Implementation {
 
   public SynthesizerI getSynthesizer() {
     return synthesizer;
+  }
+
+  @Override
+  public String id() {
+    return id;
+  }
+
+  @Override
+  public boolean supports(IsoldeSpec spec) {
+    return true;
+  }
+
+  @Override
+  public SynthesisOutcome run(Scope scope, IsoldeSpec spec, Options options) {
+    return new CegisOutcome(synthesizer.synthesize(scope, spec, options));
   }
 }

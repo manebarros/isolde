@@ -7,6 +7,7 @@ import haslab.isolde.history.AbstractHistory;
 import java.time.Duration;
 import java.time.Instant;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Optional;
 import kodkod.engine.Solver;
 import kodkod.engine.config.Options;
@@ -25,7 +26,7 @@ public class Synthesizer {
       Optional<AbstractHistory> history, int candidates, long time_ms) {}
 
   public SynthesisSolution synthesize(
-      Scope scope, ExecutionFormula<BiswasExecution> pos, ExecutionFormula<BiswasExecution> neg) {
+      Scope scope, List<ExecutionFormula<BiswasExecution>> pos, ExecutionFormula<BiswasExecution> neg) {
     int candidates = 0;
     Instant start = Instant.now();
     ExecutionGenerator generator = new ExecutionGenerator(scope);
@@ -34,20 +35,35 @@ public class Synthesizer {
     while (historyIterator.hasNext()) {
       AbstractHistory history = historyIterator.next();
       candidates++;
-      boolean satisfiesPos = false;
+      // A history is a witness iff it is allowed by EVERY positive definition (each satisfied by
+      // some execution, i.e. its own commit order) and NOT allowed by the negative one. "Allowed by
+      // f" means some execution of this history satisfies f, so each positive is OR-accumulated
+      // across executions rather than reflecting only the last execution examined.
+      boolean[] satisfiesPos = new boolean[pos.size()];
       boolean satisfiesNeg = false;
       Iterator<AbstractExecution> executionIterator = generator.allExecutions(history);
       while (!satisfiesNeg && executionIterator.hasNext()) {
         var execution = executionIterator.next();
         satisfiesNeg = checker.check(execution, neg);
-        satisfiesPos = checker.check(execution, pos);
+        for (int i = 0; i < pos.size(); i++) {
+          if (!satisfiesPos[i]) {
+            satisfiesPos[i] = checker.check(execution, pos.get(i));
+          }
+        }
       }
-      if (satisfiesPos && !satisfiesNeg) {
-        long time = Duration.between(start, Instant.now()).toSeconds();
+      if (!satisfiesNeg && allTrue(satisfiesPos)) {
+        long time = Duration.between(start, Instant.now()).toMillis();
         return new SynthesisSolution(Optional.of(history), candidates, time);
       }
     }
     return new SynthesisSolution(
-        Optional.empty(), candidates, Duration.between(start, Instant.now()).toSeconds());
+        Optional.empty(), candidates, Duration.between(start, Instant.now()).toMillis());
+  }
+
+  private static boolean allTrue(boolean[] flags) {
+    for (boolean flag : flags) {
+      if (!flag) return false;
+    }
+    return true;
   }
 }

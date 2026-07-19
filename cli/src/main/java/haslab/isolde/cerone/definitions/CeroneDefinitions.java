@@ -2,6 +2,7 @@ package haslab.isolde.cerone.definitions;
 
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.kodkod.Formulas;
 import kodkod.ast.Expression;
 import kodkod.ast.Formula;
@@ -75,4 +76,16 @@ public final class CeroneDefinitions {
   public static final ExecutionFormula<CeroneExecution> PC = PREFIX;
   public static final ExecutionFormula<CeroneExecution> SI = PREFIX.and(NO_CONF);
   public static final ExecutionFormula<CeroneExecution> Ser = TOTAL_VIS;
+
+  // UpdateSer: external consistency plus total visibility over the update sub-history (the
+  // transactions that write the final value of some key), so read-only transactions are exempt.
+  public static final ExecutionFormula<CeroneExecution> UpdateSer =
+      e ->
+          EXT.resolve(e)
+              .and(
+                  TOTAL_VIS.resolve(
+                      new CeroneExecution(
+                          e.history().subHistory(HistorySchema::updateTransactions),
+                          e.vis(),
+                          e.ar())));
 }

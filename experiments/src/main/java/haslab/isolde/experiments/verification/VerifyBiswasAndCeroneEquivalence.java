@@ -4,9 +4,10 @@ import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
+import haslab.isolde.compare.ComparisonMethods;
+import haslab.isolde.compare.ComparisonResult;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.synth.Scope;
-import haslab.isolde.experiments.benchmark.UpdateSerDefinitions;
 import java.util.Arrays;
 import java.util.List;
 
@@ -29,7 +30,7 @@ public final class VerifyBiswasAndCeroneEquivalence {
           new Definition("Prefix", CeroneDefinitions.PREFIX, AxiomaticDefinitions.Prefix),
           new Definition("No conflict", CeroneDefinitions.NO_CONF, AxiomaticDefinitions::Conflict),
           new Definition(
-              "UPDATE_SER", UpdateSerDefinitions::updateSer, UpdateSerDefinitions::updateSer));
+              "UPDATE_SER", CeroneDefinitions.UpdateSer, AxiomaticDefinitions.UpdateSer));
 
   public static void verify(int scope) {
     for (var def : levels) {

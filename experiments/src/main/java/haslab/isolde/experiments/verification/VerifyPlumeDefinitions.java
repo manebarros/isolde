@@ -4,6 +4,8 @@ import haslab.isolde.Synthesizer;
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
 import haslab.isolde.biswas.definitions.TransactionalAnomalousPatterns;
+import haslab.isolde.compare.ComparisonMethods;
+import haslab.isolde.compare.ComparisonResult;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.synth.Scope;

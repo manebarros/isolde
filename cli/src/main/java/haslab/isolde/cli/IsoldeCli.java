@@ -4,12 +4,6 @@ import haslab.isolde.IsoldeConstraint;
 import haslab.isolde.IsoldeSpec;
 import haslab.isolde.IsoldeSynthesizer;
 import haslab.isolde.SynthesizedHistory;
-import haslab.isolde.biswas.BiswasExecution;
-import haslab.isolde.biswas.definitions.AxiomaticDefinitions;
-import haslab.isolde.cerone.CeroneExecution;
-import haslab.isolde.cerone.definitions.CeroneDefinitions;
-import haslab.isolde.core.Execution;
-import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.synth.Scope;
 import java.util.ArrayList;
 import java.util.List;
@@ -17,19 +11,16 @@ import java.util.concurrent.Callable;
 import kodkod.ast.Formula;
 import kodkod.engine.satlab.SATFactory;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.HelpCommand;
 import picocli.CommandLine.Option;
 
 @Command(
     name = "isolde",
     mixinStandardHelpOptions = true,
+    subcommands = {CompareCommand.class, HelpCommand.class},
     description =
         "Synthesize transactional histories that satisfy (or violate) isolation-level specifications.")
 public class IsoldeCli implements Callable<Integer> {
-
-  enum Framework {
-    BISWAS,
-    CERONE
-  }
 
   enum Solver {
     SAT4J(SATFactory.DefaultSAT4J),
@@ -82,8 +73,8 @@ public class IsoldeCli implements Callable<Integer> {
 
     IsoldeSpec.Builder specBuilder =
         new IsoldeSpec.Builder(IsoldeConstraint.history(h -> Formula.TRUE));
-    for (String s : requires) specBuilder.and(parseConstraint(s));
-    for (String s : forbids) specBuilder.andNot(parseConstraint(s));
+    for (String s : requires) specBuilder.and(Constraints.parse(s));
+    for (String s : forbids) specBuilder.andNot(Constraints.parse(s));
 
     Scope scope = new Scope.Builder().txn(txn).obj(obj).val(val).build();
     IsoldeSpec spec = specBuilder.build();
@@ -103,35 +94,6 @@ public class IsoldeCli implements Callable<Integer> {
           "No history found (%d ms, %d candidates explored).%n",
           result.time(), result.candidates());
       return 1;
-    }
-  }
-
-  private static IsoldeConstraint parseConstraint(String spec) {
-    int colon = spec.indexOf(':');
-    if (colon <= 0 || colon == spec.length() - 1) {
-      throw new IllegalArgumentException(
-          "expected FRAMEWORK:LEVEL (e.g. biswas:Ser), got: " + spec);
-    }
-    Framework framework = Framework.valueOf(spec.substring(0, colon).toUpperCase());
-    String level = spec.substring(colon + 1);
-    return switch (framework) {
-      case BISWAS ->
-          IsoldeConstraint.biswas(IsoldeCli.<BiswasExecution>lookup(AxiomaticDefinitions.class, level));
-      case CERONE ->
-          IsoldeConstraint.cerone(IsoldeCli.<CeroneExecution>lookup(CeroneDefinitions.class, level));
-    };
-  }
-
-  @SuppressWarnings("unchecked")
-  private static <E extends Execution> ExecutionFormula<E> lookup(
-      Class<?> definitions, String fieldName) {
-    try {
-      return (ExecutionFormula<E>) definitions.getField(fieldName).get(null);
-    } catch (NoSuchFieldException e) {
-      throw new IllegalArgumentException(
-          "no such isolation level: " + fieldName + " on " + definitions.getSimpleName());
-    } catch (IllegalAccessException e) {
-      throw new RuntimeException(e);
     }
   }
 }

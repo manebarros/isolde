@@ -73,7 +73,7 @@ public class Problems {
     m.put(new DefinitionId("SI", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Snapshot));
     m.put(new DefinitionId("Ser", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Ser));
     m.put(
-        new DefinitionId("UpdateSer", Framework.BISWAS), biswas(UpdateSerDefinitions::updateSer));
+        new DefinitionId("UpdateSer", Framework.BISWAS), biswas(AxiomaticDefinitions.UpdateSer));
 
     // cerone axiomatic
     m.put(new DefinitionId("RA", "ax", Framework.CERONE), cerone(CeroneDefinitions.RA));
@@ -82,7 +82,7 @@ public class Problems {
     m.put(new DefinitionId("SI", "ax", Framework.CERONE), cerone(CeroneDefinitions.SI));
     m.put(new DefinitionId("Ser", "ax", Framework.CERONE), cerone(CeroneDefinitions.Ser));
     m.put(
-        new DefinitionId("UpdateSer", Framework.CERONE), cerone(UpdateSerDefinitions::updateSer));
+        new DefinitionId("UpdateSer", Framework.CERONE), cerone(CeroneDefinitions.UpdateSer));
 
     // biswas tap
     m.put(

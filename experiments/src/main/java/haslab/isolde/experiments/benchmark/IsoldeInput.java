@@ -1,19 +1,18 @@
 package haslab.isolde.experiments.benchmark;
 
 import haslab.isolde.IsoldeSpec;
-import haslab.isolde.SynthesizerI;
 import haslab.isolde.core.synth.Scope;
 
 public record IsoldeInput(
     Scope scope,
     IsoldeSpec problem,
     String problemName,
-    SynthesizerI implementation,
+    SynthesisRunner implementation,
     String implementationName,
     Solver solver) {
 
   public IsoldeInput(
-      Scope scope, Named<IsoldeSpec> problem, Named<SynthesizerI> implementation, Solver solver) {
+      Scope scope, Named<IsoldeSpec> problem, Named<SynthesisRunner> implementation, Solver solver) {
     this(
         scope,
         problem.value(),

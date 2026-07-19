@@ -2,6 +2,7 @@ package haslab.isolde.biswas.definitions;
 
 import haslab.isolde.biswas.BiswasExecution;
 import haslab.isolde.core.ExecutionFormula;
+import haslab.isolde.core.HistorySchema;
 import kodkod.ast.Formula;
 import kodkod.ast.Variable;
 
@@ -12,6 +13,7 @@ public final class AxiomaticDefinitions {
   public static ExecutionFormula<BiswasExecution> Prefix = AxiomaticDefinitions::Prefix;
   public static ExecutionFormula<BiswasExecution> Snapshot = AxiomaticDefinitions::Snapshot;
   public static ExecutionFormula<BiswasExecution> Ser = AxiomaticDefinitions::Serializability;
+  public static ExecutionFormula<BiswasExecution> UpdateSer = AxiomaticDefinitions::UpdateSer;
 
   public static Formula ReadAtomic(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
@@ -127,5 +129,12 @@ public final class AxiomaticDefinitions {
                         .and(
                             t2.oneOf(e.history().txnThatWriteToAnyOf(x))
                                 .and(t3.oneOf(e.history().transactions())))));
+  }
+
+  // UpdateSer: Serializability restricted to the update transactions (those that write the final
+  // value of some key), so read-only transactions are exempt.
+  public static Formula UpdateSer(BiswasExecution e) {
+    return Serializability(
+        new BiswasExecution(e.history().subHistory(HistorySchema::updateTransactions), e.co()));
   }
 }

@@ -4,8 +4,6 @@ import static java.nio.file.StandardOpenOption.APPEND;
 import static java.nio.file.StandardOpenOption.WRITE;
 
 import haslab.isolde.IsoldeSpec;
-import haslab.isolde.SynthesizedHistory;
-import haslab.isolde.SynthesizerI;
 import haslab.isolde.core.synth.Scope;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -82,7 +80,7 @@ public final class Util {
       List<Scope> scopes,
       List<Named<IsoldeSpec>> problems,
       List<Solver> solvers,
-      List<Named<SynthesizerI>> implementations,
+      List<Named<SynthesisRunner>> implementations,
       int samples,
       long timeout_s)
       throws InterruptedException, ExecutionException {
@@ -98,6 +96,11 @@ public final class Util {
     for (var implementation : implementations) {
       for (Solver solver : solvers) {
         for (var problem : problems) {
+          if (!implementation.value().supports(problem.value())) {
+            System.out.printf(
+                "SKIP: %s does not support %s\n", implementation.name(), problem.name());
+            continue;
+          }
           boolean timedOut = false;
           for (int scope_idx = 0; !timedOut && scope_idx < scopes.size(); scope_idx++) {
             Scope scope = scopes.get(scope_idx);
@@ -120,9 +123,8 @@ public final class Util {
               // correct fix is to run each solve in its own OS process and destroyForcibly() it on
               // timeout; that is deferred as future work.
               ExecutorService executor = Executors.newSingleThreadExecutor();
-              Future<SynthesizedHistory> future =
-                  executor.submit(
-                      () -> implementation.value().synthesize(scope, problem.value(), options));
+              Future<SynthesisOutcome> future =
+                  executor.submit(() -> implementation.value().run(scope, problem.value(), options));
 
               String config =
                   String.format(
@@ -131,19 +133,21 @@ public final class Util {
               String tag = String.format("[%3d/%d] %s", ++count, uniqueRuns, config);
 
               try {
-                SynthesizedHistory hist = future.get(timeout_s, TimeUnit.SECONDS);
+                SynthesisOutcome outcome = future.get(timeout_s, TimeUnit.SECONDS);
                 System.out.printf(
                     "%s : %d ms, %d candidates (%s)\n",
-                    tag, hist.time(), hist.candidates(), hist.sat() ? "SAT" : "UNSAT");
+                    tag,
+                    outcome.totalTimeMillis(),
+                    outcome.candidates(),
+                    outcome.sat() ? "SAT" : "UNSAT");
 
-                if (hist.sat()) {
+                if (outcome.sat()) {
                   success++;
                 } else {
                   failed++;
                 }
 
-                rows.add(
-                    Measurement.finished(input, hist.cegisResult(), run, Date.from(Instant.now())));
+                rows.add(Measurement.finished(input, outcome, run, Date.from(Instant.now())));
               } catch (TimeoutException e) {
                 timedOut = true;
                 timeouts++;
@@ -184,7 +188,7 @@ public final class Util {
       List<Scope> scopes,
       List<Named<IsoldeSpec>> problems,
       List<Solver> solvers,
-      List<Named<SynthesizerI>> implementations,
+      List<Named<SynthesisRunner>> implementations,
       int samples,
       long timeout_s,
       Path file)

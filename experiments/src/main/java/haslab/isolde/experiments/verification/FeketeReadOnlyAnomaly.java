@@ -11,13 +11,13 @@ import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.CeroneHistCheckingModuleEncoder;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.HistoryFormula;
+import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.check.external.HistCheckEncoder;
 import haslab.isolde.core.general.DirectExecutionModuleConstructor;
 import haslab.isolde.core.general.SimpleContext;
 import haslab.isolde.core.synth.Scope;
-import haslab.isolde.experiments.benchmark.UpdateSerDefinitions;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Session;
 import haslab.isolde.history.Transaction;
@@ -51,7 +51,7 @@ public final class FeketeReadOnlyAnomaly {
   public static final Formula updateSerCeroneWrong(CeroneExecution e) {
     return CeroneDefinitions.Ser.resolve(
         new CeroneExecution(
-            e.history().subHistory(UpdateSerDefinitions.updateTransactions), e.vis(), e.ar()));
+            e.history().subHistory(HistorySchema::updateTransactions), e.vis(), e.ar()));
   }
 
   public static final HistoryFormula oneTransactionPerSession =
@@ -61,7 +61,7 @@ public final class FeketeReadOnlyAnomaly {
   public static final void generateAnomalyBiswas() {
     Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<BiswasExecution> spec =
-        SynthesisSpec.allowedBy(AxiomaticDefinitions.Snapshot, UpdateSerDefinitions::updateSer)
+        SynthesisSpec.allowedBy(AxiomaticDefinitions.Snapshot, AxiomaticDefinitions.UpdateSer)
             .andDisallowedBy(AxiomaticDefinitions.Ser);
 
     Synthesizer synth = new Synthesizer(scope);
@@ -83,7 +83,7 @@ public final class FeketeReadOnlyAnomaly {
   public static final void generateAnomalyCerone() {
     Scope scope = new Scope.Builder(3).obj(2).val(2).build();
     SynthesisSpec<CeroneExecution> spec =
-        SynthesisSpec.allowedBy(CeroneDefinitions.SI, UpdateSerDefinitions::updateSer)
+        SynthesisSpec.allowedBy(CeroneDefinitions.SI, CeroneDefinitions.UpdateSer)
             .andDisallowedBy(CeroneDefinitions.Ser);
     HistoryFormula oneTransactionPerSession =
         h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());
@@ -123,7 +123,7 @@ public final class FeketeReadOnlyAnomaly {
     System.out.println("allowed under Biswas SI: " + sol.sat());
     System.out.println(sol.instance());
 
-    p = encoder().encode(readOnlyAnomaly, UpdateSerDefinitions::updateSer);
+    p = encoder().encode(readOnlyAnomaly, AxiomaticDefinitions.UpdateSer);
     sol = new Solver().solve(p.formula(), p.bounds());
     System.out.println("allowed under Biswas UpdateSer: " + sol.sat());
     System.out.println(sol.instance());
@@ -139,7 +139,7 @@ public final class FeketeReadOnlyAnomaly {
     System.out.println("allowed under Cerone's SI: " + sol.sat());
     System.out.println(sol.instance());
 
-    p = ceroneEncoder().encode(readOnlyAnomaly, UpdateSerDefinitions::updateSer);
+    p = ceroneEncoder().encode(readOnlyAnomaly, CeroneDefinitions.UpdateSer);
     sol = p.solve(new Solver());
     System.out.println("allowed under Cerone's UpdateSer: " + sol.sat());
     System.out.println(sol.instance());

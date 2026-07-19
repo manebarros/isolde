@@ -1,9 +1,9 @@
 package haslab.isolde.experiments.benchmark;
 
 import haslab.isolde.IsoldeSpec;
-import haslab.isolde.SynthesizerI;
 import haslab.isolde.core.synth.Scope;
 import haslab.isolde.experiments.benchmark.Problems.SpecClass;
+import haslab.isolde.experiments.benchmark.exhaustive.ExhaustiveRunner;
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -78,8 +78,11 @@ public class Cli implements Callable<Integer> {
       names = "--impl",
       split = ",",
       converter = ImplementationConverter.class,
-      description = "Implementations")
-  List<Implementation> implementations = Arrays.asList(Implementation.values());
+      description =
+          "Comma-separated implementations: all, none, no_smart_search, no_fixed_co,"
+              + " no_incremental, no_learning, exhaustive")
+  List<SynthesisRunner> implementations =
+      new ArrayList<SynthesisRunner>(Arrays.asList(Implementation.values()));
 
   @Override
   public Integer call() {
@@ -100,8 +103,8 @@ public class Cli implements Callable<Integer> {
       }
     }
 
-    List<Named<SynthesizerI>> implementations =
-        this.implementations.stream().map(s -> new Named<>(s.getId(), s.getSynthesizer())).toList();
+    List<Named<SynthesisRunner>> implementations =
+        this.implementations.stream().map(s -> new Named<>(s.id(), s)).toList();
 
     try {
       Util.measureAndAppend(scopes, problems, solvers, implementations, 3, this.timeout_s, destFile);
@@ -129,10 +132,10 @@ public class Cli implements Callable<Integer> {
     }
   }
 
-  static class ImplementationConverter implements ITypeConverter<Implementation> {
+  static class ImplementationConverter implements ITypeConverter<SynthesisRunner> {
 
     @Override
-    public Implementation convert(String value) throws Exception {
+    public SynthesisRunner convert(String value) throws Exception {
       return switch (value.toLowerCase()) {
         case "all" -> Implementation.CEGIS_ALL;
         case "none" -> Implementation.CEGIS_NONE;
@@ -140,6 +143,7 @@ public class Cli implements Callable<Integer> {
         case "no_fixed_co" -> Implementation.CEGIS_NO_FIXED_COMMIT_ORDER;
         case "no_incremental" -> Implementation.CEGIS_NO_INC_SOLVING;
         case "no_learning" -> Implementation.NO_LEARNING;
+        case "exhaustive" -> new ExhaustiveRunner();
         default -> throw new TypeConversionException("Invalid implementation: " + value);
       };
     }

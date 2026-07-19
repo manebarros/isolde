@@ -1,9 +1,10 @@
-package haslab.isolde.experiments.verification;
+package haslab.isolde.compare;
 
 import static haslab.isolde.IsoldeConstraint.biswas;
 import static haslab.isolde.IsoldeConstraint.cerone;
 import static haslab.isolde.IsoldeConstraint.history;
 
+import haslab.isolde.IsoldeConstraint;
 import haslab.isolde.IsoldeSpec;
 import haslab.isolde.IsoldeSynthesizer;
 import haslab.isolde.SynthesizedHistory;
@@ -12,9 +13,34 @@ import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.core.ExecutionFormula;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.core.synth.Scope;
+import kodkod.engine.satlab.SATFactory;
 
 public final class ComparisonMethods {
   private ComparisonMethods() {}
+
+  /**
+   * Compares two definitions by synthesizing a history allowed by {@code a} but not {@code b} and
+   * vice versa; the resulting {@link ComparisonResult} classifies them as equivalent, one stronger,
+   * or incomparable (up to the given scope). Works for any framework combination because {@link
+   * IsoldeConstraint} unifies biswas/cerone/history constraints.
+   */
+  public static ComparisonResult compare(
+      Scope scope, String nameA, IsoldeConstraint a, String nameB, IsoldeConstraint b) {
+    return compare(scope, nameA, a, nameB, b, SATFactory.DefaultSAT4J);
+  }
+
+  public static ComparisonResult compare(
+      Scope scope,
+      String nameA,
+      IsoldeConstraint a,
+      String nameB,
+      IsoldeConstraint b,
+      SATFactory solver) {
+    IsoldeSynthesizer synthesizer = new IsoldeSynthesizer.Builder().solver(solver).build();
+    SynthesizedHistory aNotB = synthesizer.synthesize(scope, a.andNot(b).build());
+    SynthesizedHistory bNotA = synthesizer.synthesize(scope, b.andNot(a).build());
+    return new ComparisonResult(nameA, nameB, scope, aNotB, bNotA);
+  }
 
   private static IsoldeSynthesizer synthesizer() {
     return new IsoldeSynthesizer.Builder().build();

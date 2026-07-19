@@ -1,6 +1,5 @@
 package haslab.isolde.experiments.benchmark;
 
-import haslab.isolde.core.cegis.CegisResult;
 import java.time.ZoneId;
 import java.time.format.DateTimeFormatter;
 import java.util.Collection;
@@ -29,16 +28,16 @@ public record Measurement(
   }
 
   public static Measurement finished(
-      IsoldeInput input, CegisResult result, Date runId, Date startTime) {
+      IsoldeInput input, SynthesisOutcome outcome, Date runId, Date startTime) {
     return new Measurement(
         input,
-        result.getSynthTime(),
-        result.getCheckTime(),
-        result.getTotalTime(),
-        result.getInitialSynthClauses(),
-        result.getFinalSynthClauses(),
-        result.sat() ? Outcome.SAT : Outcome.UNSAT,
-        result.candidatesNr(),
+        outcome.synthTimeMillis(),
+        outcome.checkTimeMillis(),
+        outcome.totalTimeMillis(),
+        outcome.initialSynthClauses(),
+        outcome.finalSynthClauses(),
+        outcome.sat() ? Outcome.SAT : Outcome.UNSAT,
+        outcome.candidates(),
         runId,
         startTime);
   }
