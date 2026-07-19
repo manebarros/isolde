@@ -9,45 +9,60 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 public record Measurement(
-    IsoldeInput input,
-    long synthTime,
-    long checkTime,
-    long totalTime,
-    int initialSynthClauses,
-    int totalSynthClauses,
-    Outcome outcome,
-    int candidates,
-    Date runId,
-    Date endTime) {
+    IsoldeInput input, long totalTime, Outcome outcome, Date runId, Date endTime) {
 
-  public static enum Outcome {
-    SAT,
-    UNSAT,
-    TIMEOUT,
-    CRASH,
+  /** What became of a run: it completed with a verdict, hit the timeout, or crashed. */
+  public sealed interface Outcome {
+
+    /** A run that reached a verdict, satisfiable or not. */
+    record Completed(
+        boolean sat,
+        long synthTime,
+        long checkTime,
+        int initialSynthClauses,
+        int totalSynthClauses,
+        int candidates)
+        implements Outcome {}
+
+    /** A run stopped by the benchmark timeout. */
+    record TimedOut() implements Outcome {}
+
+    /** A run aborted by an error; in practice, an {@link OutOfMemoryError}. */
+    record Crashed(Throwable cause) implements Outcome {}
+
+    /** The label written to the {@code outcome} CSV column. */
+    default String label() {
+      return switch (this) {
+        case Completed c -> c.sat() ? "SAT" : "UNSAT";
+        case TimedOut() -> "TIMEOUT";
+        case Crashed c -> "CRASH";
+      };
+    }
   }
 
   public static Measurement finished(
-      IsoldeInput input, SynthesisOutcome outcome, Date runId, Date startTime) {
+      IsoldeInput input, SynthesisOutcome outcome, Date runId, Date endTime) {
     return new Measurement(
         input,
-        outcome.synthTimeMillis(),
-        outcome.checkTimeMillis(),
         outcome.totalTimeMillis(),
-        outcome.initialSynthClauses(),
-        outcome.finalSynthClauses(),
-        outcome.sat() ? Outcome.SAT : Outcome.UNSAT,
-        outcome.candidates(),
+        new Outcome.Completed(
+            outcome.sat(),
+            outcome.synthTimeMillis(),
+            outcome.checkTimeMillis(),
+            outcome.initialSynthClauses(),
+            outcome.finalSynthClauses(),
+            outcome.candidates()),
         runId,
-        startTime);
+        endTime);
   }
 
-  public static Measurement timeout(IsoldeInput input, long time_ms, Date runId, Date startTime) {
-    return new Measurement(input, -1, -1, time_ms, -1, -1, Outcome.TIMEOUT, -1, runId, startTime);
+  public static Measurement timeout(IsoldeInput input, long time_ms, Date runId, Date endTime) {
+    return new Measurement(input, time_ms, new Outcome.TimedOut(), runId, endTime);
   }
 
-  public static Measurement crash(IsoldeInput input, long time_ms, Date runId, Date startTime) {
-    return new Measurement(input, -1, -1, time_ms, -1, -1, Outcome.CRASH, -1, runId, startTime);
+  public static Measurement crash(
+      IsoldeInput input, Throwable cause, long time_ms, Date runId, Date endTime) {
+    return new Measurement(input, time_ms, new Outcome.Crashed(cause), runId, endTime);
   }
 
   private record Column(String name, Function<Measurement, String> value) {}
@@ -60,15 +75,23 @@ public record Measurement(
           new Column("num_txn", m -> Integer.toString(m.input().scope().getTransactions())),
           new Column("num_keys", m -> Integer.toString(m.input().scope().getObjects())),
           new Column("num_values", m -> Integer.toString(m.input().scope().getValues())),
-          new Column("synth_time_ms", m -> num(m.synthTime())),
-          new Column("check_time_ms", m -> num(m.checkTime())),
-          new Column("total_time_ms", m -> num(m.totalTime())),
-          new Column("initial_synth_clauses", m -> num(m.initialSynthClauses())),
-          new Column("total_synth_clauses", m -> num(m.totalSynthClauses())),
-          new Column("outcome", m -> m.outcome().toString()),
-          new Column("candidates", m -> num(m.candidates())),
+          new Column("synth_time_ms", ifCompleted(c -> Long.toString(c.synthTime()))),
+          new Column("check_time_ms", ifCompleted(c -> Long.toString(c.checkTime()))),
+          new Column("total_time_ms", m -> Long.toString(m.totalTime())),
+          new Column(
+              "initial_synth_clauses", ifCompleted(c -> Integer.toString(c.initialSynthClauses()))),
+          new Column(
+              "total_synth_clauses", ifCompleted(c -> Integer.toString(c.totalSynthClauses()))),
+          new Column("outcome", m -> m.outcome().label()),
+          new Column("candidates", ifCompleted(c -> Integer.toString(c.candidates()))),
           new Column("runId", m -> formatDate(m.runId())),
           new Column("endTime", m -> formatDate(m.endTime())));
+
+  /** A cell that only completed runs can fill; timed out and crashed runs leave it empty. */
+  private static Function<Measurement, String> ifCompleted(
+      Function<Outcome.Completed, String> value) {
+    return m -> m.outcome() instanceof Outcome.Completed c ? value.apply(c) : "";
+  }
 
   public static String header() {
     return COLUMNS.stream().map(Column::name).collect(Collectors.joining(","));
@@ -76,11 +99,6 @@ public record Measurement(
 
   public String asCsvRow() {
     return COLUMNS.stream().map(c -> c.value().apply(this)).collect(Collectors.joining(","));
-  }
-
-  /** Renders a numeric cell, using an empty cell for the -1 "not applicable" sentinel. */
-  private static String num(long value) {
-    return value < 0 ? "" : Long.toString(value);
   }
 
   private static final DateTimeFormatter DATE_FORMAT =

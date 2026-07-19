@@ -13,6 +13,8 @@ import java.time.Instant;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
@@ -76,6 +78,13 @@ public final class Util {
     return scopes;
   }
 
+  /** A one-line description of a crash cause, for the benchmark log. */
+  private static String describe(Throwable cause) {
+    String message = cause.getMessage();
+    String type = cause.getClass().getSimpleName();
+    return message == null ? type : type + ": " + message;
+  }
+
   public static List<Measurement> measure(
       List<Scope> scopes,
       List<Named<IsoldeSpec>> problems,
@@ -90,7 +99,8 @@ public final class Util {
     int success = 0;
     int failed = 0;
     int timeouts = 0;
-    int crashes = 0;
+    // Crash counts by exception type (OutOfMemoryError, ...), so the summary says what went wrong.
+    Map<String, Integer> crashes = new TreeMap<>();
     Date run = Date.from(Instant.now());
     List<Measurement> rows = new ArrayList<>(uniqueRuns);
     for (var implementation : implementations) {
@@ -159,10 +169,9 @@ public final class Util {
                 long time = Duration.between(start, Instant.now()).toMillis();
                 timedOut = true;
                 Throwable cause = e.getCause() != null ? e.getCause() : e;
-                assert cause instanceof OutOfMemoryError;
-                crashes++;
-                System.out.printf("%s : OOM CRASH\n", tag);
-                rows.add(Measurement.crash(input, time, run, Date.from(Instant.now())));
+                crashes.merge(cause.getClass().getSimpleName(), 1, Integer::sum);
+                System.out.printf("%s : CRASH (%s)\n", tag, describe(cause));
+                rows.add(Measurement.crash(input, cause, time, run, Date.from(Instant.now())));
               } finally {
                 // Best-effort stop of an abandoned run before the next measurement (see the note
                 // above the executor: a native solve in progress may not observe the interrupt).
@@ -179,8 +188,10 @@ public final class Util {
         }
       }
     }
+    int totalCrashes = crashes.values().stream().mapToInt(Integer::intValue).sum();
     System.out.printf(
-        "SAT: %d\nUNSAT: %d\nTIMEOUT: %d\nOOM CRASHES: %d\n", success, failed, timeouts, crashes);
+        "SAT: %d\nUNSAT: %d\nTIMEOUT: %d\nCRASHES: %d\n", success, failed, timeouts, totalCrashes);
+    crashes.forEach((type, n) -> System.out.printf("  %s: %d\n", type, n));
     return rows;
   }
 
