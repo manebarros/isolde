@@ -1,0 +1,16 @@
+[project]
+name = "isolde-analysis"
+version = "0.1.0"
+description = "Builds the plots for the Isolde paper from isoldebench measurement CSVs."
+# domain.py uses StrEnum and match statements.
+requires-python = ">=3.11"
+dependencies = [
+    # matplotlib is pinned: .pgf output changes between releases, which would
+    # silently alter the figures in the paper.
+    "matplotlib==3.10.7",
+    "pandas>=2.2,<3",
+    "numpy>=1.26,<3",
+]
+
+[tool.uv]
+package = false

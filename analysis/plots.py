@@ -242,9 +242,32 @@ def plot1(df):
     return fig
 
 
-def save_plot(fig, dir, name):
-    fig.savefig(os.path.join(dir, f"{name}.pgf"), bbox_inches="tight", pad_inches=0.1)
-    fig.savefig(os.path.join(dir, f"{name}.pdf"), bbox_inches="tight", pad_inches=0.1)
+def save_plot(fig, dir, name, data_name=None):
+    """Writes `fig` as `<dir>/<name>.{pgf,pdf}`.
+
+    `data_name` is the file name of the CSV the figure was built from. It is recorded
+    inside both outputs so that a plot copied into the paper repository can still be
+    traced back to its measurements. Since `benchmark_latest.sh` names each CSV after
+    the Isolde commit it was run on, that name also identifies the tool version.
+    No build timestamp is recorded, so rebuilding from the same data is byte-identical.
+    """
+    stamp = f"data: {data_name}" if data_name else None
+
+    pgf_path = os.path.join(dir, f"{name}.pgf")
+    fig.savefig(pgf_path, bbox_inches="tight", pad_inches=0.1)
+    if stamp:
+        # .pgf is LaTeX source, so '%' introduces a comment.
+        contents = Path(pgf_path).read_text()
+        Path(pgf_path).write_text(f"%% {stamp}\n{contents}")
+
+    # CreationDate=None omits the embedded build date, which would otherwise make every
+    # rebuild differ. .pgf has no such field and is deterministic already.
+    fig.savefig(
+        os.path.join(dir, f"{name}.pdf"),
+        bbox_inches="tight",
+        pad_inches=0.1,
+        metadata={"Subject": stamp, "CreationDate": None},
+    )
 
 
 # For every problem `p` in the df, if there is some row `r` such that `problem(r) == p` and
@@ -451,7 +474,11 @@ def cactus_plot(
     return fig
 
 
-DATA_FILE = "../isolde-experiments/data/d8dfd9f4814950.csv"
+# The measurements the published figures are built from. Paths are resolved relative to
+# this file rather than the working directory, so the CLI behaves the same from anywhere.
+# Change this one constant to make a different benchmark run the default.
+REPO_ROOT = Path(__file__).resolve().parent.parent
+DEFAULT_DATA = REPO_ROOT / "experiments" / "data" / "d8dfd9f4814950.csv"
 
 
 def compare_means_isolde_baseline(df, name, basedir=None):
@@ -590,57 +617,113 @@ def compare_metrics_implementations(df):
     return fig
 
 
-def main():
-    parser = argparse.ArgumentParser(description="Plot builder")
-    parser.add_argument("path", nargs="?", default=None, help="Path to the data file")
-    parser.add_argument("--dest", "-d", default=None, help="Dest directory")
-    args = parser.parse_args()
-
-    path = args.path if args.path else DATA_FILE
-
-    if not args.dest:
-        commit_id = Path(path).stem
-        dir = os.path.join("./plots", commit_id)
-        Path(dir).mkdir(exist_ok=True, parents=True)
-    else:
-        dir = args.dest
-
-    extra_dir = os.path.join(dir, "extra")
-    Path(extra_dir).mkdir(exist_ok=True, parents=True)
-
-    df = pre.preprocess(pd.read_csv(path))
-    df = df[df["num_txn"].between(3, 10)]
-
-    save_plot(plot1(df), dir, "plot1")
-    save_plot(
-        cactus_plot(df, num_txns=[5, 7, 9], metric=("avg_time_ms", "Runtime (ms)")),
-        dir,
-        "cactus_times",
-    )
-
-    # extras
-    save_plot(
-        cactus_plot(
+# The figures this script can build: name -> (builder, subdirectory, paper figure).
+# Names double as output file names; figures under "extra" are the appendix ones, matching
+# the paper's own plots/ and plots/extra/ split.
+FIGURES = {
+    "instances_solved": (
+        lambda df: plot1(df),
+        "",
+        "fig:plot1 - instances solved within the timeout",
+    ),
+    "cactus_runtime": (
+        lambda df: cactus_plot(
+            df, num_txns=[5, 7, 9], metric=("avg_time_ms", "Runtime (ms)")
+        ),
+        "",
+        "fig:cactus-times - runtime comparison",
+    ),
+    "cactus_candidates": (
+        lambda df: cactus_plot(
             df,
             num_txns=[5, 7, 9],
             metric=("candidates", "Candidates"),
             scale="symlog",
         ),
-        extra_dir,
-        "cactus_cand",
-    )
-    save_plot(
-        cactus_plot(
+        "extra",
+        "fig:cactus-cand (appendix) - CEGIS candidates",
+    ),
+    "cactus_clauses": (
+        lambda df: cactus_plot(
             df,
             num_txns=[5, 7, 9],
             metric=("initial_clauses", "Clauses"),
             scale="other",
         ),
-        extra_dir,
-        "cactus_clauses",
+        "extra",
+        "fig:cactus-clauses (appendix) - initial SAT clauses",
+    ),
+    "scaling_by_implementation": (
+        lambda df: compare_metrics_implementations(df),
+        "extra",
+        "fig:compare-metrics-impl (appendix) - scope effect per implementation",
+    ),
+    "scaling_by_problem_type": (
+        lambda df: compare_metrics_ptypes(df),
+        "extra",
+        "fig:compare-metrics-ptypes (appendix) - scope effect per problem type",
+    ),
+}
+
+
+def main():
+    parser = argparse.ArgumentParser(
+        description="Builds the plots for the Isolde paper from an isoldebench CSV.",
+        epilog="With no figure names, all figures are built.",
     )
-    save_plot(compare_metrics_implementations(df), extra_dir, "compare_metrics_impl")
-    save_plot(compare_metrics_ptypes(df), extra_dir, "compare_metrics_ptypes")
+    parser.add_argument(
+        "figures",
+        nargs="*",
+        metavar="FIGURE",
+        help="Figures to build (default: all). See --list.",
+    )
+    parser.add_argument(
+        "--data", "-i", default=None, help=f"Measurement CSV (default: {DEFAULT_DATA})"
+    )
+    parser.add_argument(
+        "--dest",
+        "-d",
+        default=None,
+        help="Output directory (default: <analysis>/plots/<csv name>)",
+    )
+    parser.add_argument(
+        "--list", "-l", action="store_true", help="List the available figures and exit"
+    )
+    args = parser.parse_args()
+
+    if args.list:
+        width = max(len(name) for name in FIGURES)
+        for name, (_, subdir, paper_figure) in FIGURES.items():
+            location = f"{subdir}/" if subdir else ""
+            print(f"  {name:<{width}}  {location}{name}.pgf  {paper_figure}")
+        return
+
+    unknown = [name for name in args.figures if name not in FIGURES]
+    if unknown:
+        parser.error(
+            f"unknown figure(s): {', '.join(unknown)}\n"
+            f"available: {', '.join(FIGURES)}"
+        )
+    selected = args.figures or list(FIGURES)
+
+    path = Path(args.data) if args.data else DEFAULT_DATA
+    if not path.is_file():
+        parser.error(f"no such data file: {path}")
+
+    dest = Path(args.dest) if args.dest else Path(__file__).resolve().parent / "plots" / path.stem
+
+    print(f"data: {path}")
+    print(f"dest: {dest}")
+
+    df = pre.preprocess(pd.read_csv(path))
+    df = df[df["num_txn"].between(3, 10)]
+
+    for name in selected:
+        build, subdir, _ = FIGURES[name]
+        dir = dest / subdir
+        dir.mkdir(parents=True, exist_ok=True)
+        save_plot(build(df), dir, name, data_name=path.name)
+        print(f"  built {subdir + '/' if subdir else ''}{name}")
 
 
 if __name__ == "__main__":

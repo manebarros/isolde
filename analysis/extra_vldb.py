@@ -51,8 +51,8 @@ def full_results_table(df):
 if __name__ == "__main__":
     import pandas as pd
     import preprocessing as pre
-    from vldb import fill_with_timeouts
-    df = pd.read_csv("/home/mane/code/isolde/isolde-experiments/data/d8dfd9f4814950.csv")
+    from plots import DEFAULT_DATA, fill_with_timeouts
+    df = pd.read_csv(DEFAULT_DATA)
     df = pre.preprocess(df)
     df = fill_with_timeouts(df)
     print(full_results_table(df))
