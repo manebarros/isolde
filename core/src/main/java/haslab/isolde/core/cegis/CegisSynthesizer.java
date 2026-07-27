@@ -109,6 +109,7 @@ public class CegisSynthesizer<T, S> {
 
     var univFormula = spec.universalFormula();
 
+    // TODO: should probably be an explicit check
     assert !spec.existentialFormulas().isEmpty() || univFormula.isPresent();
 
     List<ExecutionFormula<E>> formulas = new ArrayList<>();

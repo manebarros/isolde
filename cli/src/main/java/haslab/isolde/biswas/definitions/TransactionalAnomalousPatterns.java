@@ -10,6 +10,8 @@ import kodkod.ast.Variable;
 
 public final class TransactionalAnomalousPatterns {
 
+  private TransactionalAnomalousPatterns() {}
+
   public static final ExecutionFormula<BiswasExecution> k = TransactionalAnomalousPatterns::k;
   public static final ExecutionFormula<BiswasExecution> l = TransactionalAnomalousPatterns::l;
   public static final ExecutionFormula<BiswasExecution> m = TransactionalAnomalousPatterns::m;

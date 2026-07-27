@@ -7,7 +7,7 @@ public interface SynthesizerI {
   SynthesizedHistory synthesize(Scope scope, IsoldeSpec spec);
 
   SynthesizedHistory synthesize(
-      Scope scope, IsoldeSpec spec, Options checkingOptions, Options synthOptions);
+      Scope scope, IsoldeSpec spec, Options synthOptions, Options checkingOptions);
 
   default SynthesizedHistory synthesize(Scope scope, IsoldeSpec spec, Options options) {
     return synthesize(scope, spec, options, options);

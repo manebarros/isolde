@@ -132,7 +132,7 @@ public class IsoldeSynthesizer implements SynthesizerI {
               spec.getCeroneSpec().get(),
               ceroneSynthModuleConstructor,
               ceroneChecker,
-              CeroneCounterexampleEncoder.instance());
+              CeroneCounterexampleEncoder.INSTANCE);
     }
 
     // register Biswas module
@@ -149,7 +149,7 @@ public class IsoldeSynthesizer implements SynthesizerI {
               spec.getBiswasSpec().get(),
               biswasSynthModuleConstructor,
               biswasChecker,
-              BiswasCounterexampleEncoder.instance());
+              BiswasCounterexampleEncoder.INSTANCE);
     }
 
     return new SynthesizedHistory(

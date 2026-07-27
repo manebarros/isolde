@@ -14,16 +14,9 @@ import kodkod.instance.TupleSet;
 
 public class BiswasCounterexampleEncoder implements CounterexampleEncoder<BiswasExecution> {
 
-  private static BiswasCounterexampleEncoder instance = null;
+  public static final BiswasCounterexampleEncoder INSTANCE = new BiswasCounterexampleEncoder();
 
   private BiswasCounterexampleEncoder() {}
-
-  public static BiswasCounterexampleEncoder instance() {
-    if (instance == null) {
-      instance = new BiswasCounterexampleEncoder();
-    }
-    return instance;
-  }
 
   private static Formula wellFormed(BiswasExecution execution) {
     HistorySchema h = execution.history();

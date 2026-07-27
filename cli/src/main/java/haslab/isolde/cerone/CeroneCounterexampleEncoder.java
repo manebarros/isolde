@@ -15,16 +15,9 @@ import kodkod.instance.TupleSet;
 
 public class CeroneCounterexampleEncoder implements CounterexampleEncoder<CeroneExecution> {
 
-  private static CeroneCounterexampleEncoder instance = null;
+  public static CeroneCounterexampleEncoder INSTANCE = new CeroneCounterexampleEncoder();
 
   private CeroneCounterexampleEncoder() {}
-
-  public static CeroneCounterexampleEncoder instance() {
-    if (instance == null) {
-      instance = new CeroneCounterexampleEncoder();
-    }
-    return instance;
-  }
 
   @Override
   public HistoryFormula guide(

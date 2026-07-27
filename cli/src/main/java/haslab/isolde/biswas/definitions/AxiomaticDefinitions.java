@@ -8,12 +8,15 @@ import kodkod.ast.Variable;
 
 public final class AxiomaticDefinitions {
 
-  public static ExecutionFormula<BiswasExecution> ReadAtomic = AxiomaticDefinitions::ReadAtomic;
-  public static ExecutionFormula<BiswasExecution> Causal = AxiomaticDefinitions::Causal;
-  public static ExecutionFormula<BiswasExecution> Prefix = AxiomaticDefinitions::Prefix;
-  public static ExecutionFormula<BiswasExecution> Snapshot = AxiomaticDefinitions::Snapshot;
-  public static ExecutionFormula<BiswasExecution> Ser = AxiomaticDefinitions::Serializability;
-  public static ExecutionFormula<BiswasExecution> UpdateSer = AxiomaticDefinitions::UpdateSer;
+  private AxiomaticDefinitions() {}
+
+  public static final ExecutionFormula<BiswasExecution> ReadAtomic =
+      AxiomaticDefinitions::ReadAtomic;
+  public static final ExecutionFormula<BiswasExecution> Causal = AxiomaticDefinitions::Causal;
+  public static final ExecutionFormula<BiswasExecution> Prefix = AxiomaticDefinitions::Prefix;
+  public static final ExecutionFormula<BiswasExecution> Snapshot = AxiomaticDefinitions::Snapshot;
+  public static final ExecutionFormula<BiswasExecution> Ser = AxiomaticDefinitions::Serializability;
+  public static final ExecutionFormula<BiswasExecution> UpdateSer = AxiomaticDefinitions::UpdateSer;
 
   public static Formula ReadAtomic(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");

@@ -10,6 +10,8 @@ import kodkod.ast.Variable;
 
 public final class CeroneDefinitions {
 
+  private CeroneDefinitions() {}
+
   public static final ExecutionFormula<CeroneExecution> EXT =
       e -> {
         Variable T = Variable.unary("T");

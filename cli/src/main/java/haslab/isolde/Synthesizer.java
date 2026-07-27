@@ -78,7 +78,7 @@ public class Synthesizer {
             spec,
             ceroneSynthModuleConstructor,
             new DefaultCandidateChecker<>(new CeroneCandCheckingModuleEncoder(1)),
-            CeroneCounterexampleEncoder.instance());
+            CeroneCounterexampleEncoder.INSTANCE);
   }
 
   public void registerBiswas(SynthesisSpec<BiswasExecution> spec) {
@@ -91,7 +91,7 @@ public class Synthesizer {
             spec,
             biswasSynthModuleConstructor,
             new DefaultCandidateChecker<>(new BiswasCandCheckingEncoder(1)),
-            BiswasCounterexampleEncoder.instance());
+            BiswasCounterexampleEncoder.INSTANCE);
   }
 
   public SynthesizedHistory synthesize(SATFactory solver) {
