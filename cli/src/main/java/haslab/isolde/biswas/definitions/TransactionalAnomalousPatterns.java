@@ -12,27 +12,34 @@ public final class TransactionalAnomalousPatterns {
 
   private TransactionalAnomalousPatterns() {}
 
-  public static final ExecutionFormula<BiswasExecution> k = TransactionalAnomalousPatterns::k;
-  public static final ExecutionFormula<BiswasExecution> l = TransactionalAnomalousPatterns::l;
-  public static final ExecutionFormula<BiswasExecution> m = TransactionalAnomalousPatterns::m;
-  public static final ExecutionFormula<BiswasExecution> n = TransactionalAnomalousPatterns::n;
-  public static final ExecutionFormula<BiswasExecution> k_fixed =
+  // The individual patterns are building blocks, not isolation levels, and are deliberately not
+  // public: the CLI offers exactly the public ExecutionFormula fields of a catalog class. The
+  // pattern methods below stay public, so the API can still name one on its own.
+  private static final ExecutionFormula<BiswasExecution> k = TransactionalAnomalousPatterns::k;
+  private static final ExecutionFormula<BiswasExecution> l = TransactionalAnomalousPatterns::l;
+  private static final ExecutionFormula<BiswasExecution> m = TransactionalAnomalousPatterns::m;
+  private static final ExecutionFormula<BiswasExecution> n = TransactionalAnomalousPatterns::n;
+  private static final ExecutionFormula<BiswasExecution> k_fixed =
       TransactionalAnomalousPatterns::k_prime;
-  public static final ExecutionFormula<BiswasExecution> l_fixed =
+  private static final ExecutionFormula<BiswasExecution> l_fixed =
       TransactionalAnomalousPatterns::l_fixed;
-  public static final ExecutionFormula<BiswasExecution> fails_to_see_predecessor =
+  private static final ExecutionFormula<BiswasExecution> fails_to_see_predecessor =
       TransactionalAnomalousPatterns::fails_to_see_so_predecessor;
 
-  public static final ExecutionFormula<BiswasExecution> inconsistentCommitOrder =
+  private static final ExecutionFormula<BiswasExecution> inconsistentCommitOrder =
       TransactionalAnomalousPatterns::inconsistentCommitOrder;
 
-  public static final ExecutionFormula<BiswasExecution> ReadAtomic = k.not().and(l.not());
-  public static final ExecutionFormula<BiswasExecution> ReadAtomicV3 =
-      k.not().and(l.not()).and(fails_to_see_predecessor.not()).and(inconsistentCommitOrder.not());
-  public static final ExecutionFormula<BiswasExecution> ReadAtomicV1 = k_fixed.not().and(l.not());
-  public static final ExecutionFormula<BiswasExecution> ReadAtomicV2 =
+  // The levels themselves. They are specified in the framework of Biswas and Enea, so they live
+  // under the biswas: prefix; the Tap prefix on each name keeps them apart from the axiomatic
+  // definitions of the same levels, which is exactly the comparison these exist to make.
+  public static final ExecutionFormula<BiswasExecution> TapReadAtomic = k.not().and(l.not());
+  public static final ExecutionFormula<BiswasExecution> TapReadAtomicV1 =
+      k_fixed.not().and(l.not());
+  public static final ExecutionFormula<BiswasExecution> TapReadAtomicV2 =
       k_fixed.not().and(l_fixed.not());
-  public static final ExecutionFormula<BiswasExecution> Causal =
+  public static final ExecutionFormula<BiswasExecution> TapReadAtomicV3 =
+      k.not().and(l.not()).and(fails_to_see_predecessor.not()).and(inconsistentCommitOrder.not());
+  public static final ExecutionFormula<BiswasExecution> TapCausal =
       k.not().and(l.not()).and(m.not()).and(n.not());
 
   public static Formula fails_to_see_so_predecessor(BiswasExecution e) {

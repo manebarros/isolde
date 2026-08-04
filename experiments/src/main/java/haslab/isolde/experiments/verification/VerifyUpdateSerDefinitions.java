@@ -18,7 +18,7 @@ public final class VerifyUpdateSerDefinitions {
         ComparisonMethods.compareBiswas(
             s,
             "Explicit UpdateSer Biswas",
-            FeketeReadOnlyAnomaly::updateSerExplicit,
+            AxiomaticDefinitions.UpdateSerExplicit,
             "Implicit UpdateSer Biswas",
             AxiomaticDefinitions.UpdateSer);
     System.out.println(result);

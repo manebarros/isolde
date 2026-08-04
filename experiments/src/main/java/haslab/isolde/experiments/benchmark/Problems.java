@@ -87,10 +87,10 @@ public class Problems {
     // biswas tap
     m.put(
         new DefinitionId("RA", "tap", Framework.BISWAS),
-        biswas(TransactionalAnomalousPatterns.ReadAtomic));
+        biswas(TransactionalAnomalousPatterns.TapReadAtomic));
     m.put(
         new DefinitionId("CC", "tap", Framework.BISWAS),
-        biswas(TransactionalAnomalousPatterns.Causal));
+        biswas(TransactionalAnomalousPatterns.TapCausal));
     return m;
   }
 

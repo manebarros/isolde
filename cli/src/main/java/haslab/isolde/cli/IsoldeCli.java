@@ -11,13 +11,14 @@ import java.util.concurrent.Callable;
 import kodkod.ast.Formula;
 import kodkod.engine.satlab.SATFactory;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.ExitCode;
 import picocli.CommandLine.HelpCommand;
 import picocli.CommandLine.Option;
 
 @Command(
     name = "isolde",
     mixinStandardHelpOptions = true,
-    subcommands = {CompareCommand.class, HelpCommand.class},
+    subcommands = {CompareCommand.class, LevelsCommand.class, HelpCommand.class},
     description =
         "Synthesize transactional histories that satisfy (or violate) isolation-level specifications.")
 public class IsoldeCli implements Callable<Integer> {
@@ -47,16 +48,17 @@ public class IsoldeCli implements Callable<Integer> {
       names = "--require",
       paramLabel = "FRAMEWORK:LEVEL",
       description =
-          "Require the synthesized history to satisfy the named isolation level. "
-              + "FRAMEWORK is one of: biswas, cerone. LEVEL is a public static field on "
-              + "AxiomaticDefinitions (biswas) or CeroneDefinitions (cerone), e.g. "
-              + "biswas:Ser, cerone:RA. May be specified multiple times.")
+          "Require the synthesized history to satisfy the named isolation level, e.g. biswas:Ser, "
+              + "cerone:RA. Run 'isolde levels' for the available definitions. "
+              + "May be specified multiple times.")
   List<String> requires = new ArrayList<>();
 
   @Option(
       names = "--forbid",
       paramLabel = "FRAMEWORK:LEVEL",
-      description = "Forbid the synthesized history from satisfying the named isolation level.")
+      description =
+          "Forbid the synthesized history from satisfying the named isolation level. "
+              + "May be specified multiple times.")
   List<String> forbids = new ArrayList<>();
 
   @Option(
@@ -68,13 +70,18 @@ public class IsoldeCli implements Callable<Integer> {
   public Integer call() {
     if (requires.isEmpty() && forbids.isEmpty()) {
       System.err.println("error: at least one of --require or --forbid must be specified.");
-      return 2;
+      return ExitCode.USAGE;
     }
 
     IsoldeSpec.Builder specBuilder =
         new IsoldeSpec.Builder(IsoldeConstraint.history(h -> Formula.TRUE));
-    for (String s : requires) specBuilder.and(Constraints.parse(s));
-    for (String s : forbids) specBuilder.andNot(Constraints.parse(s));
+    try {
+      for (String s : requires) specBuilder.and(Constraints.parse(s));
+      for (String s : forbids) specBuilder.andNot(Constraints.parse(s));
+    } catch (IllegalArgumentException e) {
+      System.err.println("error: " + e.getMessage());
+      return ExitCode.USAGE;
+    }
 
     Scope scope = new Scope.Builder().txn(txn).obj(obj).val(val).build();
     IsoldeSpec spec = specBuilder.build();

@@ -33,6 +33,13 @@ public final class CustomDefinitions {
             .forSome(t.oneOf(e.history().normalTxns()).and(x.oneOf(e.history().keys())));
   }
 
+  /**
+   * No lost updates: a history is allowed iff some execution explains it in which no transaction
+   * blindly overwrites a version of an object it never saw. Compared against Cerone's Update Atomic
+   * in Section 3.2.2 of the paper ({@code isolde compare cerone:UA cerone:NLU}).
+   */
+  public static final ExecutionFormula<CeroneExecution> NLU = lostUpdate().not();
+
   public static HistoryFormula subtleLongFork() {
     Variable t = Variable.unary("t");
     Variable s = Variable.unary("s");

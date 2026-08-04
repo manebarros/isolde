@@ -14,9 +14,12 @@ public final class AxiomaticDefinitions {
       AxiomaticDefinitions::ReadAtomic;
   public static final ExecutionFormula<BiswasExecution> Causal = AxiomaticDefinitions::Causal;
   public static final ExecutionFormula<BiswasExecution> Prefix = AxiomaticDefinitions::Prefix;
+  public static final ExecutionFormula<BiswasExecution> Conflict = AxiomaticDefinitions::Conflict;
   public static final ExecutionFormula<BiswasExecution> Snapshot = AxiomaticDefinitions::Snapshot;
   public static final ExecutionFormula<BiswasExecution> Ser = AxiomaticDefinitions::Serializability;
   public static final ExecutionFormula<BiswasExecution> UpdateSer = AxiomaticDefinitions::UpdateSer;
+  public static final ExecutionFormula<BiswasExecution> UpdateSerExplicit =
+      AxiomaticDefinitions::UpdateSerExplicit;
 
   public static Formula ReadAtomic(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
@@ -139,5 +142,25 @@ public final class AxiomaticDefinitions {
   public static Formula UpdateSer(BiswasExecution e) {
     return Serializability(
         new BiswasExecution(e.history().subHistory(HistorySchema::updateTransactions), e.co()));
+  }
+
+  // UpdateSer stated directly instead of through a sub-history: Serializability's implication with
+  // the extra requirement that the reading transaction t3 performs a write. The two formulations
+  // should agree, which `isolde compare biswas:UpdateSerExplicit biswas:UpdateSer` checks.
+  public static Formula UpdateSerExplicit(BiswasExecution e) {
+    Variable t1 = Variable.unary("t1");
+    Variable t2 = Variable.unary("t2");
+    Variable t3 = Variable.unary("t3");
+    Variable x = Variable.unary("x");
+
+    return Formula.and(t1.eq(t2).not(), e.history().wr(t1, x, t3), t2.product(t3).in(e.co()))
+        .implies(t1.in(t2.join(e.co())))
+        .forAll(
+            x.oneOf(e.history().keys())
+                .and(
+                    t1.oneOf(e.history().txnThatWriteToAnyOf(x))
+                        .and(
+                            t2.oneOf(e.history().txnThatWriteToAnyOf(x))
+                                .and(t3.oneOf(e.history().updateTransactions())))));
   }
 }

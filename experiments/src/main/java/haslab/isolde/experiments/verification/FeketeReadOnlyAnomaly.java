@@ -11,7 +11,6 @@ import haslab.isolde.cerone.CeroneExecution;
 import haslab.isolde.cerone.CeroneHistCheckingModuleEncoder;
 import haslab.isolde.cerone.definitions.CeroneDefinitions;
 import haslab.isolde.core.HistoryFormula;
-import haslab.isolde.core.HistorySchema;
 import haslab.isolde.core.cegis.SynthesisSpec;
 import haslab.isolde.core.check.external.CheckingIntermediateRepresentation;
 import haslab.isolde.core.check.external.HistCheckEncoder;
@@ -23,36 +22,12 @@ import haslab.isolde.history.Session;
 import haslab.isolde.history.Transaction;
 import haslab.isolde.kodkod.KodkodProblem;
 import java.util.Arrays;
-import kodkod.ast.Formula;
-import kodkod.ast.Variable;
 import kodkod.engine.Evaluator;
 import kodkod.engine.Solution;
 import kodkod.engine.Solver;
 import kodkod.engine.satlab.SATFactory;
 
 public final class FeketeReadOnlyAnomaly {
-  public static final Formula updateSerExplicit(BiswasExecution e) {
-    Variable t1 = Variable.unary("t1");
-    Variable t2 = Variable.unary("t2");
-    Variable t3 = Variable.unary("t3");
-    Variable x = Variable.unary("x");
-
-    return Formula.and(t1.eq(t2).not(), e.history().wr(t1, x, t3), t2.product(t3).in(e.co()))
-        .implies(t1.in(t2.join(e.co())))
-        .forAll(
-            x.oneOf(e.history().keys())
-                .and(
-                    t1.oneOf(e.history().txnThatWriteToAnyOf(x))
-                        .and(
-                            t2.oneOf(e.history().txnThatWriteToAnyOf(x))
-                                .and(t3.oneOf(e.history().updateTransactions())))));
-  }
-
-  public static final Formula updateSerCeroneWrong(CeroneExecution e) {
-    return CeroneDefinitions.Ser.resolve(
-        new CeroneExecution(
-            e.history().subHistory(HistorySchema::updateTransactions), e.vis(), e.ar()));
-  }
 
   public static final HistoryFormula oneTransactionPerSession =
       h -> h.initialTransaction().product(h.normalTxns()).eq(h.sessionOrder());

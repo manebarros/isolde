@@ -1,9 +1,11 @@
 package haslab.isolde.cli;
 
+import haslab.isolde.IsoldeConstraint;
 import haslab.isolde.compare.ComparisonMethods;
 import haslab.isolde.core.synth.Scope;
 import java.util.concurrent.Callable;
 import picocli.CommandLine.Command;
+import picocli.CommandLine.ExitCode;
 import picocli.CommandLine.Option;
 import picocli.CommandLine.Parameters;
 
@@ -18,7 +20,9 @@ class CompareCommand implements Callable<Integer> {
   @Parameters(
       index = "0",
       paramLabel = "DEF_A",
-      description = "First definition as FRAMEWORK:LEVEL, e.g. cerone:SI.")
+      description =
+          "First definition as FRAMEWORK:LEVEL, e.g. cerone:SI. Run 'isolde levels' for the "
+              + "available definitions.")
   String defA;
 
   @Parameters(
@@ -43,11 +47,20 @@ class CompareCommand implements Callable<Integer> {
 
   @Override
   public Integer call() {
+    IsoldeConstraint a;
+    IsoldeConstraint b;
+    try {
+      a = Constraints.parse(defA);
+      b = Constraints.parse(defB);
+    } catch (IllegalArgumentException e) {
+      System.err.println("error: " + e.getMessage());
+      return ExitCode.USAGE;
+    }
+
     Scope scope = new Scope.Builder().txn(txn).obj(obj).val(val).build();
     System.out.printf("Comparing %s and %s with scope: %s%n%n", defA, defB, scope);
     System.out.println(
-        ComparisonMethods.compare(
-            scope, defA, Constraints.parse(defA), defB, Constraints.parse(defB), solver.factory));
-    return 0;
+        ComparisonMethods.compare(scope, defA, a, defB, b, solver.factory));
+    return ExitCode.OK;
   }
 }
