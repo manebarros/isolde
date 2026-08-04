@@ -6,8 +6,6 @@ import haslab.isolde.core.DirectAbstractHistoryEncoding;
 import haslab.isolde.core.general.HistoryEncoder;
 import haslab.isolde.history.AbstractTransaction;
 import haslab.isolde.kodkod.Atom;
-import java.util.LinkedHashSet;
-import java.util.Set;
 import kodkod.ast.Formula;
 import kodkod.instance.Bounds;
 import kodkod.instance.TupleFactory;
@@ -49,13 +47,17 @@ public final class DefaultHistoryCheckingEncoder
 
     for (int sid = 0; sid < history.getHistory().getSessions().size(); sid++) {
       var session = history.getHistory().getSessions().get(sid);
-      Set<Atom<Integer>> prevTxn = new LinkedHashSet<>();
+      // Taken from the session's own order rather than from the position in the list, so that a
+      // session that is not a chain encodes back to the order it actually has. For a chain the two
+      // agree, since the order of a chain relates every transaction to all the later ones.
+      for (var edge : session.order()) {
+        soTs.add(
+            f.tuple(
+                history.getTxnAtoms().get(sid).get(edge.get(0)),
+                history.getTxnAtoms().get(sid).get(edge.get(1))));
+      }
       for (int i = 0; i < session.transactions().size(); i++) {
         Atom<Integer> txnAtom = history.getTxnAtoms().get(sid).get(i);
-        for (var atom : prevTxn) {
-          soTs.add(f.tuple(atom, txnAtom));
-        }
-        prevTxn.add(txnAtom);
         AbstractTransaction at = new AbstractTransaction(session.transactions().get(i));
         for (var key : at.getReads().keySet()) {
           readsTs.add(

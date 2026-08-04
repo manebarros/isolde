@@ -3,8 +3,10 @@ package haslab.isolde.kodkod;
 import haslab.isolde.core.HistoryFormula;
 import haslab.isolde.history.History;
 import haslab.isolde.history.Operation;
+import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.LinkedHashSet;
+import java.util.List;
 import java.util.Map;
 import java.util.Set;
 import kodkod.ast.Decls;
@@ -25,8 +27,9 @@ public final class FormulaUtil {
       Set<Variable> allTxnVariables = new LinkedHashSet<>();
       valVars.put(0, v0);
       for (int i = 0; i < hist.getSessions().size(); i++) {
-        Set<Variable> txnVariables = new LinkedHashSet<>();
-        for (int j = 0; j < hist.getSessions().get(i).transactions().size(); j++) {
+        var session = hist.getSessions().get(i);
+        List<Variable> txnVariables = new ArrayList<>();
+        for (int j = 0; j < session.transactions().size(); j++) {
           Variable t = Variable.unary("t_" + i + j);
           allTxnVariables.add(t);
           so =
@@ -34,11 +37,8 @@ public final class FormulaUtil {
                   ? h.initialTransaction().product(t)
                   : so.union(h.initialTransaction().product(t));
           transactions = transactions == null ? t : transactions.union(t);
-          for (var prevTxn : txnVariables) {
-            so = so.union(prevTxn.product(t));
-          }
           txnVariables.add(t);
-          for (Operation op : hist.getSessions().get(i).transactions().get(j).operations()) {
+          for (Operation op : session.transactions().get(j).operations()) {
             int key = op.object();
             int val = op.value();
             if (!keyVars.containsKey(key)) {
@@ -55,6 +55,11 @@ public final class FormulaUtil {
               writes = writes == null ? tuple : writes.union(tuple);
             }
           }
+        }
+        // From the session's own order, so that a session that is not a chain is reproduced as the
+        // order it has rather than as a sequence.
+        for (var edge : session.order()) {
+          so = so.union(txnVariables.get(edge.get(0)).product(txnVariables.get(edge.get(1))));
         }
       }
 
