@@ -26,7 +26,7 @@ public final class VerifyPlumeDefinitions {
           new Level(
               "Read Atomic",
               AxiomaticDefinitions.ReadAtomic,
-              TransactionalAnomalousPatterns.TapReadAtomicV3));
+              TransactionalAnomalousPatterns.TapReadAtomicV3()));
 
   public static void verify(int scope) {
     verify(new Scope(scope));
@@ -49,7 +49,7 @@ public final class VerifyPlumeDefinitions {
   public static History historyAllowedByPlumeRaButNotByBiswasRa() {
     Synthesizer synth = new Synthesizer(new Scope.Builder(2).txn(3).obj(1).build());
     synth.registerBiswas(
-        SynthesisSpec.allowedBy(TransactionalAnomalousPatterns.TapReadAtomicV1)
+        SynthesisSpec.allowedBy(TransactionalAnomalousPatterns.TapReadAtomicV1())
             .andDisallowedBy(AxiomaticDefinitions.ReadAtomic));
     return synth.synthesize().history();
   }

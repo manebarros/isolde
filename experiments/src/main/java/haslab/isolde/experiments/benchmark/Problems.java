@@ -72,7 +72,12 @@ public class Problems {
     m.put(new DefinitionId("PC", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Prefix));
     m.put(new DefinitionId("SI", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Snapshot));
     m.put(new DefinitionId("Ser", "ax", Framework.BISWAS), biswas(AxiomaticDefinitions.Ser));
-    m.put(new DefinitionId("UpdateSer", Framework.BISWAS), biswas(AxiomaticDefinitions.UpdateSer));
+    // Pinned to the sub-history formulation rather than to AxiomaticDefinitions.UpdateSer: the two
+    // are the same level, but they translate to different SAT formulas, and the committed
+    // measurements were taken with this one. Switching would make new runs incomparable with them.
+    m.put(
+        new DefinitionId("UpdateSer", Framework.BISWAS),
+        biswas(AxiomaticDefinitions::UpdateSerOverSubHistory));
 
     // cerone axiomatic
     m.put(new DefinitionId("RA", "ax", Framework.CERONE), cerone(CeroneDefinitions.RA));

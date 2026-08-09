@@ -18,17 +18,17 @@ public final class VerifyUpdateSerDefinitions {
         ComparisonMethods.compareBiswas(
             s,
             "Explicit UpdateSer Biswas",
-            AxiomaticDefinitions.UpdateSerExplicit,
-            "Implicit UpdateSer Biswas",
-            AxiomaticDefinitions.UpdateSer);
+            AxiomaticDefinitions.UpdateSer,
+            "Sub-history UpdateSer Biswas",
+            AxiomaticDefinitions::UpdateSerOverSubHistory);
     System.out.println(result);
 
     ComparisonResult result2 =
         ComparisonMethods.compareBiswasCerone(
             s,
-            "Right UpdateSer Cerone",
+            "UpdateSer Cerone",
             CeroneDefinitions.UpdateSer,
-            "Implicit UpdateSer Biswas",
+            "UpdateSer Biswas",
             AxiomaticDefinitions.UpdateSer);
     System.out.println(result2);
   }

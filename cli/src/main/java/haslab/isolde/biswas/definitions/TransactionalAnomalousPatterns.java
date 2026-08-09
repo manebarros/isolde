@@ -33,14 +33,23 @@ public final class TransactionalAnomalousPatterns {
   // under the biswas: prefix; the Tap prefix on each name keeps them apart from the axiomatic
   // definitions of the same levels, which is exactly the comparison these exist to make.
   public static final ExecutionFormula<BiswasExecution> TapReadAtomic = k.not().and(l.not());
-  public static final ExecutionFormula<BiswasExecution> TapReadAtomicV1 =
-      k_fixed.not().and(l.not());
-  public static final ExecutionFormula<BiswasExecution> TapReadAtomicV2 =
-      k_fixed.not().and(l_fixed.not());
-  public static final ExecutionFormula<BiswasExecution> TapReadAtomicV3 =
-      k.not().and(l.not()).and(fails_to_see_predecessor.not()).and(inconsistentCommitOrder.not());
   public static final ExecutionFormula<BiswasExecution> TapCausal =
       k.not().and(l.not()).and(m.not()).and(n.not());
+
+  public static ExecutionFormula<BiswasExecution> TapReadAtomicV1() {
+    return k_fixed.not().and(l.not());
+  }
+
+  public static ExecutionFormula<BiswasExecution> TapReadAtomicV2() {
+    return k_fixed.not().and(l_fixed.not());
+  }
+
+  public static ExecutionFormula<BiswasExecution> TapReadAtomicV3() {
+    return k.not()
+        .and(l.not())
+        .and(fails_to_see_predecessor.not())
+        .and(inconsistentCommitOrder.not());
+  }
 
   public static Formula fails_to_see_so_predecessor(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");

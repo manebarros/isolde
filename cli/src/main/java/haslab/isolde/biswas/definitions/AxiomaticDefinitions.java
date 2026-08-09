@@ -18,8 +18,6 @@ public final class AxiomaticDefinitions {
   public static final ExecutionFormula<BiswasExecution> Snapshot = AxiomaticDefinitions::Snapshot;
   public static final ExecutionFormula<BiswasExecution> Ser = AxiomaticDefinitions::Serializability;
   public static final ExecutionFormula<BiswasExecution> UpdateSer = AxiomaticDefinitions::UpdateSer;
-  public static final ExecutionFormula<BiswasExecution> UpdateSerExplicit =
-      AxiomaticDefinitions::UpdateSerExplicit;
 
   public static Formula ReadAtomic(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
@@ -137,17 +135,22 @@ public final class AxiomaticDefinitions {
                                 .and(t3.oneOf(e.history().transactions())))));
   }
 
-  // UpdateSer: Serializability restricted to the update transactions (those that write the final
-  // value of some key), so read-only transactions are exempt.
-  public static Formula UpdateSer(BiswasExecution e) {
+  /**
+   * The same level over the update sub-history, rather than by restricting the quantifier. Kept as
+   * a method and not as a field: it is the same level as {@link #UpdateSer}, and offering one level
+   * twice on the command line would invite a reader to think they are different. The two are worth
+   * comparing from the API, which is what {@code VerifyUpdateSerDefinitions} does, and the
+   * benchmark pins this formulation because the published measurements were taken with it.
+   */
+  public static Formula UpdateSerOverSubHistory(BiswasExecution e) {
     return Serializability(
         new BiswasExecution(e.history().subHistory(HistorySchema::updateTransactions), e.co()));
   }
 
-  // UpdateSer stated directly instead of through a sub-history: Serializability's implication with
-  // the extra requirement that the reading transaction t3 performs a write. The two formulations
-  // should agree, which `isolde compare biswas:UpdateSerExplicit biswas:UpdateSer` checks.
-  public static Formula UpdateSerExplicit(BiswasExecution e) {
+  // UpdateSer: Serializability with read-only transactions exempted, stated as the paper does — the
+  // Serializability implication with the extra requirement that the reading transaction t3 performs
+  // a write.
+  public static Formula UpdateSer(BiswasExecution e) {
     Variable t1 = Variable.unary("t1");
     Variable t2 = Variable.unary("t2");
     Variable t3 = Variable.unary("t3");
