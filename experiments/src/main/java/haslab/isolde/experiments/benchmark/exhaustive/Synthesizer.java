@@ -26,7 +26,9 @@ public class Synthesizer {
       Optional<AbstractHistory> history, int candidates, long time_ms) {}
 
   public SynthesisSolution synthesize(
-      Scope scope, List<ExecutionFormula<BiswasExecution>> pos, ExecutionFormula<BiswasExecution> neg) {
+      Scope scope,
+      List<ExecutionFormula<BiswasExecution>> pos,
+      ExecutionFormula<BiswasExecution> neg) {
     int candidates = 0;
     Instant start = Instant.now();
     ExecutionGenerator generator = new ExecutionGenerator(scope);

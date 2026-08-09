@@ -13,7 +13,7 @@ CSV_PATH="experiments/data/${COMMIT_HASH}.csv"
 
 for impl in all no_smart_search no_fixed_co no_learning
 do
-    mvn clean package && \
+    ./mvnw clean package && \
     java -Xms4g -Xmx16g \
     -jar experiments/target/isoldebench.jar \
     "$CSV_PATH" \

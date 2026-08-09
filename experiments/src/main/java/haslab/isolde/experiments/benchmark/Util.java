@@ -134,7 +134,8 @@ public final class Util {
               // timeout; that is deferred as future work.
               ExecutorService executor = Executors.newSingleThreadExecutor();
               Future<SynthesisOutcome> future =
-                  executor.submit(() -> implementation.value().run(scope, problem.value(), options));
+                  executor.submit(
+                      () -> implementation.value().run(scope, problem.value(), options));
 
               String config =
                   String.format(

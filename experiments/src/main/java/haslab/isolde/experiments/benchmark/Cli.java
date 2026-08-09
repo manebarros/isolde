@@ -107,7 +107,8 @@ public class Cli implements Callable<Integer> {
         this.implementations.stream().map(s -> new Named<>(s.id(), s)).toList();
 
     try {
-      Util.measureAndAppend(scopes, problems, solvers, implementations, 3, this.timeout_s, destFile);
+      Util.measureAndAppend(
+          scopes, problems, solvers, implementations, 3, this.timeout_s, destFile);
     } catch (Exception e) {
       e.printStackTrace();
       return ExitCode.SOFTWARE;

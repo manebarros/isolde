@@ -12,12 +12,32 @@ onto a command.
 
 ## Requirements
 
-- **JDK 21** and **Maven**. The build targets Java 21 (`maven.compiler.release`).
+- **JDK 21**. The build targets Java 21 (`maven.compiler.release`).
+- **Maven** — or just use the bundled `./mvnw`, which pins the version the project is built with.
 - **[uv](https://docs.astral.sh/uv/)**, only to build the paper's plots.
 
-The default SAT solver is SAT4J, which is pure Java and always available. `--solver minisat` and
-`--solver glucose` use the native libraries bundled with Kodkod and are considerably faster; if they
-fail to load on your platform, fall back to `sat4j`.
+## Setting up
+
+Isolde is built on [Kodkod](https://github.com/emina/kodkod), which is not published to Maven
+Central or any other public repository. It has to be placed in your local Maven repository before
+the build can resolve it, which is what this does:
+
+    scripts/setup-kodkod.sh
+
+The script downloads Kodkod 2.1 from its upstream GitHub release, checks it against a pinned
+SHA-256, and installs it as `com.github.emina:kodkod:2.1`. Run it once per machine; re-running is
+harmless. If a download does not match its expected checksum the script installs nothing and stops.
+
+It also fetches the **native SAT solvers**, which are a separate download and are *not* part of the
+Kodkod jar. `--solver minisat` and `--solver glucose` are considerably faster than the default, but
+they are JNI libraries that have to be on the library path:
+
+    java -Djava.library.path=lib/native/linux_x86_64 -jar cli/target/isolde.jar ...
+
+Without them you get an `UnsatisfiedLinkError`. The default `sat4j` is pure Java and always works.
+Upstream only ships prebuilt libraries for **x86-64 Linux and macOS** — on Apple Silicon or ARM
+Linux, `sat4j` is the only option, which also means the paper's benchmark cannot be reproduced
+as-published there (it runs Glucose).
 
 ## Repository layout
 
@@ -31,7 +51,7 @@ fail to load on your platform, fall back to `sat4j`.
 
 ## Building
 
-    mvn package
+    ./mvnw package
 
 This produces two executable jars:
 
@@ -42,7 +62,20 @@ The examples below assume a shorthand:
 
     alias isolde='java -jar '"$PWD"'/cli/target/isolde.jar'
 
-Run the tests with `mvn test`.
+Run the tests with `./mvnw test`.
+
+Sources are formatted with [google-java-format](https://github.com/google/google-java-format), and
+the build enforces it: an unformatted tree fails in `validate`, before anything is compiled. To fix,
+
+    ./mvnw spotless:apply
+
+### Reproducibility
+
+The build is pinned end to end, so the same commit produces the same artifacts anywhere: the JDK
+release, the Maven version (via `./mvnw`), every plugin version, every dependency version, the
+source encoding, and the Kodkod jar by SHA-256. `project.build.outputTimestamp` keeps build times
+out of the jars, so two builds of one commit are byte-identical — which matters because benchmark
+data files are named after the commit that produced them.
 
 ## Solving synthesis problems
 
@@ -276,6 +309,9 @@ It refuses to run on a dirty working tree, names its output
 problem over 3–10 transactions with 5 objects and 5 values, using Glucose, a one-hour timeout and a
 16 GB heap. Because the CSV is named after the commit, its file name identifies
 the version of Isolde that produced the measurements.
+
+It runs Glucose, so the [native solvers](#setting-up) have to be installed and on the library path;
+otherwise every run fails with an `UnsatisfiedLinkError`.
 
 For anything smaller, drive `isoldebench` directly:
 

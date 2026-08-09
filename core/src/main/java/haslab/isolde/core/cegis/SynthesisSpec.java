@@ -9,8 +9,7 @@ public final class SynthesisSpec<E extends Execution> {
   private final List<ExecutionFormula<E>> existentialFormulas;
   private final Optional<ExecutionFormula<E>> universalFormula;
 
-  public SynthesisSpec(
-      List<ExecutionFormula<E>> existentials, ExecutionFormula<E> universal) {
+  public SynthesisSpec(List<ExecutionFormula<E>> existentials, ExecutionFormula<E> universal) {
     this.existentialFormulas = List.copyOf(existentials);
     this.universalFormula = Optional.ofNullable(universal);
   }

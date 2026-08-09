@@ -11,11 +11,12 @@ import java.util.stream.Collectors;
  * of indices into {@code transactions}, the same way {@link AbstractHistory} holds it, so it does
  * not depend on transaction ids being unique.
  *
- * <p>Usually the order is a chain — a session in the ordinary sense — and that is how it prints. The
- * synthesis model does not force session order to decompose into chains, though: it constrains it
- * only to be transitive and within the transaction total order. A synthesized history can therefore
- * order two mutually incomparable transactions before a third, which no sequence of transactions can
- * express. Such a session prints its edges explicitly instead of pretending to be a sequence.
+ * <p>Usually the order is a chain — a session in the ordinary sense — and that is how it prints.
+ * The synthesis model does not force session order to decompose into chains, though: it constrains
+ * it only to be transitive and within the transaction total order. A synthesized history can
+ * therefore order two mutually incomparable transactions before a third, which no sequence of
+ * transactions can express. Such a session prints its edges explicitly instead of pretending to be
+ * a sequence.
  *
  * <p>{@code transactions} is always listed consistently with {@code order}, so a chain reads top to
  * bottom.
@@ -87,7 +88,8 @@ public record Session(List<Transaction> transactions, Set<List<Integer>> order) 
     return sb.append("so: ")
         .append(
             coveringEdges().stream()
-                .map(e -> transactions.get(e.get(0)).id() + " -> " + transactions.get(e.get(1)).id())
+                .map(
+                    e -> transactions.get(e.get(0)).id() + " -> " + transactions.get(e.get(1)).id())
                 .collect(Collectors.joining(", ")))
         .toString();
   }

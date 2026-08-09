@@ -12,7 +12,10 @@ public record IsoldeInput(
     Solver solver) {
 
   public IsoldeInput(
-      Scope scope, Named<IsoldeSpec> problem, Named<SynthesisRunner> implementation, Solver solver) {
+      Scope scope,
+      Named<IsoldeSpec> problem,
+      Named<SynthesisRunner> implementation,
+      Solver solver) {
     this(
         scope,
         problem.value(),

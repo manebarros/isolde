@@ -6,8 +6,8 @@ import kodkod.engine.config.Options;
 
 /**
  * A benchmarkable synthesizer. Unlike {@code SynthesizerI}, this is the seam the harness measures
- * against: it reports a neutral {@link SynthesisOutcome} and can decline problems it does not handle
- * (e.g. the exhaustive enumerator is Biswas-only).
+ * against: it reports a neutral {@link SynthesisOutcome} and can decline problems it does not
+ * handle (e.g. the exhaustive enumerator is Biswas-only).
  */
 public interface SynthesisRunner {
   String id();

@@ -59,8 +59,7 @@ class CompareCommand implements Callable<Integer> {
 
     Scope scope = new Scope.Builder().txn(txn).obj(obj).val(val).build();
     System.out.printf("Comparing %s and %s with scope: %s%n%n", defA, defB, scope);
-    System.out.println(
-        ComparisonMethods.compare(scope, defA, a, defB, b, solver.factory));
+    System.out.println(ComparisonMethods.compare(scope, defA, a, defB, b, solver.factory));
     return ExitCode.OK;
   }
 }

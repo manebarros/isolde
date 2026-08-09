@@ -17,6 +17,19 @@
 
 <properties>
     <maven.compiler.release>21</maven.compiler.release>
+
+    <!-- Sources contain non-ASCII characters, so leaving this to the platform default would make
+         the build depend on the machine's locale. -->
+    <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+    <project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+    <!-- Fixed, so that a given commit produces byte-identical jars instead of embedding the time
+         it was built. Bump when releasing. Benchmark data files are named after the commit that
+         produced them, so a commit should identify exactly one build. -->
+    <project.build.outputTimestamp>2026-08-09T00:00:00Z</project.build.outputTimestamp>
+
+    <spotless.version>2.44.5</spotless.version>
+    <google-java-format.version>1.27.0</google-java-format.version>
 </properties>
 
 <dependencyManagement>
@@ -29,10 +42,12 @@
             <scope>import</scope>
         </dependency>
 
+        <!-- Not on Maven Central; installed into the local repository by
+             scripts/setup-kodkod.sh, which pins the upstream release by checksum. -->
         <dependency>
             <groupId>com.github.emina</groupId>
             <artifactId>kodkod</artifactId>
-            <version>1.0</version>
+            <version>2.1</version>
         </dependency>
 
         <dependency>
@@ -66,5 +81,71 @@
         </dependency>
     </dependencies>
 </dependencyManagement>
+
+<build>
+    <!-- Every plugin the lifecycle binds is pinned. Left unpinned, their versions come from
+         whichever Maven is on PATH, so two machines can build the same commit differently. -->
+    <pluginManagement>
+        <plugins>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.13.0</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-surefire-plugin</artifactId>
+                <version>3.5.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-jar-plugin</artifactId>
+                <version>3.4.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-resources-plugin</artifactId>
+                <version>3.3.1</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-install-plugin</artifactId>
+                <version>3.1.2</version>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-shade-plugin</artifactId>
+                <version>3.5.0</version>
+            </plugin>
+        </plugins>
+    </pluginManagement>
+
+    <plugins>
+        <!-- Inherited by every module, so each one formats its own sources. Checking in `validate`
+             means an unformatted tree fails before anything is compiled; `mvn spotless:apply`
+             fixes it. -->
+        <plugin>
+            <groupId>com.diffplug.spotless</groupId>
+            <artifactId>spotless-maven-plugin</artifactId>
+            <version>${spotless.version}</version>
+            <configuration>
+                <java>
+                    <googleJavaFormat>
+                        <version>${google-java-format.version}</version>
+                    </googleJavaFormat>
+                </java>
+            </configuration>
+            <executions>
+                <execution>
+                    <id>spotless-check</id>
+                    <phase>validate</phase>
+                    <goals>
+                        <goal>check</goal>
+                    </goals>
+                </execution>
+            </executions>
+        </plugin>
+    </plugins>
+</build>
 
 </project>

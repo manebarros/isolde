@@ -24,9 +24,9 @@ import kodkod.instance.TupleSet;
  * and outside the model only the normal transactions are part of the history. Every other consumer
  * already agrees: hand-written histories start at transaction 1, {@code
  * CheckingIntermediateRepresentation} manufactures its own initial transaction when encoding one
- * back, and the executions print their commit / visibility orders over the normal transactions only.
- * Dropping it also drops the {@code initial -> t} session-order edges, which are the encoder's lower
- * bound and say nothing about the history.
+ * back, and the executions print their commit / visibility orders over the normal transactions
+ * only. Dropping it also drops the {@code initial -> t} session-order edges, which are the
+ * encoder's lower bound and say nothing about the history.
  */
 public class HistoryIntermediateRepresentation {
   private final TupleSet readsTs;

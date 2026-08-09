@@ -36,11 +36,11 @@ public class HistoryIntermediateRepresentationTest {
   }
 
   /**
-   * An instance over transactions {@code t0..tn}, where {@code t0} is the initial transaction. Every
-   * normal transaction reads the initial value of the single object and writes it back, so none is
-   * empty. {@code so} is given as pairs of normal transaction ids and must already be transitive,
-   * which is what the synthesis encoder guarantees; the {@code t0 -> t} edges the encoder always
-   * includes are added here too.
+   * An instance over transactions {@code t0..tn}, where {@code t0} is the initial transaction.
+   * Every normal transaction reads the initial value of the single object and writes it back, so
+   * none is empty. {@code so} is given as pairs of normal transaction ids and must already be
+   * transitive, which is what the synthesis encoder guarantees; the {@code t0 -> t} edges the
+   * encoder always includes are added here too.
    */
   private static Instance instance(int normalTxns, int[][] so) {
     List<Object> atoms = new ArrayList<>();
@@ -121,7 +121,9 @@ public class HistoryIntermediateRepresentationTest {
     History history = decode(3, new int[][] {});
 
     assertEquals(3, history.getSessions().size());
-    assertEquals(List.of(List.of(1), List.of(2), List.of(3)), history.getSessions().stream().map(HistoryIntermediateRepresentationTest::ids).toList());
+    assertEquals(
+        List.of(List.of(1), List.of(2), List.of(3)),
+        history.getSessions().stream().map(HistoryIntermediateRepresentationTest::ids).toList());
   }
 
   @Test
@@ -170,7 +172,11 @@ public class HistoryIntermediateRepresentationTest {
 
     assertEquals(
         String.join(
-            "\n", "1: r(0,0) w(0,1) ", "2: r(0,0) w(0,1) ", "3: r(0,0) w(0,1) ", "so: 1 -> 2, 1 -> 3"),
+            "\n",
+            "1: r(0,0) w(0,1) ",
+            "2: r(0,0) w(0,1) ",
+            "3: r(0,0) w(0,1) ",
+            "so: 1 -> 2, 1 -> 3"),
         decode(3, new int[][] {{1, 2}, {1, 3}}).toString());
   }
 
@@ -208,8 +214,7 @@ public class HistoryIntermediateRepresentationTest {
                 new Transaction(3, List.of(Operation.readOf(0, 1)))));
 
     assertTrue(session.isChain());
-    assertEquals(
-        Set.of(List.of(0, 1), List.of(0, 2), List.of(1, 2)), Set.copyOf(session.order()));
+    assertEquals(Set.of(List.of(0, 1), List.of(0, 2), List.of(1, 2)), Set.copyOf(session.order()));
     assertEquals(Set.of(List.of(0, 1), List.of(1, 2)), session.coveringEdges());
   }
 }

@@ -13,8 +13,8 @@ import kodkod.engine.config.Options;
 
 /**
  * Runs the brute-force exhaustive enumerator as a benchmark baseline. It is Biswas-only, so it
- * declines Cerone problems. Decomposes an {@link IsoldeSpec} into the positive "allowed-by" formulas
- * and the single forbidden one the enumerator needs.
+ * declines Cerone problems. Decomposes an {@link IsoldeSpec} into the positive "allowed-by"
+ * formulas and the single forbidden one the enumerator needs.
  */
 public final class ExhaustiveRunner implements SynthesisRunner {
 
